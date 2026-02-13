@@ -11,14 +11,14 @@ export default async function proxy(request: NextRequest) {
     const isProtectedRoute = protectedRoutes.includes(path);
     const isPublicRoute = publicRoutes.includes(path);
 
-    const cookie = (await cookies()).get('session')?.value;
+    const cookie = (await cookies()).get('accessToken')?.value;
     const session = await decrypt(cookie);
 
-    if (isProtectedRoute && !session?.userId) {
+    if (isProtectedRoute && !session) {
         return NextResponse.redirect(new URL(LoginPageRoute, request.nextUrl));
     }
 
-    if (isPublicRoute && session?.userId) {
+    if (isPublicRoute && session) {
         return NextResponse.redirect(new URL(HomePageRoute, request.nextUrl));
     }
 
