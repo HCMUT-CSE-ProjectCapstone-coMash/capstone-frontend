@@ -18,3 +18,13 @@ export async function profile() {
 
     return response.data;
 }
+
+export async function logout() {
+    const response = await axiosClient.post(
+        "/auth/logout",
+        {},
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

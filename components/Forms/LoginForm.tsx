@@ -36,6 +36,17 @@ export function LoginForm() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!userName) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng điền tên đăng nhập" }));
+            return;
+        }
+
+        if (!password) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng điền mật khẩu" }));
+            return;
+        }
+
         mutation.mutate();
     }
 
