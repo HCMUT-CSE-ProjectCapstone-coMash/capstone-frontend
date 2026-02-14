@@ -1,18 +1,17 @@
-"use client";
-
-import { useSelector } from "react-redux";
 import { Navbar } from "./Navbar/Navbar";
 import { Profile } from "./Profile";
-import { RootState } from "@/utilities/store";
 import Link from "next/link";
 import { HomePageRoute } from "@/const/routes";
+import { cookies } from "next/headers";
+import { decrypt } from "@/utilities/session";
 
-export function Header() {
-    const user = useSelector((state: RootState) => state.user);
+export async function Header() {
+    const cookie = (await cookies()).get('accessToken')?.value;
+    const session = await decrypt(cookie);
 
     return (
         <>
-            {user.id ? (
+            {session ? (
                 <header className="h-24 bg-gray-white p-6 flex items-center justify-between">
                     <Link href={HomePageRoute}>
                         <p className="font-display font-semibold text-3xl text-pink">
@@ -23,7 +22,7 @@ export function Header() {
                     <Navbar/>
 
                     <div>
-                        <Profile userName={user.fullName || ""}/>
+                        <Profile userName={String(session.given_name) || ""}/>
                     </div>
                 </header>
             ) : (

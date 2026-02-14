@@ -1,3 +1,5 @@
+"use client";
+
 import { NavItem } from "@/types/navbar";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
