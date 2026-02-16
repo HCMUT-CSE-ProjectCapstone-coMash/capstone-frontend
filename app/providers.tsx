@@ -14,7 +14,8 @@ export function Providers({ children } : { children : React.ReactNode }) {
         <ConfigProvider
             theme={{
                 components: {
-                    Alert: { withDescriptionIconSize: 20 } 
+                    Alert: { withDescriptionIconSize: 20 },
+                    Switch: { colorPrimary: "#6420AA", colorPrimaryHover: "#6420AA"}
                 }
             }}
         >

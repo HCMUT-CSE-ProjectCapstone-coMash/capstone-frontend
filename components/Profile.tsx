@@ -26,6 +26,7 @@ function LogoutOption() {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng xuất thành công" }));
 
             router.replace(LoginPageRoute);
+            router.refresh();
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "" }));

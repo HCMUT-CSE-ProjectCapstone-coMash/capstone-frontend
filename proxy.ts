@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { HomePageRoute, LoginPageRoute } from "./const/routes";
+import { HomePageRoute, ImportPageRoute, LoginPageRoute, OrderPageRoute, ProductPageRoute, SalePageRoute, SellPageRoute } from "./const/routes";
 import { decrypt } from "./utilities/session";
 
-const protectedRoutes = [HomePageRoute];
+const protectedRoutes = [HomePageRoute, ProductPageRoute, ImportPageRoute, SellPageRoute, SalePageRoute, OrderPageRoute];
 const publicRoutes = [LoginPageRoute];
 
 export default async function proxy(request: NextRequest) {

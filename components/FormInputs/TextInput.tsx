@@ -1,18 +1,20 @@
 
 interface TextInputProps {
     label: string,
-    value: string,
+    value: string | number,
     placeHolder: string,
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
-    inputType?: "text" | "number" | "password"
+    inputType?: "text" | "number" | "password",
+    labelPosition?: "left" | "top"
 }
 
-export function TextInput({ label, placeHolder, value, onChange, inputType="text" } : TextInputProps) {
-
+export function TextInput({ label, placeHolder, value, onChange, inputType="text", labelPosition="top" } : TextInputProps) {
+    const isLeft = labelPosition === "left";
+    
     return (
-        <div className="flex flex-col gap-y-2.5 w-full font-display">
-            <label className="text-sm font-normal text-tgray9">{label}</label>
-            <input 
+        <div className={`w-full font-display ${isLeft ? "flex items-center gap-x-4" : "flex flex-col gap-y-2.5"}`}>
+            <label className={`text-sm font-normal text-tgray9 ${isLeft ? "w-25" : ""}`}>{label}</label>
+            <input
                 type={inputType} 
                 placeholder={placeHolder}
                 value={value} 

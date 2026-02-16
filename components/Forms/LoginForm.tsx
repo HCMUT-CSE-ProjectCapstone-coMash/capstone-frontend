@@ -27,6 +27,7 @@ export function LoginForm() {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng nhập thành công" }));
 
             router.replace(HomePageRoute);
+            router.refresh();
         },
 
         onError: (error: AxiosError<{ message: string }>) => {

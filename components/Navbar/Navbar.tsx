@@ -1,4 +1,4 @@
-import { NavItem } from "@/types/navbar";
+import { NavItem } from "@/types/UIType";
 import { NavbarItem } from "./NavbarItem";
 import { HomePageRoute, ImportPageRoute, OrderPageRoute, ProductPageRoute, SalePageRoute, SellPageRoute } from "@/const/routes";
 
