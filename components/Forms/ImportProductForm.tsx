@@ -6,11 +6,12 @@ import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { Button } from "../Button";
 import { useMutation } from "@tanstack/react-query";
-import { CreateProduct } from "@/api/authentication/product";
-import { useDispatch } from "react-redux";
+import { CreateProductAsync } from "@/api/authentication/product";
+import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { Product } from "@/types/product";
+import { CreateProduct, Product } from "@/types/product";
+import { RootState } from "@/utilities/store";
 
 const categories = [
     { label: "Đầm", value: "Đầm" },
@@ -40,6 +41,7 @@ const sizesLetter = ["Freesize", "S", "M", "L", "XL", "2XL", "3XL", "4XL++"];
 const sizesNumber = ["Freesize", "28", "30", "32", "34", "36", "38", "40"];
 
 export function ImportProductForm() {
+    const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
     const [productID, setProductID] = useState<string>("");
     const [productName, setProductName] = useState<string>("");
@@ -70,10 +72,10 @@ export function ImportProductForm() {
     };
 
     const mutation = useMutation({
-        mutationFn: (productData: Product) => CreateProduct(productData),
+        mutationFn: (productData: CreateProduct) => CreateProductAsync(productData),
 
-        onSuccess: () => {
-
+        onSuccess: (data: Product) => {
+            console.log(data);
         },
 
         onError: () => {
@@ -83,6 +85,10 @@ export function ImportProductForm() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if(!user.id) {
+            return;
+        }
         
         if(!productID) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập mã sản phẩm" }));
@@ -108,21 +114,22 @@ export function ImportProductForm() {
         
         const formattedQuantities = Object.entries(sizeQuantities)
             .filter(([, qty]) => qty > 0)
-            .map(([size, qty]) => ({ size, quantity: qty }));
+            .map(([size, qty]) => ({ size, quantities: qty }));
 
         if (formattedQuantities.length === 0) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số lượng cho ít nhất một size" }));
             return;
         }
 
-        const productData: Product = {
+        const productData: CreateProduct = {
             productID, 
             productName, 
             category, 
             color, 
             pattern, 
             sizeType: isNumberSize ? "number" : "letter",
-            quantities: formattedQuantities
+            quantities: formattedQuantities,
+            createdBy: user.id,
         };
 
         mutation.mutate(productData);

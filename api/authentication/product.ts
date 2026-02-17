@@ -1,8 +1,8 @@
-import { Product } from "@/types/product";
+import { CreateProduct } from "@/types/product";
 import { axiosClient } from "../axiosClient";
 
 
-export async function CreateProduct(productData: Product) {
+export async function CreateProductAsync(productData: CreateProduct) {
 
     const response = await axiosClient.post(
         "/product/create",
