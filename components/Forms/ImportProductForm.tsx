@@ -5,7 +5,7 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { Button } from "../Button";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CreateProductAsync } from "@/api/authentication/product";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
@@ -41,8 +41,9 @@ const sizesLetter = ["Freesize", "S", "M", "L", "XL", "2XL", "3XL", "4XL++"];
 const sizesNumber = ["Freesize", "28", "30", "32", "34", "36", "38", "40"];
 
 export function ImportProductForm() {
-    const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user);
+    
     const [productID, setProductID] = useState<string>("");
     const [productName, setProductName] = useState<string>("");
     const [category, setCategory] = useState<string>("");
@@ -71,15 +72,18 @@ export function ImportProductForm() {
         }
     };
 
+    const queryClient = useQueryClient();
+
     const mutation = useMutation({
         mutationFn: (productData: CreateProduct) => CreateProductAsync(productData),
 
         onSuccess: (data: Product) => {
-            console.log(data);
+            queryClient.setQueryData<Product[]>(["pendingProducts"], (oldData = []) => [...oldData, data]);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
 
         onError: () => {
-
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại" }));
         }
     });
 

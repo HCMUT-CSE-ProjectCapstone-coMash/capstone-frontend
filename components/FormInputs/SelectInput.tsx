@@ -1,5 +1,5 @@
 import { SelectOption } from "@/types/UIType";
-import { ArrowDownLine } from "@/public/assets/Icons";
+import { ArrowDownLineIcon } from "@/public/assets/Icons";
 
 interface SelectInputProps {
     label: string,
@@ -31,7 +31,7 @@ export function SelectInput({ label, options, value, onChange }: SelectInputProp
                     ))}
                 </select>
 
-                <div className="absolute right-3 top-1/2 -translate-y-1/2"><ArrowDownLine width={24} height={24} fill={"gray"}/></div>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2"><ArrowDownLineIcon width={24} height={24} fill={"gray"}/></div>
             </div>
         </div>
     )

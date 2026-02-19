@@ -1,11 +1,12 @@
 import { Button } from "@/components/Button";
 import { ImageUpload } from "@/components/imageUpload";
 import { ImportProductForm } from "@/components/Forms/ImportProductForm";
+import { PendingProductsTable } from "@/components/Tables/PendingProductsTable";
 
 export default function ImportPage() {
 
     return (
-        <main className="px-20 py-10">
+        <main className="px-20 pt-10 pb-25">
             <p className="text-purple text-2xl font-medium">Nhập hàng</p>
 
             <div className="flex justify-between gap-55 mt-5">
@@ -33,6 +34,13 @@ export default function ImportPage() {
                     <ImportProductForm/>
                 </div>
             </div>
+
+            <div className="mt-10 flex flex-col gap-5">
+                <p className="text-purple text-lg font-medium">
+                    Danh sách sản phẩm chưa duyệt
+                </p>
+                <PendingProductsTable/>
+            </div>  
         </main>
     )
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Dropdown, MenuProps } from "antd";
-import { LogoutIcon, UserIcon, ArrowDownLine } from "@/public/assets/Icons";
+import { LogoutIcon, UserIcon, ArrowDownLineIcon } from "@/public/assets/Icons";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -55,7 +55,7 @@ export function Profile({ userName } : ProfileProps) {
                 <div className="bg-pink text-white flex items-center justify-between gap-x-3 p-3 rounded-lg">
                     <UserIcon width={24} height={24} fill={"white"}/>
                     {userName}
-                    <ArrowDownLine width={24} height={24} fill={"white"}/>
+                    <ArrowDownLineIcon width={24} height={24} fill={"white"}/>
                 </div>  
             </Dropdown>
         </div>

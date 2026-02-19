@@ -32,7 +32,7 @@ export function UserIcon({ width, height, fill }: IconProps) {
     )
 }
 
-export function ArrowDownLine({ width, height, fill }: IconProps) {
+export function ArrowDownLineIcon({ width, height, fill }: IconProps) {
 
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} fill={fill} viewBox="0 0 24 24">
