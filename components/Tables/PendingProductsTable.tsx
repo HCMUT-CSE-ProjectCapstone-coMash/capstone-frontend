@@ -4,7 +4,7 @@ import { Product } from "@/types/product";
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
 import { useQuery } from "@tanstack/react-query";
-import { GetPendingProducts } from "@/api/authentication/product";
+import { GetPendingProducts } from "@/api/products/products";
 import { Button } from "../Button";
 
 export function PendingProductsTable() {

@@ -6,13 +6,14 @@ import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { Button } from "../Button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CreateProductAsync } from "@/api/authentication/product";
+import { CreateProductAsync } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { CreateProduct, Product } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
+import { Predict } from "@/api/products/image";
 
 const categories = [
     { label: "Đầm", value: "Đầm" },
@@ -81,7 +82,7 @@ export function ImportProductForm() {
 
     const queryClient = useQueryClient();
 
-    const mutation = useMutation({
+    const createMutation = useMutation({
         mutationFn: (productData: CreateProduct) => CreateProductAsync(productData),
 
         onSuccess: (data: Product) => {
@@ -143,8 +144,16 @@ export function ImportProductForm() {
             createdBy: user.id,
         };
 
-        mutation.mutate(productData);
+        createMutation.mutate(productData);
     }
+
+    const predictMutation = useMutation({
+        mutationFn: (file: File) => Predict(file),
+
+        onSuccess: (data) => {
+            console.log(data);
+        },
+    });
 
     const handleFiles = (files: FileList | null) => {
         if (!files) return;
@@ -156,7 +165,13 @@ export function ImportProductForm() {
 
         const newFiles = Array.from(files);
 
+        const isFirstImageInsert = imageFiles.length === 0 && newFiles.length > 0;
+
         setImageFiles([...imageFiles, ...newFiles]);
+
+        if (isFirstImageInsert) {
+            predictMutation.mutate(newFiles[0]);
+        }
     }
 
     const openFilePicker = () => {
@@ -310,9 +325,9 @@ export function ImportProductForm() {
 
                     <div className="flex justify-end mt-5">
                         <Button 
-                            label={mutation.isPending ? "Đang thêm..." : "Thêm vào danh sách duyệt"} 
+                            label={createMutation.isPending ? "Đang thêm..." : "Thêm vào danh sách duyệt"} 
                             className={"bg-pink text-white"}
-                            isLoading={mutation.isPending}
+                            isLoading={createMutation.isPending}
                         />
                     </div>
                 </form>
