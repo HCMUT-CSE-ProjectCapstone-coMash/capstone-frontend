@@ -32,6 +32,7 @@ const colors = [
     { label: "Xanh Dương", value: "Xanh Dương" },
     { label: "Tím", value: "Tím" },
     { label: "Hồng", value: "Hồng" },
+    { label: "Nâu", value: "Nâu" },
 ];
 
 const patternOptions = [
