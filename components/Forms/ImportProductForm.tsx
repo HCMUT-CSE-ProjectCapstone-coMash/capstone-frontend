@@ -12,7 +12,6 @@ import { AlertType } from "@/types/alert";
 import { CreateProduct, Product } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
-import { Predict } from "@/api/products/image";
 
 const categories = [
     { label: "Đầm", value: "Đầm" },
@@ -149,16 +148,6 @@ export function ImportProductForm() {
         createMutation.mutate(productData);
     }
 
-    // Dự đoán sản phẩm từ hình ảnh đầu tiên
-    const predictMutation = useMutation({
-        mutationFn: (file: File) => Predict(file),
-
-        onSuccess: (data) => {
-            console.log(data);
-        },
-    });
-
-
     // Xử lý khi người dùng chọn hình ảnh để tải lên
     const handleFiles = (files: FileList | null) => {
         if (!files) return;
@@ -170,13 +159,7 @@ export function ImportProductForm() {
 
         const newFiles = Array.from(files);
 
-        const isFirstImageInsert = imageFiles.length === 0 && newFiles.length > 0;
-
         setImageFiles([...imageFiles, ...newFiles]);
-
-        if (isFirstImageInsert) {
-            predictMutation.mutate(newFiles[0]);
-        }
     }
 
     const openFilePicker = () => {
