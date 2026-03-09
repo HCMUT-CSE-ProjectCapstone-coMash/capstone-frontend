@@ -76,7 +76,7 @@ export function ImportProductForm() {
         }
     };
 
-    const [imageFiles, setImageFiles] = useState<File[]>([]);
+    const [imageFile, setImageFile] = useState<File | null>(null);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const queryClient = useQueryClient();
@@ -150,24 +150,17 @@ export function ImportProductForm() {
 
     // Xử lý khi người dùng chọn hình ảnh để tải lên
     const handleFiles = (files: FileList | null) => {
-        if (!files) return;
+        if (!files || files.length === 0) return;
 
-        if (imageFiles.length + files.length > 4) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Bạn chỉ có thể tải lên tối đa 4 hình ảnh" }));
-            return;
-        }
-
-        const newFiles = Array.from(files);
-
-        setImageFiles([...imageFiles, ...newFiles]);
+        setImageFile(files[0]);
     }
 
     const openFilePicker = () => {
         fileInputRef.current?.click();
     };
 
-    const removeImage = (index: number) => {
-        setImageFiles(prev => prev.filter((_, i) => i !== index));
+    const removeImage = () => {
+        setImageFile(null);
     };
 
     return (
@@ -178,56 +171,30 @@ export function ImportProductForm() {
                 <input 
                     type="file" 
                     className="hidden"
-                    multiple
                     accept="image/*"
                     ref={fileInputRef}
                     onChange={(e) => handleFiles(e.target.files)}
                 />
 
                 <div className="w-md">
-                    {imageFiles.length > 0 ? (
-                        <div className="flex flex-col gap-5">
-                            <div className="relative group h-118.75 w-full">   
-                                <Image 
-                                    src={URL.createObjectURL(imageFiles[0])} 
-                                    alt=""
-                                    fill
-                                    className="object-cover" unoptimized
-                                />
+                    {imageFile ? (
+                        <div className="relative group h-118.75 w-full">   
+                            <Image 
+                                src={URL.createObjectURL(imageFile)} 
+                                alt=""
+                                fill
+                                className="object-cover" unoptimized
+                            />
 
-                                <button
-                                    type="button"
-                                    onClick={() => removeImage(0)}
-                                    className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full 
-                                            flex items-center justify-center text-sm
-                                            opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                            
-                            <div className="grid grid-cols-3 gap-5">
-                                {imageFiles.slice(1,4).map((file, index) => (
-                                    <div key={index} className="relative group h-30 w-30">
-                                        <Image 
-                                            src={URL.createObjectURL(file)} 
-                                            alt=""
-                                            fill
-                                            className="object-cover" unoptimized
-                                        />
-
-                                        <button
-                                            type="button"
-                                            onClick={() => removeImage(0)}
-                                            className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full 
-                                                    flex items-center justify-center text-sm
-                                                    opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
+                            <button
+                                type="button"
+                                onClick={removeImage}
+                                className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full 
+                                        flex items-center justify-center text-sm
+                                        opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                            >
+                                ✕
+                            </button>
                         </div>
                     ) : (
                         <div className="h-118.75 bg-tgray05 flex items-center justify-center">
