@@ -31,7 +31,7 @@ export function SelectInput({ label, options, value, onChange }: SelectInputProp
                     ))}
                 </select>
 
-                <div className="absolute right-3 top-1/2 -translate-y-1/2"><ArrowDownLineIcon width={24} height={24} fill={"gray"}/></div>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2"><ArrowDownLineIcon width={24} height={24} className={"text-gray"}/></div>
             </div>
         </div>
     )

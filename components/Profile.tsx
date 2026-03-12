@@ -35,7 +35,7 @@ function LogoutOption() {
 
     return (
         <div className="flex items-center gap-x-3">
-            <LogoutIcon width={20} height={20} fill={""}/>
+            <LogoutIcon width={20} height={20} className={""}/>
             <button className="cursor-pointer" onClick={() => mutation.mutate()}>
                 Đăng xuất
             </button>
@@ -53,9 +53,9 @@ export function Profile({ userName } : ProfileProps) {
         <div>
             <Dropdown menu={{ items }}>
                 <div className="bg-pink text-white flex items-center justify-between gap-x-3 p-3 rounded-lg">
-                    <UserIcon width={24} height={24} fill={"white"}/>
+                    <UserIcon width={24} height={24} className={""}/>
                     {userName}
-                    <ArrowDownLineIcon width={24} height={24} fill={"white"}/>
+                    <ArrowDownLineIcon width={24} height={24} className={""}/>
                 </div>  
             </Dropdown>
         </div>
