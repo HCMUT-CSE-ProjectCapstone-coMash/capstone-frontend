@@ -1,5 +1,6 @@
 import { CreateProduct } from "@/types/product";
 import { axiosClient } from "../axiosClient";
+import { fileToBase64 } from "@/utilities/image";
 
 // Nhân viên tạo sản phẩm mới 
 export async function CreateProductAsync(productData: CreateProduct) {
@@ -40,6 +41,19 @@ export async function CreateProductAsync(productData: CreateProduct) {
 export async function GetPendingProducts() {
     const response = await axiosClient.get(
         "/product/pending",
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+// Tìm kiếm sản phẩm tương tự bằng hình ảnh
+export async function SearchSimilarProduct(imageFile: File) {
+    const base64Image = await fileToBase64(imageFile);
+
+    const response = await axiosClient.post(
+        "/product/similar",
+        { ImageBase64: base64Image },
         { withCredentials: true }
     );
 

@@ -5,7 +5,7 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { CreateProductAsync } from "@/api/products/products";
+import { CreateProductAsync, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -130,10 +130,24 @@ export function ImportProductForm() {
     }
 
     // Xử lý khi người dùng chọn hình ảnh để tải lên
+    const imageSearchMutation = useMutation({
+        mutationFn: (imageFile: File) => SearchSimilarProduct(imageFile),
+
+        onSuccess: (data) => {
+            console.log(data);
+        },
+
+        onError: () => {
+
+        }
+    });
+
     const handleFiles = (files: FileList | null) => {
         if (!files || files.length === 0) return;
 
         setField("imageFile", files[0]);
+
+        imageSearchMutation.mutate(files[0]);
     }
 
     const openFilePicker = () => {
