@@ -19,7 +19,7 @@ export async function Header() {
                         </p>
                     </Link>
 
-                    <Navbar/>
+                    <Navbar role={session.role}/>
 
                     <div>
                         <Profile userName={String(session.given_name) || ""}/>

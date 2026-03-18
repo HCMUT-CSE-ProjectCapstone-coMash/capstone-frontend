@@ -11,8 +11,12 @@ const navbarItems : NavItem[] = [
     { label: "Đơn hàng", href: OrderPageRoute },
 ];
 
-export function Navbar() {
+interface NavbarProps {
+    role?: string;
+}
 
+export function Navbar({ role }: NavbarProps) {
+    
     return (
         <div className="flex items-center gap-x-10">
             {navbarItems.map((item) => (
