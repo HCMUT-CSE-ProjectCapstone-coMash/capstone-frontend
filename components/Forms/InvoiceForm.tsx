@@ -27,44 +27,62 @@ export function InvoiceForm() {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
+    const handleMoneyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Lấy giá trị nhập vào và xóa tất cả ký tự không phải là số (bao gồm cả chữ và dấu chấm cũ)
+        const rawValue = e.target.value.replace(/\D/g, "");
+        
+        // Định dạng lại thành chuỗi có dấu chấm (VD: "500.000")
+        const formattedValue = rawValue ? Number(rawValue).toLocaleString("vi-VN") : "";
+    
+        setField("customerMoney", formattedValue);
+    };
+
     // Giả lập tổng tiền
     const totalAmount = 120000;
-    const customerMoneyNum = Number(form.customerMoney);
+    
+    // 2. Tính toán: Phải xóa dấu chấm (.) đi trước khi chuyển thành Number
+    const rawCustomerMoney = form.customerMoney.replace(/\./g, ""); // "500.000" -> "500000"
+    const customerMoneyNum = Number(rawCustomerMoney);
+    
     const returnMoney = customerMoneyNum > totalAmount ? customerMoneyNum - totalAmount : 0;
 
     // Xử lý khi bấm nút Xuất hóa đơn
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 1. Validate tên khách hàng
         if (!form.customerName.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên khách hàng" }));
             return;
         }
 
-        // 2. Validate số điện thoại
         if (!form.customerPhone.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số điện thoại khách hàng" }));
             return;
         }
 
-        // 3. Validate số tiền khách đưa (chưa nhập)
         if (form.customerMoney === "") {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số tiền khách đưa" }));
             return;
         }
 
-        // Nếu qua hết các bước kiểm tra, thực hiện gọi API hoặc xử lý xuất hóa đơn ở đây
-        console.log("Dữ liệu hóa đơn chuẩn bị gửi:", form);
+        if (customerMoneyNum < totalAmount) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Số tiền khách đưa không đủ" }));
+            return;
+        }
+
+        // CHÚ Ý: Khi gửi API, bạn nên gửi số gốc (customerMoneyNum) thay vì chuỗi có dấu chấm
+        const dataToSubmit = {
+            ...form,
+            customerMoney: customerMoneyNum 
+        };
+        console.log("Dữ liệu hóa đơn chuẩn bị gửi:", dataToSubmit);
         
-        // Hiển thị thông báo thành công
         dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công!" }));
     };
 
     return (
         <form 
-            onSubmit={handleSubmit} 
-            className="bg-gwhite flex flex-col justify-between p-5 w-152.25 min-h-161.5 rounded-lg font-normal"
+            className="bg-gwhite flex flex-col justify-between p-5 w-152.25 min-h-161.5 rounded-lg font-normal gap-y-4"
         >
             <div className="flex flex-row justify-between">
                 <div className="text-sm text-tgray9">Thời gian bán hàng</div>
@@ -107,9 +125,9 @@ export function InvoiceForm() {
                     label="Số tiền khách đưa"
                     placeHolder="0" 
                     labelPosition="right"
-                    value={form.customerMoney}
-                    inputType="string"
-                    onChange={(e) => setField("customerMoney", e.target.value)}
+                    value={form.customerMoney} // Đang là "500.000"
+                    inputType="text" // Lưu ý: HTML dùng "text", nếu component MoneyInput của bạn bắt buộc prop tên là "string" thì bạn đổi lại nhé.
+                    onChange={handleMoneyChange} // Gọi hàm xử lý đã tạo ở trên
                 />
             </div>
             
@@ -120,7 +138,8 @@ export function InvoiceForm() {
             
             <button 
                 type="submit" 
-                className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer"
+                onClick={handleSubmit}
+                className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all"
             >
                 Xuất hóa đơn  
             </button>
