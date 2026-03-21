@@ -15,7 +15,7 @@ export function MoneyInput({ label, placeHolder, value, onChange, inputType="tex
     return (
         <div className={`w-full font-display ${isRight ? "flex items-center justify-between" : "flex flex-col gap-y-2.5"}`}>
             {label && (
-                <label className={`text-sm font-normal text-tgray9 ${isRight ? "flex justify-between" : ""}`}>
+                <label className={`text-sm text-tgray9 ${isRight ? "flex justify-between" : ""}`}>
                     {label}
                 </label>
             )}

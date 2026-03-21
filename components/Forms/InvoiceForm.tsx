@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { MoneyInput } from "../FormInputs/MoneyInput";
+import { RadioInput } from "../FormInputs/RadioInput";
 import { useDispatch } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -11,13 +12,21 @@ interface InvoiceFormState {
     customerName: string;
     customerPhone: string;
     customerMoney: string;
+    paymentMethod: string; 
 }
 
 const initialInvoiceFormState: InvoiceFormState = {
     customerName: "",
     customerPhone: "",
     customerMoney: "",
+    paymentMethod: "cash",
 };
+
+const paymentOptions = [
+    { id: 'cash', label: 'Tiền mặt' },
+    { id: 'transfer', label: 'Chuyển khoản' },
+    { id: 'debit', label: 'Ghi nợ' },
+];
 
 export function InvoiceForm() {
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
@@ -27,26 +36,42 @@ export function InvoiceForm() {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
+    const totalAmount = 120000;
+
     const handleMoneyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        // Lấy giá trị nhập vào và xóa tất cả ký tự không phải là số (bao gồm cả chữ và dấu chấm cũ)
         const rawValue = e.target.value.replace(/\D/g, "");
-        
-        // Định dạng lại thành chuỗi có dấu chấm (VD: "500.000")
         const formattedValue = rawValue ? Number(rawValue).toLocaleString("vi-VN") : "";
-    
         setField("customerMoney", formattedValue);
     };
 
-    // Giả lập tổng tiền
-    const totalAmount = 120000;
-    
-    // 2. Tính toán: Phải xóa dấu chấm (.) đi trước khi chuyển thành Number
-    const rawCustomerMoney = form.customerMoney.replace(/\./g, ""); // "500.000" -> "500000"
+    const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedMethod = e.target.value;
+        setField("paymentMethod", selectedMethod);
+
+        if (selectedMethod === "transfer") {
+            setField("customerMoney", totalAmount.toLocaleString("vi-VN"));
+        } else if (selectedMethod === "debit") {
+             // Tùy chọn: tự động xóa số tiền khách đưa khi chọn Ghi nợ để thu ngân tự nhập số tiền khách trả trước
+             setField("customerMoney", "");
+        }
+    };
+
+    // --- TÍNH TOÁN TIỀN THỐI / TIỀN NỢ ---
+    const rawCustomerMoney = form.customerMoney.replace(/\./g, ""); 
     const customerMoneyNum = Number(rawCustomerMoney);
     
+    const isDebit = form.paymentMethod === "debit";
+    
+    // Tiền thối (chỉ tính khi khách đưa dư)
     const returnMoney = customerMoneyNum > totalAmount ? customerMoneyNum - totalAmount : 0;
+    
+    // Tiền nợ (chỉ tính khi khách đưa thiếu)
+    const debtAmount = totalAmount > customerMoneyNum ? totalAmount - customerMoneyNum : 0;
 
-    // Xử lý khi bấm nút Xuất hóa đơn
+    // Xác định Text và Số tiền hiển thị dựa trên phương thức thanh toán
+    const displayLabel = isDebit ? "Số tiền còn nợ" : "Số tiền hoàn trả";
+    const displayAmount = isDebit ? debtAmount : returnMoney;
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -65,15 +90,10 @@ export function InvoiceForm() {
             return;
         }
 
-        if (customerMoneyNum < totalAmount) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Số tiền khách đưa không đủ" }));
-            return;
-        }
-
-        // CHÚ Ý: Khi gửi API, bạn nên gửi số gốc (customerMoneyNum) thay vì chuỗi có dấu chấm
         const dataToSubmit = {
             ...form,
-            customerMoney: customerMoneyNum 
+            customerMoney: customerMoneyNum,
+            debtAmount: isDebit ? debtAmount : 0 // Gửi kèm số tiền nợ lên server để lưu công nợ
         };
         console.log("Dữ liệu hóa đơn chuẩn bị gửi:", dataToSubmit);
         
@@ -115,25 +135,29 @@ export function InvoiceForm() {
                 <div className="text-sm font-semibold">{totalAmount.toLocaleString("vi-VN")} VND</div>
             </div>
             
-            <div className="flex flex-row justify-between items-center">
-                <div className="text-sm text-tgray9">Phương thức thanh toán</div>
-                <div className="text-sm">Tiền mặt</div>
-            </div>
+            <RadioInput
+                label="Phương thức thanh toán"
+                labelPosition="right"
+                options={paymentOptions}
+                value={form.paymentMethod}
+                onChange={handlePaymentMethodChange} 
+            />
             
             <div>
                 <MoneyInput
-                    label="Số tiền khách đưa"
+                    label= "Số tiền khách đưa"
                     placeHolder="0" 
                     labelPosition="right"
-                    value={form.customerMoney} // Đang là "500.000"
-                    inputType="text" // Lưu ý: HTML dùng "text", nếu component MoneyInput của bạn bắt buộc prop tên là "string" thì bạn đổi lại nhé.
-                    onChange={handleMoneyChange} // Gọi hàm xử lý đã tạo ở trên
+                    value={form.customerMoney} 
+                    inputType="text" 
+                    onChange={handleMoneyChange} 
                 />
             </div>
             
-            <div className="flex flex-row justify-between items-center mt-2 mb-4">
-                <div className="text-sm text-tgray9">Số tiền hoàn trả</div>
-                <div className="text-sm font-medium">{returnMoney.toLocaleString("vi-VN")} VND</div>
+            {/* --- CẬP NHẬT HIỂN THỊ LABEL VÀ AMOUNT --- */}
+            <div className="flex flex-row justify-between items-center">
+                <div className="text-sm text-tgray9">{displayLabel}</div>
+                <div className="text-sm font-semibold">{displayAmount.toLocaleString("vi-VN")} VND</div>
             </div>
             
             <button 
