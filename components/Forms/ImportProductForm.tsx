@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { CreateProductAsync, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
@@ -13,9 +13,10 @@ import { CreateProduct, Product } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
+import { addProductToOrder } from "@/utilities/productsOrderStore";
 
 interface FormState {
-    productID: string;
+    productId: string;
     productName: string;
     category: string;
     color: string;
@@ -29,7 +30,7 @@ interface FormState {
 const createInitialQuantities = (sizes: string[]) => Object.fromEntries(sizes.map(size => [size, 0]));
 
 const initialFormState : FormState = {
-    productID: "",
+    productId: "",
     productName: "",
     category: "",
     color: "",
@@ -43,6 +44,7 @@ const initialFormState : FormState = {
 export function ImportProductForm() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
+    const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
 
     const [form, setForm] = useState(initialFormState);
     const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -60,14 +62,26 @@ export function ImportProductForm() {
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    const queryClient = useQueryClient();
-
     // Tạo sản phẩm mới
     const createMutation = useMutation({
-        mutationFn: (productData: CreateProduct) => CreateProductAsync(productData),
+        mutationFn: ({ productData, productsOrderId } : { productData: CreateProduct, productsOrderId: string }) => CreateProductAsync(productData, productsOrderId),
 
-        onSuccess: (data: Product) => {
-            queryClient.setQueryData<Product[]>(["pendingProducts"], (oldData = []) => [...oldData, data]);
+        onSuccess: (data) => {
+            const newProduct: Product = {
+                id: data.id,
+                productId: data.productId,
+                productName: data.productName,
+                category: data.category,
+                color: data.color,
+                pattern: data.pattern,
+                sizeType: data.sizeType,
+                quantities: data.quantities,
+                createdBy: data.createdBy,
+                createdAt: data.createdAt,
+                status: data.status,
+                imageURL: data.imageURL
+            }
+            dispatch(addProductToOrder(newProduct));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
 
@@ -80,11 +94,11 @@ export function ImportProductForm() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if(!user.id) {
+        if(!user.id || !productsOrder?.id) {
             return;
         }
         
-        if(!form.productID) {
+        if(!form.productId) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập mã sản phẩm" }));
             return;
         }
@@ -115,7 +129,7 @@ export function ImportProductForm() {
         }
 
         const productData: CreateProduct = {
-            productID: form.productID,
+            productId: form.productId,
             productName: form.productName,
             category: form.category,
             color: form.color,
@@ -126,7 +140,7 @@ export function ImportProductForm() {
             image: form.imageFile
         };
 
-        createMutation.mutate(productData);
+        createMutation.mutate({ productData, productsOrderId: productsOrder.id });
     }
 
     // Xử lý khi người dùng chọn hình ảnh để tải lên
@@ -147,7 +161,7 @@ export function ImportProductForm() {
 
         setField("imageFile", files[0]);
 
-        imageSearchMutation.mutate(files[0]);
+        // imageSearchMutation.mutate(files[0]);
     }
 
     const openFilePicker = () => {
@@ -237,8 +251,8 @@ export function ImportProductForm() {
                     <TextInput 
                         label={"Mã sản phẩm"} 
                         placeHolder="" 
-                        value={form.productID}
-                        onChange={(e) => setField("productID" , e.target.value)}
+                        value={form.productId}
+                        onChange={(e) => setField("productId" , e.target.value)}
                     />
 
                     <TextInput 

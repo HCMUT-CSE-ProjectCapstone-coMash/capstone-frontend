@@ -4,7 +4,7 @@ export interface ProductQuantity {
 }
 
 export interface ProductBase {
-    productID: string,
+    productId: string,
     productName: string,
     category: string,
     color: string,

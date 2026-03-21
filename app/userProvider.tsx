@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { PageLoading } from "@/components/PageLoading";
+import { User } from "@/types/user";
 
 export function UserProvider({ children } : { children : React.ReactNode }) {
     const dispatch = useDispatch();
@@ -12,12 +13,19 @@ export function UserProvider({ children } : { children : React.ReactNode }) {
     const { isLoading, isError, data } = useQuery({
         queryKey: ["profile"],
         queryFn: profile,
-        retry: false,
+        retry: false
     });
 
     useEffect(() => {
         if (data) {
-            dispatch(setUser(data));
+            const user: User = {
+                id: data.id,
+                fullName: data.fullName,
+                email: data.email,
+                role: data.role,
+                createdAt: data.createdAt
+            }
+            dispatch(setUser(user));
         }
 
         if (isError) {

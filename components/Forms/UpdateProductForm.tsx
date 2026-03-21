@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { useDispatch } from "react-redux";
@@ -41,7 +41,7 @@ const mapProductToForm = (product: Product): FormState => {
     });
 
     return {
-        productID: product.productID,
+        productID: product.productId,
         productName: product.productName,
         category: product.category,
         color: product.color,
@@ -76,7 +76,6 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
     };
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const queryClient = useQueryClient();
 
     // TODO: Tạo mutation cập nhật sản phẩm, gọi API update và xử lý kết quả
     const updateMutation = useMutation({

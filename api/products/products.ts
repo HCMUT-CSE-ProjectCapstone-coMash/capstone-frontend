@@ -3,10 +3,10 @@ import { axiosClient } from "../axiosClient";
 import { fileToBase64 } from "@/utilities/image";
 
 // Nhân viên tạo sản phẩm mới 
-export async function CreateProductAsync(productData: CreateProduct) {
+export async function CreateProductAsync(productData: CreateProduct, productsOrderId: string) {
     const formData = new FormData();
 
-    formData.append("ProductID", productData.productID);
+    formData.append("ProductId", productData.productId);
     formData.append("ProductName", productData.productName);
     formData.append("Category", productData.category);
     formData.append("Color", productData.color);
@@ -24,7 +24,7 @@ export async function CreateProductAsync(productData: CreateProduct) {
     }
 
     const response = await axiosClient.post(
-        "/product/create",
+        "/product/create/" + productsOrderId,
         formData,
         { 
             withCredentials: true,
@@ -36,16 +36,6 @@ export async function CreateProductAsync(productData: CreateProduct) {
 
     return response.data;
 };
-
-// Lấy các sản phẩm có trạng thái pending của nhân viên đó
-export async function GetPendingProducts() {
-    const response = await axiosClient.get(
-        "/product/pending",
-        { withCredentials: true }
-    );
-
-    return response.data;
-}
 
 // Tìm kiếm sản phẩm tương tự bằng hình ảnh
 export async function SearchSimilarProduct(imageFile: File) {
