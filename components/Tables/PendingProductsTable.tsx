@@ -74,7 +74,7 @@ export function PendingProductsTable() {
 
             <div className="flex justify-end mt-5">
                 <button
-                    className={`py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer`}
+                    className={`py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
                     disabled={products.length === 0}
                 >
                     Yêu cầu duyệt

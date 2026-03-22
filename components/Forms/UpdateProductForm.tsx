@@ -16,7 +16,7 @@ import { AlertType } from "@/types/alert";
 import { updateProductInOrder } from "@/utilities/productsOrderStore";
 
 interface FormState {
-    productID: string;
+    productId: string;
     productName: string;
     category: string;
     color: string;
@@ -45,7 +45,7 @@ const mapProductToForm = (product: Product): FormState => {
     });
 
     return {
-        productID: product.productId,
+        productId: product.productId,
         productName: product.productName,
         category: product.category,
         color: product.color,
@@ -62,12 +62,16 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
     const dispatch = useDispatch();
 
     const [form, setForm] = useState<FormState>(() => mapProductToForm(editProduct));
+    const [initialForm, setInitialForm] = useState<FormState>(() => mapProductToForm(editProduct));
     const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
+    const isUnchanged = JSON.stringify(form) === JSON.stringify(initialForm);
+
     useEffect(() => {
         setForm(mapProductToForm(editProduct));
+        setInitialForm(mapProductToForm(editProduct));
     }, [editProduct]);
 
     // Tuỳ theo loại size đang chọn, hiển thị input số lượng tương ứng (UI)
@@ -81,7 +85,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-    // TODO: Tạo mutation cập nhật sản phẩm, gọi API update và xử lý kết quả
+    // Tạo mutation cập nhật sản phẩm, gọi API update và xử lý kết quả
     const updateMutation = useMutation({
         mutationFn: ({ productId, updateData }: { productId: string, updateData: UpdateProduct }) => PatchProductInProductsOrder(productId, updateData),
 
@@ -116,14 +120,40 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+
+        if(!form.productId) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập mã sản phẩm" }));
+            return;
+        }
+
+        if(!form.productName) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
+            return;
+        }
+
+        if(!form.category) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui chọn phân loại" }));
+            return;
+        }
+
+        if(!form.color) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn màu" }));
+            return;
+        }
+
         const sizeQuantities = form.isNumberSize ? form.numberQuantities : form.letterQuantities;
 
         const formattedQuantities = Object.entries(sizeQuantities)
             .filter(([, qty]) => qty > 0)
             .map(([size, qty]) => ({ size, quantities: qty }));
 
+        if (formattedQuantities.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số lượng cho ít nhất một size" }));
+            return;
+        }
+
         const updateData: UpdateProduct = {
-            productId: form.productID,
+            productId: form.productId,
             productName: form.productName,
             category: form.category,
             color: form.color,
@@ -229,8 +259,8 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     <TextInput
                         label={"Mã sản phẩm"}
                         placeHolder=""
-                        value={form.productID}
-                        onChange={(e) => setField("productID", e.target.value)}
+                        value={form.productId}
+                        onChange={(e) => setField("productId", e.target.value)}
                     />
 
                     <TextInput
@@ -275,7 +305,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
                         <button
                             className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
-                                ${updateMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                                ${updateMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                             disabled={updateMutation.isPending}
                         >
                             {updateMutation.isPending ? "Đang cập nhật..." : "Lưu thay đổi"}
