@@ -1,4 +1,4 @@
-import { CreateProduct } from "@/types/product";
+import { CreateProduct, UpdateProduct } from "@/types/product";
 import { axiosClient } from "../axiosClient";
 import { fileToBase64 } from "@/utilities/image";
 
@@ -46,6 +46,33 @@ export async function SearchSimilarProduct(imageFile: File) {
         { ImageBase64: base64Image },
         { withCredentials: true }
     );
+
+    return response.data;
+}
+
+// Nhân viên cập nhật thông tin sản phẩm trong đơn hàng
+export async function PatchProductInProductsOrder(productId: string, updateData: UpdateProduct) {
+    const formData = new FormData();
+
+    if (updateData.productId) formData.append("ProductId", updateData.productId);
+    if (updateData.productName) formData.append("ProductName", updateData.productName);
+    if (updateData.category) formData.append("Category", updateData.category);
+    if (updateData.color) formData.append("Color", updateData.color);
+    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
+
+    if (updateData.quantities) {
+        updateData.quantities.forEach((quantity, index) => {
+            formData.append(`Quantities[${index}].Size`, quantity.size);
+            formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+        })
+    }
+
+    const response = await axiosClient.patch(
+        "/product/patch/" + productId,
+        updateData,
+        { withCredentials: true }
+    )
 
     return response.data;
 }

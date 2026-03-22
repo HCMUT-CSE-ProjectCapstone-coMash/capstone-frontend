@@ -1,6 +1,6 @@
 "use client";
 
-import { Product } from "@/types/product";
+import { Product, UpdateProduct } from "@/types/product";
 import { useEffect, useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
@@ -10,6 +10,10 @@ import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { useDispatch } from "react-redux";
 import { clearEditingProduct } from "@/utilities/productEditStore";
+import { PatchProductInProductsOrder } from "@/api/products/products";
+import { addAlert } from "@/utilities/alertStore";
+import { AlertType } from "@/types/alert";
+import { updateProductInOrder } from "@/utilities/productsOrderStore";
 
 interface FormState {
     productID: string;
@@ -79,7 +83,32 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
     // TODO: Tạo mutation cập nhật sản phẩm, gọi API update và xử lý kết quả
     const updateMutation = useMutation({
+        mutationFn: ({ productId, updateData }: { productId: string, updateData: UpdateProduct }) => PatchProductInProductsOrder(productId, updateData),
 
+        onSuccess: (data) => {
+            const newProduct: Product = {
+                id: data.id,
+                productId: data.productId,
+                productName: data.productName,
+                category: data.category,
+                color: data.color,
+                pattern: data.pattern,
+                sizeType: data.sizeType,
+                quantities: data.quantities,
+                createdBy: data.createdBy,
+                createdAt: data.createdAt,
+                status: data.status,
+                imageURL: data.imageURL
+            }
+
+            dispatch(updateProductInOrder(newProduct));
+
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật sản phẩm thất bại"}));
+        }
     });
 
 
@@ -87,6 +116,23 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const sizeQuantities = form.isNumberSize ? form.numberQuantities : form.letterQuantities;
+
+        const formattedQuantities = Object.entries(sizeQuantities)
+            .filter(([, qty]) => qty > 0)
+            .map(([size, qty]) => ({ size, quantities: qty }));
+
+        const updateData: UpdateProduct = {
+            productId: form.productID,
+            productName: form.productName,
+            category: form.category,
+            color: form.color,
+            pattern: form.pattern,
+            sizeType: form.isNumberSize ? "Number" : "Letter",
+            quantities: formattedQuantities
+        };
+
+        updateMutation.mutate({ productId: editProduct.id, updateData });
     }
     
     // Xử lý file ảnh: lưu file vào state và tạo URL preview

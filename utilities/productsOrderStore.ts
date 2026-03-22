@@ -24,11 +24,20 @@ const productsOrderSlice = createSlice({
             }
         },
 
+        updateProductInOrder: (state, action: PayloadAction<Product>) => {
+            if (state.productsOrder) {
+                const index = state.productsOrder.products.findIndex(p => p.id === action.payload.id);
+                if (index !== -1) {
+                    state.productsOrder.products[index] = action.payload;
+                }
+            }
+        },
+
         clearProductsOrder: (state) => {
             state.productsOrder = null;
         }
     }
 });
 
-export const { setProductsOrder, addProductToOrder, clearProductsOrder } = productsOrderSlice.actions;
+export const { setProductsOrder, addProductToOrder, updateProductInOrder, clearProductsOrder } = productsOrderSlice.actions;
 export default productsOrderSlice.reducer;

@@ -3,7 +3,7 @@ export interface ProductQuantity {
     quantities: number
 }
 
-export interface ProductBase {
+export interface CreateProduct {
     productId: string,
     productName: string,
     category: string,
@@ -12,15 +12,30 @@ export interface ProductBase {
     sizeType: "Letter" | "Number",
     quantities: ProductQuantity[],
     createdBy: string,
-}
-
-export interface CreateProduct extends ProductBase {
     image: File | null
 }
 
-export interface Product extends ProductBase {
+export interface Product {
     id: string,
+    productId: string,
+    productName: string,
+    category: string,
+    color: string,
+    pattern: string,
+    sizeType: "Letter" | "Number",
+    quantities: ProductQuantity[],
+    createdBy: string,
     createdAt: string,
     status: "Pending" | "Approved" | "Sending",
     imageURL: string
+}
+
+export interface UpdateProduct {
+    productId?: string,
+    productName?: string,
+    category?: string,
+    color?: string,
+    pattern?: string,
+    sizeType?: "Letter" | "Number",
+    quantities?: ProductQuantity[],
 }
