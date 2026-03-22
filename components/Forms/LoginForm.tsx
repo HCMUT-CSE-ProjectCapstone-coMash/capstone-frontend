@@ -10,7 +10,12 @@ import { AlertType } from "@/types/alert";
 import { setUser } from "@/utilities/userStore";
 import { User } from "@/types/user";
 import { useRouter } from "next/navigation";
-import { HomePageRoute } from "@/const/routes";
+import { EmployeeHomePageRoute, LoginPageRoute, OwnerHomePageRoute } from "@/const/routes";
+
+const roleHomeMap: Record<string, string> = {
+    employee: EmployeeHomePageRoute,
+    owner: OwnerHomePageRoute,
+};
 
 export function LoginForm() {
     const [userName, setUserName] = useState<string>("");
@@ -26,7 +31,8 @@ export function LoginForm() {
             dispatch(setUser(data));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng nhập thành công" }));
 
-            router.replace(HomePageRoute);
+            const homeRoute = roleHomeMap[data.role!] ?? LoginPageRoute;
+            router.replace(homeRoute);
             router.refresh();
         },
 

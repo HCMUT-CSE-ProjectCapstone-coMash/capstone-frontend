@@ -1,10 +1,22 @@
 // Auth routes
 export const LoginPageRoute = "/dang-nhap";
 
-// App routes
-export const HomePageRoute = "/";
-export const ProductPageRoute = "/san-pham";
-export const ImportPageRoute = "/nhap-hang";
-export const SellPageRoute = "/ban-hang";
-export const SalePageRoute = "/khuyen-mai";
-export const OrderPageRoute = "/don-hang";
+// Role base routes
+export const EmployeeBaseRoute = "/nhan-vien";
+export const OwnerBaseRoute = "/chu-cua-hang";
+
+// Employee routes
+export const EmployeeHomePageRoute = EmployeeBaseRoute;
+export const EmployeeProductPageRoute = `${EmployeeBaseRoute}/san-pham`;
+export const EmployeeImportPageRoute = `${EmployeeBaseRoute}/nhap-hang`;
+export const EmployeeSellPageRoute = `${EmployeeBaseRoute}/ban-hang`;
+export const EmployeeSalePageRoute = `${EmployeeBaseRoute}/khuyen-mai`;
+export const EmployeeOrderPageRoute = `${EmployeeBaseRoute}/don-hang`;
+
+// Owner routes
+export const OwnerHomePageRoute = OwnerBaseRoute;
+export const OwnerProductPageRoute = `${OwnerBaseRoute}/san-pham`;
+export const OwnerImportPageRoute = `${OwnerBaseRoute}/nhap-hang`;
+export const OwnerSellPageRoute = `${OwnerBaseRoute}/ban-hang`;
+export const OwnerSalePageRoute = `${OwnerBaseRoute}/khuyen-mai`;
+export const OwnerOrderPageRoute = `${OwnerBaseRoute}/don-hang`;

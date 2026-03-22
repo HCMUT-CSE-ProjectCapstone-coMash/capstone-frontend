@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export function NavbarItem({ item } : { item : NavItem}) {
     const pathname = usePathname();
-    const isPathActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+    const isPathActive = pathname === item.href;
 
     return (
         <Link 

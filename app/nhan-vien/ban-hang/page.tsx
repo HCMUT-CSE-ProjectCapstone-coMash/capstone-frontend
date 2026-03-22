@@ -1,4 +1,5 @@
-import { InvoiceForm } from "@/components/Forms/InvoiceForm"
+import { InvoiceForm } from "@/components/Forms/InvoiceForm";
+
 export default function SellPage() {
 
     return (

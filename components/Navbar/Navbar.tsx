@@ -1,21 +1,41 @@
 import { NavItem } from "@/types/UIType";
 import { NavbarItem } from "./NavbarItem";
-import { HomePageRoute, ImportPageRoute, OrderPageRoute, ProductPageRoute, SalePageRoute, SellPageRoute } from "@/const/routes";
+import {
+    EmployeeHomePageRoute, EmployeeProductPageRoute, EmployeeImportPageRoute,
+    EmployeeSellPageRoute, EmployeeSalePageRoute, EmployeeOrderPageRoute,
+    OwnerHomePageRoute, OwnerProductPageRoute, OwnerImportPageRoute,
+    OwnerSellPageRoute, OwnerSalePageRoute, OwnerOrderPageRoute,
+} from "@/const/routes";
 
-const navbarItems : NavItem[] = [
-    { label: "Nhà chính", href: HomePageRoute },
-    { label: "Sản phẩm", href: ProductPageRoute },
-    { label: "Nhập hàng", href: ImportPageRoute },
-    { label: "Bán hàng", href: SellPageRoute },
-    { label: "Khuyến mãi", href: SalePageRoute },
-    { label: "Đơn hàng", href: OrderPageRoute },
+const employeeNavItems: NavItem[] = [
+    { label: "Nhà chính", href: EmployeeHomePageRoute },
+    { label: "Sản phẩm", href: EmployeeProductPageRoute },
+    { label: "Nhập hàng", href: EmployeeImportPageRoute },
+    { label: "Bán hàng", href: EmployeeSellPageRoute },
+    { label: "Khuyến mãi", href: EmployeeSalePageRoute },
+    { label: "Đơn hàng", href: EmployeeOrderPageRoute },
 ];
+
+const ownerNavItems: NavItem[] = [
+    { label: "Nhà chính", href: OwnerHomePageRoute },
+    { label: "Sản phẩm", href: OwnerProductPageRoute },
+    { label: "Nhập hàng", href: OwnerImportPageRoute },
+    { label: "Bán hàng", href: OwnerSellPageRoute },
+    { label: "Khuyến mãi", href: OwnerSalePageRoute },
+    { label: "Đơn hàng", href: OwnerOrderPageRoute },
+];
+
+const navItemsMap: Record<string, NavItem[]> = {
+    employee: employeeNavItems,
+    owner: ownerNavItems,
+};
 
 interface NavbarProps {
     role?: string;
 }
 
 export function Navbar({ role }: NavbarProps) {
+    const navbarItems = (role ? navItemsMap[role] : null) ?? [];
     
     return (
         <div className="flex items-center gap-x-10">
