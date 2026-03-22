@@ -283,7 +283,7 @@ export function ImportProductForm() {
                                 placeHolder=""
                                 value={quantities[size]}
                                 labelPosition="left"
-                                inputType="number"
+                                inputType="text"
                                 onChange={(e) => handleQuantityChange(size, Number(e.target.value))}
                             />
                         ))}
