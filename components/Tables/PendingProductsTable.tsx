@@ -10,15 +10,18 @@ import { setEditingProduct } from "@/utilities/productEditStore";
 import { DeleteProductFromProductsOrders, FetchOrCreateOrder } from "@/api/productsOrder/productsOrder";
 import { RootState } from "@/utilities/store";
 import { removeProductFromOrder, setProductsOrder } from "@/utilities/productsOrderStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ProductsOrder } from "@/types/productsOrder";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { ProductsOrderForm } from "../Forms/ProductsOrderForm";
 
 export function PendingProductsTable() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
+    const [isFormSubmit, setFormSubmit] = useState<boolean>(false);
 
     // Lấy dữ liệu sản phẩm đang chờ duyệt
     const { data , isLoading } = useQuery({
@@ -104,10 +107,18 @@ export function PendingProductsTable() {
                 <button
                     className={`py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
                     disabled={products.length === 0}
+                    onClick={() => setFormSubmit(true)}
                 >
                     Yêu cầu duyệt
                 </button>
             </div>
+
+            <LayoutModal
+                isOpen={isFormSubmit}
+                onClose={() => setFormSubmit(false)}
+            >
+                <ProductsOrderForm/>
+            </LayoutModal>
         </>
     );
 }
