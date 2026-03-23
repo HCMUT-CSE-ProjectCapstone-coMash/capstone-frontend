@@ -108,6 +108,8 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             dispatch(updateProductInOrder(newProduct));
 
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
+
+            setInitialForm(form);
         },
 
         onError: () => {
@@ -289,7 +291,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                                 placeHolder=""
                                 value={quantities[size]}
                                 labelPosition="left"
-                                inputType="number"
+                                inputType="text"
                                 onChange={(e) => handleQuantityChange(size, Number(e.target.value))}
                             />
                         ))}

@@ -33,11 +33,19 @@ const productsOrderSlice = createSlice({
             }
         },
 
+        removeProductFromOrder: (state, action: PayloadAction<string>) => {
+            if (state.productsOrder) {
+                state.productsOrder.products = state.productsOrder.products.filter(
+                    p => p.id !== action.payload
+                );
+            }
+        },
+
         clearProductsOrder: (state) => {
             state.productsOrder = null;
         }
     }
 });
 
-export const { setProductsOrder, addProductToOrder, updateProductInOrder, clearProductsOrder } = productsOrderSlice.actions;
+export const { setProductsOrder, addProductToOrder, updateProductInOrder, removeProductFromOrder, clearProductsOrder } = productsOrderSlice.actions;
 export default productsOrderSlice.reducer;

@@ -83,6 +83,8 @@ export function ImportProductForm() {
             }
             dispatch(addProductToOrder(newProduct));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
+
+            setForm(initialFormState);
         },
 
         onError: () => {

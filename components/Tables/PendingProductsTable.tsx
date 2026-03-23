@@ -3,15 +3,17 @@
 import { Product } from "@/types/product";
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { useQuery } from "@tanstack/react-query";
-import { PencilIcon } from "@/public/assets/Icons";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { PencilIcon, TrashIcon } from "@/public/assets/Icons";
 import { useDispatch, useSelector } from "react-redux";
 import { setEditingProduct } from "@/utilities/productEditStore";
-import { FetchOrCreateOrder } from "@/api/productsOrder/productsOrder";
+import { DeleteProductFromProductsOrders, FetchOrCreateOrder } from "@/api/productsOrder/productsOrder";
 import { RootState } from "@/utilities/store";
-import { setProductsOrder } from "@/utilities/productsOrderStore";
+import { removeProductFromOrder, setProductsOrder } from "@/utilities/productsOrderStore";
 import { useEffect } from "react";
 import { ProductsOrder } from "@/types/productsOrder";
+import { addAlert } from "@/utilities/alertStore";
+import { AlertType } from "@/types/alert";
 
 export function PendingProductsTable() {
     const dispatch = useDispatch();
@@ -44,22 +46,48 @@ export function PendingProductsTable() {
         }
     }, [data, dispatch]);
 
+    const deleteMutation = useMutation({
+        mutationFn: ({ orderId, productId } : { orderId: string, productId: string}) => DeleteProductFromProductsOrders(orderId, productId),
+
+        onSuccess: (data) => {
+            dispatch(removeProductFromOrder(data.productId));
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xoá sản phẩm thành công" }));
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Xoá sản phẩm thất bại" }));
+        }
+    });
+
     const products = productsOrder?.products ?? [];
 
     const columns: Column<Product>[] = [
-        { title: "Mã sản phẩm", key: "productID", render: (row) => <span>{row.productId}</span> },
+        { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
         { title: "Tên sản phẩm", key: "productName", render: (row) => <span>{row.productName}</span> },
-        { title: "Phân loại", key: "category", render: (row) => <span>{row.category}</span> },
-        { title: "Màu sắc", key: "color", render: (row) => <span>{row.color}</span> },
-        { title: "Họa tiết", key: "pattern", render: (row) => <span>{row.pattern ? row.pattern : "Không"}</span> },
-        { title: "", key: "edit", render: (row) => (
+        { title: "Số lượng", key: "quantities", render: (row) => (
+            <span>{row.quantities.reduce((sum, q) => sum + q.quantities, 0)}</span>
+        )},
+        { title: "Chỉnh sửa", key: "edit", render: (row) => (
             <button 
                 className="cursor-pointer"
                 onClick={() => {
                     dispatch(setEditingProduct(row));
                 }}
             >
-                <PencilIcon width={24} height={24} className={"text-pink"}/>
+                <PencilIcon width={24} height={24} className={""}/>
+            </button>
+        )},
+        { title: "Xoá", key: "delete", render: (row) => (
+            <button
+                className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={deleteMutation.isPending}
+                onClick={() => {
+                    if (productsOrder?.id) {
+                        deleteMutation.mutate({ orderId: productsOrder.id, productId: row.id });
+                    }
+                }}
+            >
+                <TrashIcon width={24} height={24} className={"text-red-500"}/>
             </button>
         )}
     ];
