@@ -103,7 +103,7 @@ export function ProductsOrderForm() {
 
                     <button 
                         className="py-2 px-3 rounded-lg text-white bg-pink text-sm mt-5 cursor-pointer"
-                        onClick={() => { router.push(EmployeeBaseRoute); router.refresh(); }}
+                        onClick={() => { router.replace(EmployeeBaseRoute); router.refresh(); }}
                     >
                         Về trang chủ
                     </button>

@@ -2,18 +2,19 @@
 
 import { NavItem } from "@/types/UIType";
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function NavbarItem({ item } : { item : NavItem}) {
+    const router = useRouter();
     const pathname = usePathname();
     const isPathActive = pathname === item.href;
 
     return (
-        <Link 
+        <button 
             className={`${isPathActive ? "text-black font-semibold" : "text-gray-500"} cursor-pointer`}
-            href={item.href}
+            onClick={() => { router.replace(item.href); router.refresh(); }}
         >
             {item.label}
-        </Link>
+        </button>
     )
 }
