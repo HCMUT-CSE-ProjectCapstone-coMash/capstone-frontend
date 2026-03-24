@@ -5,11 +5,14 @@ interface TextInputProps {
     placeHolder: string,
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void,
     inputType?: "text" | "number" | "password" | "textarea",
-    labelPosition?: "left" | "top"
+    labelPosition?: "left" | "top",
+    isError?: boolean
 }
 
-export function TextInput({ label, placeHolder, value, onChange, inputType="text", labelPosition="top" } : TextInputProps) {
+export function TextInput({ label, placeHolder, value, onChange, inputType="text", labelPosition="top", isError } : TextInputProps) {
     const isLeft = labelPosition === "left";
+
+    const borderClass = isError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-tgray5 focus:border-purple focus:ring-purple";
     
     return (
         <div className={`w-full font-display ${isLeft ? "flex items-center gap-x-4" : "flex flex-col gap-y-2.5"}`}>
@@ -20,15 +23,15 @@ export function TextInput({ label, placeHolder, value, onChange, inputType="text
                     placeholder={placeHolder}
                     value={value}
                     onChange={onChange}
-                    className="w-full min-h-20 p-2.5 resize-y rounded-lg border-[0.5px] border-solid border-tgray5 focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple transition-colors caret-purple"
+                    className={`w-full min-h-20 p-2.5 resize-y rounded-lg border-[0.5px] border-solid focus:outline-none focus:ring-1 transition-colors caret-purple ${borderClass}`}
                 />
             ) : (
                 <input
                     type={inputType} 
                     placeholder={placeHolder}
                     value={value} 
-                    onChange={onChange} 
-                    className="w-full h-12 px-2.5 rounded-lg border-[0.5px] border-solid border-tgray5 focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple transition-colors caret-purple"
+                    onChange={onChange}
+                    className={`w-full h-12 px-2.5 rounded-lg border-[0.5px] border-solid focus:outline-none focus:ring-1 transition-colors caret-purple ${borderClass}`}
                 />
             )}
 

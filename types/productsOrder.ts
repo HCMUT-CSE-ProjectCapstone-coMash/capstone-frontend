@@ -9,3 +9,9 @@ export interface ProductsOrder {
     orderStatus: "Pending" | "Approved" | "Sending",
     products: Product[]
 } 
+
+export interface UpdateProductsOrder {
+    orderName: string,
+    orderDescription: string,
+    orderStatus: "Pending" | "Approved" | "Sending",
+}
