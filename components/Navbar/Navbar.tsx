@@ -4,7 +4,7 @@ import {
     EmployeeHomePageRoute, EmployeeProductPageRoute, EmployeeImportPageRoute,
     EmployeeSellPageRoute, EmployeeSalePageRoute, EmployeeOrderPageRoute,
     OwnerHomePageRoute, OwnerProductPageRoute, OwnerEmployeePageRoute, OwnerImportPageRoute,
-    OwnerSellPageRoute, OwnerSalePageRoute, OwnerOrderPageRoute,
+    OwnerSellPageRoute, OwnerSalePageRoute, OwnerOrderPageRoute, OwnerCustomerPageRoute,
 } from "@/const/routes";
 
 const employeeNavItems: NavItem[] = [
@@ -24,6 +24,7 @@ const ownerNavItems: NavItem[] = [
     { label: "Bán hàng", href: OwnerSellPageRoute },
     { label: "Khuyến mãi", href: OwnerSalePageRoute },
     { label: "Đơn hàng", href: OwnerOrderPageRoute },
+    { label: "Khách hàng", href: OwnerCustomerPageRoute },
 ];
 
 const navItemsMap: Record<string, NavItem[]> = {
