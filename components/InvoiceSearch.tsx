@@ -37,8 +37,8 @@ export function InvoiceSearch() {
 
             {/* Khung gợi ý hiển thị khi showDropdown là true và có dữ liệu nhập vào */}
             {showDropdown && searchValue && (
-                <div className="absolute w-full mt-1 bg-white border border-black z-10 py-4 shadow-sm">
-                    <p className="text-center text-base text-black font-medium">
+                <div className="absolute w-full bg-white border border-black z-10 py-4 shadow-sm">
+                    <p className="text-center text-sm text-black">
                         Không có dữ liệu
                     </p>
                 </div>
