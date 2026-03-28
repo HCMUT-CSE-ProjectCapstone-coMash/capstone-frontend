@@ -10,7 +10,7 @@ export default function SellPage() {
             
             {/* Header: Tiêu đề và Thanh tìm kiếm */}
             <div className="flex justify-between items-center mb-6">
-                <p className="text-purple text-2xl font-medium">Bán hàng</p>
+                <p className="text-purple text-3xl font-medium">Bán hàng</p>
                 <InvoiceSearch/>
             </div>
             <div className="flex flex-row gap-16">
