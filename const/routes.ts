@@ -16,6 +16,7 @@ export const EmployeeOrderPageRoute = `${EmployeeBaseRoute}/don-hang`;
 // Owner routes
 export const OwnerHomePageRoute = OwnerBaseRoute;
 export const OwnerProductPageRoute = `${OwnerBaseRoute}/san-pham`;
+export const OwnerEmployeePageRoute = `${OwnerBaseRoute}/nhan-vien`;
 export const OwnerImportPageRoute = `${OwnerBaseRoute}/nhap-hang`;
 export const OwnerSellPageRoute = `${OwnerBaseRoute}/ban-hang`;
 export const OwnerSalePageRoute = `${OwnerBaseRoute}/khuyen-mai`;
