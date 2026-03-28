@@ -1,6 +1,6 @@
 import { InvoiceForm } from "@/components/Forms/InvoiceForm";
 import { SellProductsTable } from "@/components/Tables/SellProductsTable";
-import { InvoiceSearch } from "@/components/InvoiceSearch";
+import { InvoiceSearch } from "@/components/SearchBar/InvoiceSearch";
 
 
 export default function SellPage() {
