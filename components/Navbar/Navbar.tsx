@@ -3,7 +3,7 @@ import { NavbarItem } from "./NavbarItem";
 import {
     EmployeeHomePageRoute, EmployeeProductPageRoute, EmployeeImportPageRoute,
     EmployeeSellPageRoute, EmployeeSalePageRoute, EmployeeOrderPageRoute,
-    OwnerHomePageRoute, OwnerProductPageRoute, OwnerEmployeePageRoute, OwnerImportPageRoute,
+    OwnerHomePageRoute, OwnerProductPageRoute, OwnerEmployeeManagementPageRoute, OwnerImportPageRoute,
     OwnerSellPageRoute, OwnerSalePageRoute, OwnerOrderPageRoute, OwnerCustomerPageRoute,
 } from "@/const/routes";
 
@@ -19,7 +19,7 @@ const employeeNavItems: NavItem[] = [
 const ownerNavItems: NavItem[] = [
     { label: "Nhà chính", href: OwnerHomePageRoute },
     { label: "Sản phẩm", href: OwnerProductPageRoute },
-    { label: "Nhân viên", href: OwnerEmployeePageRoute },
+    { label: "Nhân viên", href: OwnerEmployeeManagementPageRoute },
     { label: "Nhập hàng", href: OwnerImportPageRoute },
     { label: "Bán hàng", href: OwnerSellPageRoute },
     { label: "Khuyến mãi", href: OwnerSalePageRoute },
