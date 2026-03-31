@@ -11,7 +11,7 @@ export function NavbarItem({ item } : { item : NavItem}) {
 
     return (
         <button 
-            className={`${isPathActive ? "text-black font-semibold" : "text-gray-500"} cursor-pointer`}
+            className={`${isPathActive ? "text-black font-semibold" : "text-gray-500"} text-lg cursor-pointer`}
             onClick={() => { router.replace(item.href); router.refresh(); }}
         >
             {item.label}
