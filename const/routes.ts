@@ -1,3 +1,5 @@
+export const DefaultPageRoute = "/";
+
 // Auth routes
 export const LoginPageRoute = "/dang-nhap";
 
