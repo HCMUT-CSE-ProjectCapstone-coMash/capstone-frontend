@@ -1,49 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
 import { GetProductsOrders, PatchOrderAndStatus } from "@/api/productsOrder/productsOrder";
 import { ProductsOrder } from "@/types/productsOrder";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const statusLabel = (status: ProductsOrder["orderStatus"]): string =>
-    status === "Pending" ? "Chưa duyệt" : "Đã duyệt";
+    status === "Sending" ? "Chưa duyệt" : "Đã duyệt";
 
 export function PendingListTable() {
-    const [pendingLists, setPendingLists] = useState<ProductsOrder[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const loadOrders = async () => {
-            try {
-                const orders = await GetProductsOrders();
-                setPendingLists(orders);
-            } catch (err) {
-                setError("Không thể tải danh sách duyệt");
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    const { data: pendingLists = [], isLoading } = useQuery<ProductsOrder[]>({
+        queryKey: ["productsOrders"],
+        queryFn: GetProductsOrders,
+    });
 
-        loadOrders();
-    }, []);
-
-    const handleApprove = async (id: string) => {
-        try {
-            await PatchOrderAndStatus(id, { orderStatus: "Approved" });
-            setPendingLists((current) =>
-                current.map((item) =>
-                    item.id === id ? { ...item, orderStatus: "Approved" } : item
-                )
+    const approveMutation = useMutation({
+        mutationFn: (orderId: string) => PatchOrderAndStatus(orderId, { orderStatus: "Approved" }),
+        onSuccess: (_data, orderId) => {
+            queryClient.setQueryData<ProductsOrder[]>(["productsOrders"], (current) =>
+                current?.map((item) =>
+                    item.id === orderId ? { ...item, orderStatus: "Approved" } : item
+                ) ?? []
             );
-        } catch (err) {
-            setError("Cập nhật trạng thái duyệt thất bại");
-        }
+        },
+        onError: () => setError("Cập nhật trạng thái duyệt thất bại"),
+    });
+
+    const handleApprove = (id: string) => {
+        approveMutation.mutate(id);
     };
 
     const handleDelete = (id: string) => {
-        setPendingLists((current) => current.filter((item) => item.id !== id));
+        queryClient.setQueryData<ProductsOrder[]>(["productsOrders"], (current) =>
+            current?.filter((item) => item.id !== id) ?? []
+        );
     };
 
     const columns: Column<ProductsOrder>[] = [
@@ -55,7 +50,7 @@ export function PendingListTable() {
             title: "",
             key: "actions",
             render: (row) =>
-                row.orderStatus === "Pending" ? (
+                row.orderStatus === "Sending" ? (
                     <div className="flex flex-wrap justify-center gap-2">
                         <button
                             type="button"

@@ -3,7 +3,7 @@ import { Product } from "./product";
 export interface ProductsOrder {
     id: string,
     createdBy: string,
-    createdByName: string,
+    createdByName?: string,
     createdAt: string,
     orderName: string,
     orderDescription: string,
