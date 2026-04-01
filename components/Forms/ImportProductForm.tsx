@@ -5,7 +5,7 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation } from "@tanstack/react-query";
-import { CreateProductAsync, SearchSimilarProduct } from "@/api/products/products";
+import { AnalyzeImage, CreateProductAsync, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -158,12 +158,30 @@ export function ImportProductForm() {
         }
     });
 
+    // Xử lý khi người dùng chọn hình ảnh để phân tích và tự động điền thông tin sản phẩm
+    const analyzeImageMutation = useMutation({
+        mutationFn: (imageFile: File) => AnalyzeImage(imageFile),
+
+        onSuccess: (data) => {
+            setField("productId", data.productId);
+            setField("productName", data.productName);
+            setField("category", data.category);
+            setField("color", data.color);
+            setField("pattern", data.pattern);
+        },
+
+        onError: () => {
+
+        }
+    });
+
     const handleFiles = (files: FileList | null) => {
         if (!files || files.length === 0) return;
 
         setField("imageFile", files[0]);
 
         // imageSearchMutation.mutate(files[0]);
+        // analyzeImageMutation.mutate(files[0]);
     }
 
     const openFilePicker = () => {
