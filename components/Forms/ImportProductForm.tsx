@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
-import { useMutation } from "@tanstack/react-query";
-import { AnalyzeImage, CreateProductAsync, SearchSimilarProduct } from "@/api/products/products";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { AnalyzeImage, CreateProductAsync, FetchProductByName, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -14,6 +14,9 @@ import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { addProductToOrder } from "@/utilities/productsOrderStore";
+import { SearchInput } from "../FormInputs/SearchInput";
+import { useDebounce } from "@/hooks/useDebounce";
+import { setEditingProduct } from "@/utilities/productEditStore";
 
 interface FormState {
     productId: string;
@@ -192,6 +195,21 @@ export function ImportProductForm() {
         setField("imageFile", null);
     };
 
+    // 
+    const debouncedName = useDebounce(form.productName, 500);
+
+    const { data: products = [] } = useQuery({
+        queryKey: ["products", debouncedName],
+        queryFn: () => FetchProductByName(debouncedName),
+        enabled: debouncedName.length > 2,
+    });
+
+    const suggestions = products.map((p: Product) => ({
+        label: p.productName,
+        value: p.productName,
+        data: p
+    }));
+
     return (
         <div className="flex gap-[10vw]">
             <div>
@@ -275,11 +293,19 @@ export function ImportProductForm() {
                         onChange={(e) => setField("productId" , e.target.value)}
                     />
 
-                    <TextInput 
-                        label={"Tên sản phẩm"} 
-                        placeHolder="" 
+                    <SearchInput<Product>
+                        label={"Tên sản phẩm"}
+                        placeHolder=""
                         value={form.productName}
-                        onChange={(e) => setField("productName" ,e.target.value)}
+                        onChange={(e) => setField("productName", e.target.value)}
+                        suggestions={suggestions}
+                        onSuggestionClick={(item) => { dispatch(setEditingProduct(item.data)) }}
+                        renderItem={(item) => (
+                            <div className="flex items-center gap-3">
+                                <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover"/>
+                                <span>{item.label}</span>
+                            </div>
+                        )}
                     />
 
                     <div className="flex items-center justify-between gap-5">

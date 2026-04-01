@@ -88,3 +88,12 @@ export async function PatchProductInProductsOrder(productId: string, updateData:
 
     return response.data;
 }
+
+export async function FetchProductByName(productName: string) {
+    const response = await axiosClient.get(
+        "/product/fetch-by-name/" + productName,
+        { withCredentials : true }
+    );
+
+    return response.data;
+}
