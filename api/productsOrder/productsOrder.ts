@@ -11,11 +11,6 @@ export async function FetchOrCreateOrder(userId: string) {
     return response.data;
 }
 
-export async function GetProductsOrders() {
-    const response = await axiosClient.get("products-orders", { withCredentials: true });
-    return response.data;
-}
-
 export async function DeleteProductFromProductsOrders(orderId: string, productId: string) {
     const response = await axiosClient.delete(
         "products-orders/delete/" + orderId + "/" + productId,
