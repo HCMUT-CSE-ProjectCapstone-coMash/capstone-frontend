@@ -19,7 +19,7 @@ export async function Header() {
     return (
         <>
             {session ? (
-                <header className="h-24 bg-gray-white p-6 flex items-center justify-between">
+                <header className="min-h-20 bg-gwhite px-10 flex items-center justify-between">
                     <Link href={homeRoute}>
                         <p className="font-display font-semibold text-3xl text-pink">
                             co<span className="text-purple">Mash</span>
@@ -33,7 +33,7 @@ export async function Header() {
                     </div>
                 </header>
             ) : (
-                <header className="h-24 flex items-center justify-center bg-gray-white">
+                <header className="h-20 flex items-center justify-center bg-gwhite">
                     <p className="font-display font-semibold text-3xl text-pink">
                         co<span className="text-purple">Mash</span>
                     </p>

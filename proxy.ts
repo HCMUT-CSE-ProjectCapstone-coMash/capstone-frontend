@@ -24,6 +24,15 @@ export default async function proxy(request: NextRequest) {
     const session = await decrypt(cookie);
     const role = session?.role;
 
+    //If user logged -> go to each role's homepage, if not -> go to login page
+    if (path === "/") {
+        if (session && role) {
+            const home = roleHomeMap[role] ?? LoginPageRoute;
+            return NextResponse.redirect(new URL(home, request.nextUrl));
+        }
+        return NextResponse.redirect(new URL(LoginPageRoute, request.nextUrl));
+    }
+
     // Not logged in, trying to access protected route
     if (isProtectedRoute && !session) {
         return NextResponse.redirect(new URL(LoginPageRoute, request.nextUrl));

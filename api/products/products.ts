@@ -50,6 +50,18 @@ export async function SearchSimilarProduct(imageFile: File) {
     return response.data;
 }
 
+export async function AnalyzeImage(imageFile: File) {
+    const base64Image = await fileToBase64(imageFile);
+
+    const response = await axiosClient.post(
+        "/product/analyze",
+        { ImageBase64: base64Image },
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
 // Nhân viên cập nhật thông tin sản phẩm trong đơn hàng
 export async function PatchProductInProductsOrder(productId: string, updateData: UpdateProduct) {
     const formData = new FormData();

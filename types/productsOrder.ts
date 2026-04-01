@@ -12,7 +12,7 @@ export interface ProductsOrder {
 } 
 
 export interface UpdateProductsOrder {
-    orderName?: string,
-    orderDescription?: string,
-    orderStatus?: "Pending" | "Approved" | "Sending",
+    orderName: string,
+    orderDescription: string,
+    orderStatus: "Pending" | "Approved" | "Sending",
 }
