@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { GetProductsOrders, PatchOrderAndStatus } from "@/api/productsOrder/productsOrder";
+import { GetProductsOrdersExcludingPending, PatchOrderAndStatus } from "@/api/productsOrder/productsOrder";
 import { ProductsOrder } from "@/types/productsOrder";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -16,7 +16,7 @@ export function PendingListTable() {
 
     const { data: pendingLists = [], isLoading } = useQuery<ProductsOrder[]>({
         queryKey: ["productsOrders"],
-        queryFn: GetProductsOrders,
+        queryFn: GetProductsOrdersExcludingPending,
     });
 
     const approveMutation = useMutation({

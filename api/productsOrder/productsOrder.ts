@@ -11,8 +11,11 @@ export async function FetchOrCreateOrder(userId: string) {
     return response.data;
 }
 
-export async function GetProductsOrders() {
-    const response = await axiosClient.get("products-orders", { withCredentials: true });
+export async function GetProductsOrdersExcludingPending() {
+    const response = await axiosClient.get(
+        "products-orders/fetch-excluding-pending", 
+        { withCredentials: true }
+    );
     return response.data;
 }
 
@@ -25,6 +28,7 @@ export async function DeleteProductFromProductsOrders(orderId: string, productId
     return response.data;
 }
 
+// Nhân viên gửi đơn hàng cho chủ cửa hàng duyệt
 export async function PatchOrderAndStatus(orderId: string, updateData: UpdateProductsOrder) {
     const formData = new FormData();
     
