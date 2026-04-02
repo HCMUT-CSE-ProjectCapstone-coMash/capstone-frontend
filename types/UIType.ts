@@ -3,7 +3,8 @@ import React from "react";
 // Navbar Types
 export interface NavItem {
     label: string,
-    href: string
+    href: string,
+    matchNested?: boolean
 };
 
 // Select Types
