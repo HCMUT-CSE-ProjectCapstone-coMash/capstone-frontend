@@ -2,28 +2,33 @@
 
 import { useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
+import { SelectInput } from "../FormInputs/SelectInput";
 import { useDispatch } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 
 interface EmployeeFormState {
     employeeName: string;
+    employeeGender: string;
+    employeeBirthDate: string;
     employeePhone: string;
-    employeeSalary: string;
+    employeeMail: string;
    
 }
 
 const initialEmployeeFormState: EmployeeFormState = {
     employeeName: "",
+    employeeGender: "",
+    employeeBirthDate: "",
     employeePhone: "",
-    employeeSalary: "",
+    employeeMail: "",
 };
 
-// const paymentOptions = [
-//     { id: 'cash', label: 'Tiền mặt' },
-//     { id: 'transfer', label: 'Chuyển khoản' },
-//     { id: 'debit', label: 'Ghi nợ' },
-// ];
+const genderOptions = [
+    { label: "Nữ", value: "Nữ" },
+    { label: "Nam", value: "Nam" },
+    { label: "Khác", value: "Khác" }
+];
 
 export function EmployeeForm() {
     const [form, setForm] = useState<EmployeeFormState>(initialEmployeeFormState);
@@ -32,7 +37,6 @@ export function EmployeeForm() {
     const setField = <K extends keyof EmployeeFormState>(key: K, value: EmployeeFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
-
 
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -45,11 +49,6 @@ export function EmployeeForm() {
 
         if (!form.employeePhone.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số điện thoại nhân viên" }));
-            return;
-        }
-
-        if (form.employeeSalary === "") {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập lương nhân viên" }));
             return;
         }
 
@@ -69,6 +68,40 @@ export function EmployeeForm() {
                 value={form.employeeName}
                 onChange={(e) => setField("employeeName", e.target.value)} 
             />
+            
+            <div className="flex items-center justify-between gap-5">
+                <div className="w-1/2">
+                    <SelectInput
+                    label={"Giới tính"} 
+                    options={genderOptions}     
+                    value={form.employeeGender}
+                    onChange={(value) => setField("employeeGender", value)}
+                    />
+                </div>
+                <div className="w-1/2">
+                    <TextInput
+                    label={"Ngày sinh"} 
+                    placeHolder="dd/mm/yyyy" 
+                    value={form.employeeBirthDate}
+                    onChange={(e) => setField("employeeBirthDate", e.target.value)} 
+                    />
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-5">
+                <TextInput
+                    label={"Số điện thoại"} 
+                    placeHolder="Nhập số điện thoại"        
+                    value={form.employeePhone}
+                    onChange={(e) => setField("employeePhone", e.target.value)} 
+                />
+                <TextInput
+                    label={"Email"} 
+                    placeHolder="Nhập email"        
+                    value={form.employeeMail}
+                    onChange={(e) => setField("employeeMail", e.target.value)} 
+                />
+            </div>
         </form>
     );
 }
