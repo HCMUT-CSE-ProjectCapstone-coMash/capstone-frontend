@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 export function NavbarItem({ item } : { item : NavItem}) {
     const router = useRouter();
     const pathname = usePathname();
-    const isPathActive = pathname === item.href;
+    const isPathActive = pathname === item.href || (item.matchNested && pathname.startsWith(`${item.href}/`));
 
     return (
         <button 

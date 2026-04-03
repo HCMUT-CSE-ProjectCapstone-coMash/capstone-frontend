@@ -8,10 +8,14 @@ export interface ProductsOrder {
     orderDescription: string,
     orderStatus: "Pending" | "Approved" | "Sending",
     products: Product[]
-} 
+};
+
+export interface ProductsOrderWithCreator extends ProductsOrder {
+    createdByName: string
+};
 
 export interface UpdateProductsOrder {
-    orderName: string,
-    orderDescription: string,
-    orderStatus: "Pending" | "Approved" | "Sending",
-}
+    orderName?: string,
+    orderDescription?: string,
+    orderStatus?: "Pending" | "Approved" | "Sending",
+};
