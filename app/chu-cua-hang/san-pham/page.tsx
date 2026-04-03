@@ -1,5 +1,6 @@
 "use client";
 
+import { OwnerProductsOrderPageRoute } from "@/const/routes";
 import { useRouter } from "next/navigation";
 
 export default function ProductPage() {
@@ -11,7 +12,7 @@ export default function ProductPage() {
                 <p className="text-purple text-2xl font-medium">Danh sách sản phẩm</p>
                 <button
                     type="button"
-                    onClick={() => router.push("/chu-cua-hang/san-pham/cho-duyet")}
+                    onClick={() => router.push(OwnerProductsOrderPageRoute)}
                     className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
                 >
                     Danh sách sản phẩm chờ duyệt
