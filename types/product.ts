@@ -18,7 +18,9 @@ export interface CreateProduct {
     sizeType: "Letter" | "Number",
     quantities: ProductQuantity[],
     createdBy: string,
-    image: File | null
+    image: File | null,
+    importPrice?: number,
+    salePrice?: number,
 }
 
 export interface Product {
@@ -34,7 +36,9 @@ export interface Product {
     createdAt: string,
     status: "Pending" | "Approved",
     imageURL: string
-    quantityChanges?: ProductQuantityChange[]
+    quantityChanges?: ProductQuantityChange[],
+    importPrice: number,
+    salePrice: number,
 }
 
 export interface UpdateProduct {

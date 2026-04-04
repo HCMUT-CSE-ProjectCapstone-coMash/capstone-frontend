@@ -128,3 +128,40 @@ export async function CreateProductsOrderDetailForApprovedProduct(productId: str
 
     return response.data;
 }
+
+export async function OwnerCreateProduct(productData: CreateProduct) {
+    const formData = new FormData();
+
+    formData.append("ProductId", productData.productId);
+    formData.append("ProductName", productData.productName);
+    formData.append("Category", productData.category);
+    formData.append("Color", productData.color);
+    formData.append("Pattern", productData.pattern);
+    formData.append("SizeType", productData.sizeType);
+    formData.append("CreatedBy", productData.createdBy);
+    
+    if (productData.importPrice) formData.append("ImportPrice", productData.importPrice.toString());
+    if (productData.salePrice) formData.append("SalePrice", productData.salePrice.toString());
+
+    productData.quantities.forEach((quantity, index) => {
+        formData.append(`Quantities[${index}].Size`, quantity.size);
+        formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+    })
+
+    if (productData.image) {
+        formData.append("Image", productData.image);
+    }
+
+    const response = await axiosClient.post(
+        "/product/owner-create",
+        formData,
+        { 
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+    );
+
+    return response.data;
+}

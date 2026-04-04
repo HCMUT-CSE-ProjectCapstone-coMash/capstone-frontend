@@ -15,6 +15,7 @@ import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { addProductToOrder, updateProductInOrder } from "@/utilities/productsOrderStore";
 import { RootState } from "@/utilities/store";
+import { parseFormattedNumber } from "@/utilities/numberFormat";
 
 interface FormState {
     productId: string;
@@ -112,7 +113,10 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                 createdBy: data.createdBy,
                 createdAt: data.createdAt,
                 status: data.status,
-                imageURL: data.imageURL
+                imageURL: data.imageURL,
+                quantityChanges: data.quantityChanges,
+                importPrice: data.importPrice,
+                salePrice: data.salePrice
             }
 
             dispatch(updateProductInOrder(newProduct));
@@ -144,7 +148,9 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                 createdAt: data.createdAt,
                 status: data.status,
                 imageURL: data.imageURL,
-                quantityChanges: data.quantityChanges
+                quantityChanges: data.quantityChanges,
+                importPrice: data.importPrice,
+                salePrice: data.salePrice
             }
 
             const alreadyExists = productsOrder?.products.some(p => p.id === newProduct.id);
@@ -340,7 +346,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                                 value={quantities[size]}
                                 labelPosition="left"
                                 inputType="text"
-                                onChange={(e) => handleQuantityChange(size, Number(e.target.value))}
+                                onChange={(e) => handleQuantityChange(size, parseFormattedNumber(e.target.value))}
                             />
                         ))}
                     </div>
