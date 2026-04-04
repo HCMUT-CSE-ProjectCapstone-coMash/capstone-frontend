@@ -6,7 +6,7 @@ import { Table } from "./Table";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PencilIcon, TrashIcon } from "@/public/assets/Icons";
 import { useDispatch, useSelector } from "react-redux";
-import { setEditingProduct } from "@/utilities/productEditStore";
+import { clearEditingProduct, setEditingProduct } from "@/utilities/productEditStore";
 import { DeleteProductFromProductsOrders, FetchOrCreateOrder } from "@/api/productsOrder/productsOrder";
 import { RootState } from "@/utilities/store";
 import { removeProductFromOrder, setProductsOrder } from "@/utilities/productsOrderStore";
@@ -108,6 +108,7 @@ export function PendingProductsTable() {
                 disabled={deleteMutation.isPending}
                 onClick={() => {
                     if (productsOrder?.id) {
+                        dispatch(clearEditingProduct());
                         deleteMutation.mutate({ orderId: productsOrder.id, productId: row.id });
                     }
                 }}

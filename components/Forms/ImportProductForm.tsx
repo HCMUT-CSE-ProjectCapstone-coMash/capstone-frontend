@@ -115,11 +115,6 @@ export function ImportProductForm() {
         if(!user.id || !productsOrder?.id) {
             return;
         }
-        
-        if(!form.productId) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập mã sản phẩm" }));
-            return;
-        }
 
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
@@ -215,6 +210,8 @@ export function ImportProductForm() {
         queryKey: ["products", debouncedName],
         queryFn: () => FetchApprovedProductByName(debouncedName),
         enabled: debouncedName.length > 2,
+        staleTime: 0,
+        gcTime: 0
     });
 
     const suggestions = products.map((p: Product) => ({
@@ -316,7 +313,7 @@ export function ImportProductForm() {
                         onSuggestionClick={(item) => { dispatch(setEditingProduct(item.data)) }}
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
-                                <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover"/>
+                                <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
                                 <span>{item.label}</span>
                             </div>
                         )}

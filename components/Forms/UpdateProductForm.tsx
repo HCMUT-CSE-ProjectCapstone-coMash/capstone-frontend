@@ -152,12 +152,12 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             if (alreadyExists) {
                 dispatch(updateProductInOrder(newProduct));
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
+                setInitialForm(form);
             } else {
                 dispatch(addProductToOrder(newProduct));
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
+                dispatch(clearEditingProduct());
             }
-
-            setInitialForm(form);
         },
 
         onError: () => {
@@ -170,11 +170,6 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         e.preventDefault();
 
         if (productsOrder?.id == null) return;
-
-        if(!form.productId) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập mã sản phẩm" }));
-            return;
-        }
 
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
