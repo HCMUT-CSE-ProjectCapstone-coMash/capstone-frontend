@@ -6,18 +6,21 @@ interface SelectInputProps {
     options: SelectOption[],
     value: string,
     onChange: (value: string) => void;
+    disabled?: boolean
 }
 
-export function SelectInput({ label, options, value, onChange }: SelectInputProps) {
+export function SelectInput({ label, options, value, onChange, disabled }: SelectInputProps) {
+    const disabledClass = disabled ? "cursor-not-allowed opacity-70" : "";
 
     return (
         <div className="flex flex-col gap-y-2.5 flex-1">
             <p className="text-sm font-normal text-tgray9">{label}</p>
             <div className="relative flex-1">
                 <select 
-                    className="text-sm p-2.5 rounded-lg border-[0.5px] border-solid border-tgray5 appearance-none w-full focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple transition-all"
+                    className={`text-sm p-2.5 rounded-lg border-[0.5px] border-solid border-tgray5 appearance-none w-full focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple transition-all ${disabledClass}`}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
+                    disabled={disabled}
                 >
                     <option value="">Lựa chọn</option>
 

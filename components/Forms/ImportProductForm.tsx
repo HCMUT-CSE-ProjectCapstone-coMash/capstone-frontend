@@ -5,7 +5,7 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnalyzeImage, CreateProductAsync, FetchProductByName, SearchSimilarProduct } from "@/api/products/products";
+import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -64,6 +64,19 @@ export function ImportProductForm() {
     }
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Tạo mã sản phẩm tự động khi chọn phân loại
+    const createProductIdMutation = useMutation({
+        mutationFn: (productName: string) => CreateProductIdByCategory(productName),
+
+        onSuccess: (data) => {
+            setField("productId", data.productId);
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo mã sản phẩm tự động" }));
+        }
+    });
 
     // Tạo sản phẩm mới
     const createMutation = useMutation({
@@ -200,7 +213,7 @@ export function ImportProductForm() {
 
     const { data: products = [] } = useQuery({
         queryKey: ["products", debouncedName],
-        queryFn: () => FetchProductByName(debouncedName),
+        queryFn: () => FetchApprovedProductByName(debouncedName),
         enabled: debouncedName.length > 2,
     });
 
@@ -286,7 +299,8 @@ export function ImportProductForm() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                    <TextInput 
+                    <TextInput
+                        disabled={true}
                         label={"Mã sản phẩm"} 
                         placeHolder="" 
                         value={form.productId}
@@ -309,7 +323,14 @@ export function ImportProductForm() {
                     />
 
                     <div className="flex items-center justify-between gap-5">
-                        <SelectInput label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)}/>
+                        <SelectInput 
+                            label={"Phân loại"} 
+                            options={categories} 
+                            value={form.category} 
+                            onChange={(value) => {
+                                setField("category", value);
+                                createProductIdMutation.mutate(value);
+                            }}/>
 
                         <SelectInput label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)}/>
 

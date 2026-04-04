@@ -3,8 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["t3.storageapi.dev"],
-  }
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 't3.storageapi.dev',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
 };
 
 export default nextConfig;

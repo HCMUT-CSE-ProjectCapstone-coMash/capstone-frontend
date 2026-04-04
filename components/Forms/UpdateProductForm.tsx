@@ -1,6 +1,6 @@
 "use client";
 
-import { Product, UpdateProduct } from "@/types/product";
+import { Product, ProductQuantity, UpdateProduct } from "@/types/product";
 import { useEffect, useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
@@ -8,12 +8,13 @@ import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { clearEditingProduct } from "@/utilities/productEditStore";
-import { PatchProductInProductsOrder } from "@/api/products/products";
+import { CreateProductsOrderDetailForApprovedProduct, PatchProductInProductsOrder } from "@/api/products/products";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { updateProductInOrder } from "@/utilities/productsOrderStore";
+import { RootState } from "@/utilities/store";
 
 interface FormState {
     productId: string;
@@ -26,6 +27,7 @@ interface FormState {
     numberQuantities: Record<string, number>;
     imageFile: File | null;
     imagePreviewUrl: string | null;
+    status: "Pending" | "Approved",
 }
 
 interface UpdateProductFormProps {
@@ -55,11 +57,13 @@ const mapProductToForm = (product: Product): FormState => {
         numberQuantities: isNumber ? quantityMap : createInitialQuantities(sizesNumber),
         imageFile: null,
         imagePreviewUrl: product.imageURL ?? null,
+        status: product.status
     };
 };
 
 export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
     const dispatch = useDispatch();
+    const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
 
     const [form, setForm] = useState<FormState>(() => mapProductToForm(editProduct));
     const [initialForm, setInitialForm] = useState<FormState>(() => mapProductToForm(editProduct));
@@ -117,11 +121,43 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         }
     });
 
+    const AddMoreProductMutation = useMutation({
+        mutationFn: ({ productId, productsOrderId, productQuantities } : { productId: string, productsOrderId: string, productQuantities: ProductQuantity[] }) => CreateProductsOrderDetailForApprovedProduct(productId, productsOrderId, productQuantities),
+
+        onSuccess: (data) => {
+            const newProduct: Product = {
+                id: data.id,
+                productId: data.productId,
+                productName: data.productName,
+                category: data.category,
+                color: data.color,
+                pattern: data.pattern,
+                sizeType: data.sizeType,
+                quantities: data.quantities,
+                createdBy: data.createdBy,
+                createdAt: data.createdAt,
+                status: data.status,
+                imageURL: data.imageURL,
+                quantityChanges: data.quantityChanges
+            }
+
+            dispatch(updateProductInOrder(newProduct));
+
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
+
+            setInitialForm(form);
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại"}));
+        }
+    });
 
     // Xử lý submit form: validate dữ liệu, gọi mutation cập nhật sản phẩm
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (productsOrder?.id == null) return;
 
         if(!form.productId) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập mã sản phẩm" }));
@@ -164,7 +200,10 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             quantities: formattedQuantities
         };
 
-        updateMutation.mutate({ productId: editProduct.id, updateData });
+        if (form.status === "Pending")
+            updateMutation.mutate({ productId: editProduct.id, updateData });
+        else 
+            AddMoreProductMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, productQuantities: formattedQuantities });
     }
     
     // Xử lý file ảnh: lưu file vào state và tạo URL preview
@@ -259,6 +298,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
+                        disabled={true}
                         label={"Mã sản phẩm"}
                         placeHolder=""
                         value={form.productId}
@@ -266,6 +306,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     />
 
                     <TextInput
+                        disabled={form.status === "Approved"}
                         label={"Tên sản phẩm"}
                         placeHolder=""
                         value={form.productName}
@@ -273,9 +314,9 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     />
 
                     <div className="flex items-center justify-between gap-5">
-                        <SelectInput label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
-                        <SelectInput label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
-                        <SelectInput label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
+                        <SelectInput disabled={form.status === "Approved"} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
+                        <SelectInput disabled={form.status === "Approved"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
+                        <SelectInput disabled={form.status === "Approved"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -305,13 +346,23 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                             {"Huỷ bỏ"}
                         </button>
 
-                        <button
-                            className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
-                                ${updateMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                            disabled={updateMutation.isPending}
-                        >
-                            {updateMutation.isPending ? "Đang cập nhật..." : "Lưu thay đổi"}
-                        </button>
+                        {form.status === "Pending" ? (
+                            <button
+                                className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
+                                    ${updateMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                                disabled={updateMutation.isPending}
+                            >
+                                {updateMutation.isPending ? "Đang cập nhật..." : "Lưu thay đổi"}
+                            </button>
+                        ) : (
+                            <button
+                                className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
+                                    ${AddMoreProductMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                                disabled={AddMoreProductMutation.isPending}
+                            >
+                                {AddMoreProductMutation.isPending ? "Đang cập nhật..." : "Cập nhật"}
+                            </button>
+                        )}
                     </div>
                 </form>
             </div>

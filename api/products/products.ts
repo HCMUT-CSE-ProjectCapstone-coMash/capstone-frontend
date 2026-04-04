@@ -1,4 +1,4 @@
-import { CreateProduct, UpdateProduct } from "@/types/product";
+import { CreateProduct, ProductQuantity, UpdateProduct } from "@/types/product";
 import { axiosClient } from "../axiosClient";
 import { fileToBase64 } from "@/utilities/image";
 
@@ -89,10 +89,41 @@ export async function PatchProductInProductsOrder(productId: string, updateData:
     return response.data;
 }
 
-export async function FetchProductByName(productName: string) {
+export async function FetchApprovedProductByName(productName: string) {
     const response = await axiosClient.get(
         "/product/fetch-by-name/" + productName,
         { withCredentials : true }
+    );
+
+    return response.data;
+}
+
+export async function CreateProductIdByCategory(category: string) {
+    const response = await axiosClient.get(
+        "/product/create-product-id-by-category/" + category,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function CreateProductsOrderDetailForApprovedProduct(productId: string, productsOrderId: string, productQuantities: ProductQuantity[]) {
+    const formData = new FormData();
+
+    productQuantities.forEach((quantity, index) => {
+        formData.append(`Quantities[${index}].Size`, quantity.size);
+        formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+    })
+
+    const response = await axiosClient.post(
+        "/product/create-detail-for-approved-product/" + productId + "/" + productsOrderId,
+        formData,
+        { 
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
     );
 
     return response.data;
