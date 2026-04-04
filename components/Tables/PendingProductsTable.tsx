@@ -36,7 +36,6 @@ export function PendingProductsTable() {
 
     useEffect(() => {
         if (data) {
-            console.log(data);
             const productsOrder: ProductsOrder = {
                 id: data.id,
                 createdBy: data.createdBy,
@@ -98,20 +97,7 @@ export function PendingProductsTable() {
         { title: "Chỉnh sửa", key: "edit", render: (row) => (
             <button 
                 className="cursor-pointer"
-                onClick={() => {
-                    if (row.quantityChanges && row.quantityChanges.length > 0) {
-                        const mergedProduct: Product = {
-                            ...row,
-                            quantities: row.quantities.map((q) => {
-                                const change = row.quantityChanges!.find(c => c.size === q.size);
-                                return change ? { ...q, quantities: change.newQuantity } : q;
-                            })
-                        };
-                        dispatch(setEditingProduct(mergedProduct));
-                    } else {
-                        dispatch(setEditingProduct(row));
-                    }
-                }}
+                onClick={() => { dispatch(setEditingProduct(row)) }}
             >
                 <PencilIcon width={24} height={24} className={""}/>
             </button>

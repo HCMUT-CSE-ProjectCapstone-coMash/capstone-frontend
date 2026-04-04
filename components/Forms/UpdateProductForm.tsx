@@ -13,7 +13,7 @@ import { clearEditingProduct } from "@/utilities/productEditStore";
 import { CreateProductsOrderDetailForApprovedProduct, PatchProductInProductsOrder } from "@/api/products/products";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { updateProductInOrder } from "@/utilities/productsOrderStore";
+import { addProductToOrder, updateProductInOrder } from "@/utilities/productsOrderStore";
 import { RootState } from "@/utilities/store";
 
 interface FormState {
@@ -45,6 +45,12 @@ const mapProductToForm = (product: Product): FormState => {
     product.quantities.forEach((qty) => {
         quantityMap[qty.size] = qty.quantities;
     });
+
+    if (product.quantityChanges && product.quantityChanges.length > 0) {
+        product.quantityChanges.forEach((change) => {
+            quantityMap[change.size] = change.newQuantity;
+        });
+    }
 
     return {
         productId: product.productId,
@@ -141,9 +147,15 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                 quantityChanges: data.quantityChanges
             }
 
-            dispatch(updateProductInOrder(newProduct));
+            const alreadyExists = productsOrder?.products.some(p => p.id === newProduct.id);
 
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
+            if (alreadyExists) {
+                dispatch(updateProductInOrder(newProduct));
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
+            } else {
+                dispatch(addProductToOrder(newProduct));
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
+            }
 
             setInitialForm(form);
         },
@@ -321,7 +333,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
                     <div className="flex items-center justify-between">
                         <p className="text-sm">Kích cỡ - Số lượng</p>
-                        <SwitchInput label={"Size số"} checked={form.isNumberSize} onChange={(checked) => setField("isNumberSize", checked)} />
+                        <SwitchInput disabled={form.status === "Approved"} label={"Size số"} checked={form.isNumberSize} onChange={(checked) => setField("isNumberSize", checked)} />
                     </div>
 
                     <div className="grid grid-cols-4 gap-x-10 gap-y-5">
