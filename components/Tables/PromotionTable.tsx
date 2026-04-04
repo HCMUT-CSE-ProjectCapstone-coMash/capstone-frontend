@@ -39,8 +39,8 @@ async function fetchPromotions(): Promise<Promotion[]> {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function PromotionTable() {
-    
     const router = useRouter();
+
     const user = useSelector((state: RootState) => state.user);
 
     const [activeFilter, setActiveFilter] = useState<PromotionType | "all">("all");
@@ -140,12 +140,15 @@ export function PromotionTable() {
                         />
                     </div>
                     {/* Create button */}
-                    <button
-                        onClick={() => router.push("/nhan-vien/khuyen-mai/tao-khuyen-mai")}
-                        className="px-3 py-2 text-sm font-semibold rounded-lg shadow cursor-pointer bg-purple text-white hover:bg-light-purple transition-opacity duration-150 whitespace-nowrap"
-                    >
-                        Tạo khuyến mãi mới
-                    </button>
+
+                    {user.role === "owner" && (
+                        <button
+                            onClick={() => router.push("/nhan-vien/khuyen-mai/tao-khuyen-mai")}
+                            className="px-3 py-2 text-sm font-semibold rounded-lg shadow cursor-pointer bg-purple text-white hover:bg-light-purple transition-opacity duration-150 whitespace-nowrap"
+                        >
+                            Tạo khuyến mãi mới
+                        </button>
+                    )}
                 </div>
             </div>
 
