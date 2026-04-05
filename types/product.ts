@@ -48,5 +48,8 @@ export interface UpdateProduct {
     color?: string,
     pattern?: string,
     sizeType?: "Letter" | "Number",
-    quantities?: ProductQuantity[]
+    quantities?: ProductQuantity[],
+    image?: File | null,
+    importPrice?: number,
+    salePrice?: number,
 }

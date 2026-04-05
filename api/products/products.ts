@@ -165,3 +165,36 @@ export async function OwnerCreateProduct(productData: CreateProduct) {
 
     return response.data;
 }
+
+export async function OwnerUpdateProduct(updateData: UpdateProduct, productId: string) {
+    const formData = new FormData();
+
+    if (updateData.productId) formData.append("ProductId", updateData.productId);
+    if (updateData.productName) formData.append("ProductName", updateData.productName);
+    if (updateData.category) formData.append("Category", updateData.category);
+    if (updateData.color) formData.append("Color", updateData.color);
+    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
+    if (updateData.importPrice) formData.append("ImportPrice", updateData.importPrice.toString());
+    if (updateData.salePrice) formData.append("SalePrice", updateData.salePrice.toString());
+
+    if (updateData.quantities) {
+        updateData.quantities.forEach((quantity, index) => {
+            formData.append(`Quantities[${index}].Size`, quantity.size);
+            formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+        })
+    }
+
+    const response = await axiosClient.patch(
+        "/product/owner-patch/" + productId,
+        formData,
+        { 
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+    );
+
+    return response.data;
+}

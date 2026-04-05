@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 
 interface FormState {
     productId: string;
@@ -147,11 +148,11 @@ export function OwnerImportProductForm() {
         mutationFn: (newProduct: CreateProduct) => OwnerCreateProduct(newProduct),
 
         onSuccess: (data) => {
-            console.log("Created product:", data);
+            setForm(initialFormState);
         },
 
         onError: () => {
-
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại" }));
         }
     });
 
@@ -304,7 +305,7 @@ export function OwnerImportProductForm() {
                         value={form.productName}
                         onChange={(e) => setField("productName", e.target.value)}
                         suggestions={suggestions}
-                        onSuggestionClick={(item) => { }}
+                        onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)) }}
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
                                 <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>

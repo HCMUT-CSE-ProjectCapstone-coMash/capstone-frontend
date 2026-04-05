@@ -1,4 +1,4 @@
-import { OwnerImportProductForm } from "@/components/Forms/OwnerImportProductForm"
+import { ProductForm } from "@/components/Forms/ProductForm"
 
 export default function ImportPage() {
 
@@ -7,7 +7,7 @@ export default function ImportPage() {
             <p className="text-purple text-3xl font-medium">Nhập hàng</p>
 
             <div className="mt-5">
-                <OwnerImportProductForm/>
+                <ProductForm/>
             </div>
         </main>
     )
