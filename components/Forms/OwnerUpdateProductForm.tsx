@@ -7,7 +7,7 @@ import { addAlert } from "@/utilities/alertStore";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
@@ -192,7 +192,20 @@ export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormPr
         setField("imagePreviewUrl", null);
     };
 
-    const previewSrc = form.imageFile ? URL.createObjectURL(form.imageFile) : form.imagePreviewUrl ?? null;
+    // Sử dụng useMemo để tạo URL preview từ file ảnh, và useEffect để giải phóng URL khi component unmount hoặc file thay đổi
+    const objectUrl = useMemo(() => {
+        if (!form.imageFile) return null;
+        const url = URL.createObjectURL(form.imageFile);
+        return url;
+    }, [form.imageFile]);
+    
+    useEffect(() => {
+        return () => {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [objectUrl]);
+    
+    const previewSrc = objectUrl ?? form.imagePreviewUrl ?? null;
 
     return (
         <div className="flex gap-[10vw]">

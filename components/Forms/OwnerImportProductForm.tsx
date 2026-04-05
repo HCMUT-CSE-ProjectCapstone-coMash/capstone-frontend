@@ -147,7 +147,7 @@ export function OwnerImportProductForm() {
     const createMutation = useMutation({
         mutationFn: (newProduct: CreateProduct) => OwnerCreateProduct(newProduct),
 
-        onSuccess: (data) => {
+        onSuccess: () => {
             setForm(initialFormState);
         },
 

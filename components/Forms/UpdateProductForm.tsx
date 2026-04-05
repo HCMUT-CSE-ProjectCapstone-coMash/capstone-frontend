@@ -1,7 +1,7 @@
 "use client";
 
 import { Product, ProductQuantity, UpdateProduct } from "@/types/product";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
@@ -68,6 +68,14 @@ const mapProductToForm = (product: Product): FormState => {
     };
 };
 
+const getMinQuantities = (product: Product, sizes: string[]): Record<string, number> => {
+    const map = createInitialQuantities(sizes);
+    product.quantities.forEach((qty) => {
+        map[qty.size] = qty.quantities;
+    });
+    return map;
+};
+
 export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
     const dispatch = useDispatch();
     const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
@@ -84,6 +92,12 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         setForm(mapProductToForm(editProduct));
         setInitialForm(mapProductToForm(editProduct));
     }, [editProduct]);
+
+    const allSizes = useMemo(() => [...sizesLetter, ...sizesNumber], []);
+    const minQuantities = useMemo(
+        () => getMinQuantities(editProduct, allSizes),
+        [editProduct, allSizes]
+    );
 
     // Tuỳ theo loại size đang chọn, hiển thị input số lượng tương ứng (UI)
     const sizes = form.isNumberSize ? sizesNumber : sizesLetter;
@@ -203,6 +217,16 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             return;
         }
 
+        if (form.status === "Approved") {
+            const belowMin = formattedQuantities.some(
+                ({ size, quantities: qty }) => qty < (minQuantities[size] ?? 0)
+            );
+            if (belowMin) {
+                dispatch(addAlert({ type: AlertType.WARNING, message: "Số lượng không được thấp hơn số lượng đã duyệt" }));
+                return;
+            }
+        }
+
         const updateData: UpdateProduct = {
             productId: form.productId,
             productName: form.productName,
@@ -233,7 +257,20 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         setField("imagePreviewUrl", null);
     };
 
-    const previewSrc = form.imageFile ? URL.createObjectURL(form.imageFile) : form.imagePreviewUrl ?? null;
+    // Sử dụng useMemo để tạo URL preview từ file ảnh, và useEffect để giải phóng URL khi component unmount hoặc file thay đổi
+    const objectUrl = useMemo(() => {
+        if (!form.imageFile) return null;
+        const url = URL.createObjectURL(form.imageFile);
+        return url;
+    }, [form.imageFile]);
+    
+    useEffect(() => {
+        return () => {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [objectUrl]);
+    
+    const previewSrc = objectUrl ?? form.imagePreviewUrl ?? null;
 
     return (
         <div className="flex gap-[10vw]">
@@ -339,15 +376,23 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
                     <div className="grid grid-cols-4 gap-x-10 gap-y-5">
                         {sizes.map((size) => (
-                            <TextInput
-                                key={size}
-                                label={size}
-                                placeHolder=""
-                                value={quantities[size]}
-                                labelPosition="left"
-                                inputType="text"
-                                onChange={(e) => handleQuantityChange(size, parseFormattedNumber(e.target.value))}
-                            />
+                            <div key={size} className="flex flex-col gap-1">
+                                <TextInput
+                                    label={size}
+                                    placeHolder=""
+                                    value={quantities[size]}
+                                    labelPosition="left"
+                                    inputType="text"
+                                    onChange={(e) =>
+                                        handleQuantityChange(size, parseFormattedNumber(e.target.value))
+                                    }
+                                />
+                                {form.status === "Approved" && (minQuantities[size] ?? 0) > 0 && (
+                                    <p className="text-xs text-gray-600 text-right">
+                                        Tối thiểu: {minQuantities[size]}
+                                    </p>
+                                )}
+                            </div>
                         ))}
                     </div>
 
