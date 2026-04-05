@@ -1,6 +1,15 @@
 import { UpdateProductsOrder } from "@/types/productsOrder";
 import { axiosClient } from "../axiosClient";
 
+// Get a single products order by ID
+export async function GetProductsOrderById(orderId: string) {
+    const response = await axiosClient.get(
+        `products-orders/${orderId}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
 // Nhân viên lấy đơn hàng hiện tại của mình, nếu chưa có thì tạo mới
 export async function FetchOrCreateOrder(userId: string) {
     const response = await axiosClient.post(
