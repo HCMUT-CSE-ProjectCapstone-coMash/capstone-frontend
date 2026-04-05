@@ -198,3 +198,12 @@ export async function OwnerUpdateProduct(updateData: UpdateProduct, productId: s
 
     return response.data;
 }
+
+export async function FetchProducts(currentPage: number, pageSize: number) {
+    const response = await axiosClient.get(
+        `/product/fetch-all?page=${currentPage}&pageSize=${pageSize}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

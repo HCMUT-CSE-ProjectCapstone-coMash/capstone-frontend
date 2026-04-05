@@ -1,23 +1,17 @@
 "use client";
-
-import { OwnerProductsOrderPageRoute } from "@/const/routes";
-import { useRouter } from "next/navigation";
+import { ProductsTable } from "@/components/Tables/ProductsTable"
+import { RootState } from "@/utilities/store";
+import { useSelector } from "react-redux";
+import { OwnerUpdateProductForm } from "@/components/Forms/OwnerUpdateProductForm";
 
 export default function ProductPage() {
-    const router = useRouter();
+    const ownerEditProduct = useSelector((state: RootState) => state.ownerProductEdit.ownerEditingProduct);
 
     return (
         <main className="px-20 pt-10 pb-25">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-                <p className="text-purple text-2xl font-medium">Danh sách sản phẩm</p>
-                <button
-                    type="button"
-                    onClick={() => router.push(OwnerProductsOrderPageRoute)}
-                    className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
-                >
-                    Danh sách sản phẩm chờ duyệt
-                </button>
-            </div>
+            <>
+                {ownerEditProduct ? <OwnerUpdateProductForm editProduct={ownerEditProduct}/> : <ProductsTable/>}
+            </>
         </main>
     )
 }

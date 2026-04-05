@@ -20,8 +20,16 @@ export interface Column<T> {
     render?: (row: T) => React.ReactNode;
 };
 
+export interface TablePagination {
+    current: number;
+    pageSize: number;
+    total: number;
+    onChange: (page: number) => void;
+}
+
 export interface TableProps<T> {
     columns: Column<T>[],
     data: T[],
-    isLoading?: boolean
+    isLoading?: boolean,
+    pagination?: TablePagination; 
 };
