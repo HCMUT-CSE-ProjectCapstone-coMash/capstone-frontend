@@ -4,16 +4,40 @@ import { Column } from "@/types/UIType";
 import { Table } from "./Table";
 import { Product } from "@/types/product";
 import { TrashIcon } from "@/public/assets/Icons";
+import { useParams } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { DeleteProductFromProductsOrders, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
+import { formatThousands } from "@/utilities/numberFormat";
+import { useMemo } from "react";
+import { useDispatch } from "react-redux";
+import { addAlert } from "@/utilities/alertStore";
+import { AlertType } from "@/types/alert";
 
-interface ProductOrderTableProps {
-    data: Product[];
-    isLoading?: boolean;
-    onDelete: (productId: string) => void;
-}
+export function ProductOrderTable() {
+    const dispatch = useDispatch();
+    const queryClient = useQueryClient();
+    const { productsOrdersId } = useParams();
 
-export function ProductOrderTable({ data, isLoading = false, onDelete }: ProductOrderTableProps) {
+    const { data, isLoading } = useQuery({
+        queryKey: ["productsOrderDetails", productsOrdersId],
+        queryFn: () => GetProductsOrderById(productsOrdersId as string),
+        enabled: !!productsOrdersId,
+    });
 
-    const columns: Column<Product>[] = [
+    const deleteMutation = useMutation({
+        mutationFn: ({ orderId, productId } : { orderId: string, productId: string}) => DeleteProductFromProductsOrders(orderId, productId),
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xoá sản phẩm thành công" }));
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Xoá sản phẩm thất bại" }));
+        }
+    });
+
+    const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
         { title: "Tên sản phẩm", key: "productName", render: (row) => <span>{row.productName}</span> },
         { title: "Số lượng", key: "quantities", render: (row) => {
@@ -31,7 +55,7 @@ export function ProductOrderTable({ data, isLoading = false, onDelete }: Product
                     </div>
                 );
             }
-
+    
             return (
                 <div>
                     {row.quantities.map((quantity) => (
@@ -43,34 +67,33 @@ export function ProductOrderTable({ data, isLoading = false, onDelete }: Product
                 </div>
             );
         }},
-        { title: "Giá nhập", key: "importPrice", render: (row) => <span>N/A</span> }, // Placeholder, add when available
-        { title: "Giá bán", key: "sellingPrice", render: (row) => <span>N/A</span> }, // Placeholder, add when available
+        { title: "Giá nhập", key: "importPrice", render: (row) => <span>{formatThousands(row.importPrice)} VND</span> },
+        { title: "Giá bán", key: "salePrice", render: (row) => <span>{formatThousands(row.salePrice)} VND</span> },
         { title: "Trạng thái", key: "status", render: (row) => {
-            if (row.status === "Approved") {
-                return <span className="text-purple">Nhập thêm</span>;
-            } else if (row.status === "Pending") {
-                return <span className="text-pink">Hàng mới</span>;
-            }
+            if (row.status === "Approved") return <span className="text-purple">Nhập thêm</span>;
+            if (row.status === "Pending") return <span className="text-pink">Hàng mới</span>;
             return <span>{row.status}</span>;
         }},
-        {
-            title: "",
-            key: "actions",
-            render: (row) => (
-                <button
-                    type="button"
-                    onClick={() => onDelete(row.id)}
-                    className="text-red-500 hover:text-red-700 transition"
-                >
-                    <TrashIcon width={20} height={20} className="" />
-                </button>
-            ),
-        },
-    ];
+        { title: "", key: "id", render: (row) => (
+            <button 
+                className="text-red-500 hover:text-red-700 transition"
+                onClick={() => deleteMutation.mutate({ orderId: productsOrdersId as string, productId: row.id })}
+            >
+                <TrashIcon width={20} height={20} className=""/>
+            </button>
+        )},
+    ], [deleteMutation, productsOrdersId]);
+
+    const products = data?.products || [];
 
     return (
+
         <div className="mt-8">
-            <Table columns={columns} data={data} isLoading={isLoading} />
+            <Table 
+                columns={columns} 
+                data={products} 
+                isLoading={isLoading} 
+            />
         </div>
     );
 }
