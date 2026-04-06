@@ -1,11 +1,28 @@
 import { UpdateProductsOrder } from "@/types/productsOrder";
 import { axiosClient } from "../axiosClient";
 
+// Get a single products order by ID
+export async function GetProductsOrderById(orderId: string) {
+    const response = await axiosClient.get(
+        `products-orders/${orderId}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
 // Nhân viên lấy đơn hàng hiện tại của mình, nếu chưa có thì tạo mới
 export async function FetchOrCreateOrder(userId: string) {
     const response = await axiosClient.post(
         "products-orders/fetch/" + userId,
         {},
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function GetProductsOrdersExcludingPending() {
+    const response = await axiosClient.get(
+        "products-orders/fetch-excluding-pending", 
         { withCredentials: true }
     );
     return response.data;
@@ -20,6 +37,7 @@ export async function DeleteProductFromProductsOrders(orderId: string, productId
     return response.data;
 }
 
+// Nhân viên gửi đơn hàng cho chủ cửa hàng duyệt
 export async function PatchOrderAndStatus(orderId: string, updateData: UpdateProductsOrder) {
     const formData = new FormData();
     

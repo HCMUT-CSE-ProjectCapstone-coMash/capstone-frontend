@@ -10,9 +10,10 @@
     --color-tgray9: #0D0D0D;
     --color-gray-dark: #3A4163;
     --color-purple: #6420AA;
-    --color-light-purple: #FFB5DA;
+    --color-light-purple: #DEBDFF;
     --color-pink: #FF3EA5;
     --color-light-pink: #FFB5DA;
+    --color-red: #D10000;
 
     --font-display: "Inter", sans-serif; 
 }

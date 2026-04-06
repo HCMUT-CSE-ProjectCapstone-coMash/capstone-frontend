@@ -5,25 +5,11 @@ import { InvoiceSearch } from "@/components/SearchBar/InvoiceSearch";
 
 export default function SellPage() {
     return (
-        // Thêm max-w-7xl và mx-auto để khóa form ở giữa màn hình lớn, không bị bè ra quá xa
-        <main className="mx-auto px-20 py-10 lg:px-20">
-            
-            {/* Header: Tiêu đề và Thanh tìm kiếm */}
-            <div className="flex justify-between items-center mb-6">
-                <p className="text-purple text-3xl font-medium">Bán hàng</p>
-                <InvoiceSearch/>
-            </div>
-            <div className="flex flex-row gap-16">
-            
-                <div className="flex-2">
-                    <SellProductsTable />
-                </div>
-
-                {/* Cột phải: Form Hóa Đơn chiếm 1/3 */}
-                <div className="flex-1">
-                    <InvoiceForm />
-                </div>
-                
+        <main className="px-20 pt-10 pb-25">
+            <p className="text-purple text-3xl font-medium">Bán hàng</p>
+            <div className="flex gap-[10vw]">
+                <p className="text-2xl font-medium">Bảng</p>
+                <InvoiceForm/>
             </div>
         </main>
     );

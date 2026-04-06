@@ -6,7 +6,7 @@ import { Table } from "./Table";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PencilIcon, TrashIcon } from "@/public/assets/Icons";
 import { useDispatch, useSelector } from "react-redux";
-import { setEditingProduct } from "@/utilities/productEditStore";
+import { clearEditingProduct, setEditingProduct } from "@/utilities/productEditStore";
 import { DeleteProductFromProductsOrders, FetchOrCreateOrder } from "@/api/productsOrder/productsOrder";
 import { RootState } from "@/utilities/store";
 import { removeProductFromOrder, setProductsOrder } from "@/utilities/productsOrderStore";
@@ -67,15 +67,37 @@ export function PendingProductsTable() {
     const columns: Column<Product>[] = [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
         { title: "Tên sản phẩm", key: "productName", render: (row) => <span>{row.productName}</span> },
-        { title: "Số lượng", key: "quantities", render: (row) => (
-            <span>{row.quantities.reduce((sum, q) => sum + q.quantities, 0)}</span>
-        )},
+        { title: "Số lượng", key: "quantities", render: (row) => {
+            if (row.quantityChanges && row.quantityChanges.length > 0) {
+                return (
+                    <div className="flex flex-col gap-1">
+                        {row.quantityChanges.map((change) => (
+                            <div key={change.size} className="flex justify-center items-center gap-2 text-sm">
+                                <span className="font-medium">{change.size}:</span>
+                                <span className="text-red line-through">{change.oldQuantity}</span>
+                                <span>→</span>
+                                <span className="text-purple font-bold">{change.newQuantity}</span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+    
+            return (
+                <div>
+                    {row.quantities.map((quantity) => (
+                        <div key={quantity.size} className="flex justify-center items-center gap-2 text-sm">
+                            <span className="font-medium">{quantity.size}:</span>
+                            <span className="text-purple font-bold">{quantity.quantities}</span>
+                        </div>
+                    ))}
+                </div>
+            );
+        }},
         { title: "Chỉnh sửa", key: "edit", render: (row) => (
             <button 
                 className="cursor-pointer"
-                onClick={() => {
-                    dispatch(setEditingProduct(row));
-                }}
+                onClick={() => { dispatch(setEditingProduct(row)) }}
             >
                 <PencilIcon width={24} height={24} className={""}/>
             </button>
@@ -86,6 +108,7 @@ export function PendingProductsTable() {
                 disabled={deleteMutation.isPending}
                 onClick={() => {
                     if (productsOrder?.id) {
+                        dispatch(clearEditingProduct());
                         deleteMutation.mutate({ orderId: productsOrder.id, productId: row.id });
                     }
                 }}

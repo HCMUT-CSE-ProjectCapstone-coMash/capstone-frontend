@@ -17,7 +17,12 @@ export const EmployeeOrderPageRoute = `${EmployeeBaseRoute}/don-hang`;
 
 // Owner routes
 export const OwnerHomePageRoute = OwnerBaseRoute;
+
 export const OwnerProductPageRoute = `${OwnerBaseRoute}/san-pham`;
+export const OwnerProductsOrderPageRoute = `${OwnerBaseRoute}/san-pham/cho-duyet`;
+export const OwnerProductsInProductsOrderPageRoute = (productsOrdersId: string) => 
+    `${OwnerBaseRoute}/san-pham/cho-duyet/chi-tiet/${productsOrdersId}`;
+
 export const OwnerEmployeeManagementPageRoute = `${OwnerBaseRoute}/quan-ly-nhan-vien`;
 export const OwnerImportPageRoute = `${OwnerBaseRoute}/nhap-hang`;
 export const OwnerSellPageRoute = `${OwnerBaseRoute}/ban-hang`;

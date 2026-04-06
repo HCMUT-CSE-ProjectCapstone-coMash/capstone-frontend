@@ -3,6 +3,8 @@ import alertReducer from "./alertStore";
 import userReducer from "./userStore";
 import productEditReducer from "./productEditStore";
 import productsOrderReducer from "./productsOrderStore";
+import ownerProductEditReducer from "./ownerProductEditStore";
+import printReducer from "./printStore";
 
 export const store = configureStore({
     reducer: {
@@ -10,6 +12,8 @@ export const store = configureStore({
         user: userReducer,
         productEdit: productEditReducer,
         productsOrder: productsOrderReducer,
+        ownerProductEdit: ownerProductEditReducer,
+        print: printReducer,
     },
 });
 

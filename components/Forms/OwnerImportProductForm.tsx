@@ -1,23 +1,22 @@
 "use client";
 
+import { categories, colors, patterns, sizesLetter, sizesNumber } from "@/const/product";
+import Image from "next/image";
 import { useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
+import { SearchInput } from "../FormInputs/SearchInput";
+import { CreateProduct, Product } from "@/types/product";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
+import { AnalyzeImage, CreateProductIdByCategory, FetchApprovedProductByName, OwnerCreateProduct, SearchSimilarProduct } from "@/api/products/products";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
+import { useDebounce } from "@/hooks/useDebounce";
+import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { CreateProduct, Product } from "@/types/product";
-import { RootState } from "@/utilities/store";
-import Image from "next/image";
-import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
-import { addProductToOrder } from "@/utilities/productsOrderStore";
-import { SearchInput } from "../FormInputs/SearchInput";
-import { useDebounce } from "@/hooks/useDebounce";
-import { setEditingProduct } from "@/utilities/productEditStore";
-import { parseFormattedNumber } from "@/utilities/numberFormat";
+import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 
 interface FormState {
     productId: string;
@@ -29,6 +28,8 @@ interface FormState {
     letterQuantities: Record<string, number>;
     numberQuantities: Record<string, number>;
     imageFile: File | null;
+    importPrice: number,
+    salePrice: number,
 }
 
 const createInitialQuantities = (sizes: string[]) => Object.fromEntries(sizes.map(size => [size, 0]));
@@ -43,12 +44,13 @@ const initialFormState : FormState = {
     letterQuantities: createInitialQuantities(sizesLetter),
     numberQuantities: createInitialQuantities(sizesNumber),
     imageFile: null,
+    importPrice: 0,
+    salePrice: 0,
 };
 
-export function ImportProductForm() {
+export function OwnerImportProductForm() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
-    const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
 
     const [form, setForm] = useState(initialFormState);
     const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -65,99 +67,6 @@ export function ImportProductForm() {
     }
 
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-    // Tạo mã sản phẩm tự động khi chọn phân loại
-    const createProductIdMutation = useMutation({
-        mutationFn: (productName: string) => CreateProductIdByCategory(productName),
-
-        onSuccess: (data) => {
-            setField("productId", data.productId);
-        },
-
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo mã sản phẩm tự động" }));
-        }
-    });
-
-    // Tạo sản phẩm mới
-    const createMutation = useMutation({
-        mutationFn: ({ productData, productsOrderId } : { productData: CreateProduct, productsOrderId: string }) => CreateProductAsync(productData, productsOrderId),
-
-        onSuccess: (data) => {
-            const newProduct: Product = {
-                id: data.id,
-                productId: data.productId,
-                productName: data.productName,
-                category: data.category,
-                color: data.color,
-                pattern: data.pattern,
-                sizeType: data.sizeType,
-                quantities: data.quantities,
-                createdBy: data.createdBy,
-                createdAt: data.createdAt,
-                status: data.status,
-                imageURL: data.imageURL,
-                importPrice: data.importPrice,
-                salePrice: data.salePrice,
-            }
-            dispatch(addProductToOrder(newProduct));
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
-
-            setForm(initialFormState);
-        },
-
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại" }));
-        }
-    });
-
-    // Xử lý submit form thêm sản phẩm mới
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if(!user.id || !productsOrder?.id) {
-            return;
-        }
-
-        if(!form.productName) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
-            return;
-        }
-
-        if(!form.category) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui chọn phân loại" }));
-            return;
-        }
-
-        if(!form.color) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn màu" }));
-            return;
-        }
-        
-        const sizeQuantities = form.isNumberSize ? form.numberQuantities : form.letterQuantities;
-        const formattedQuantities = Object.entries(sizeQuantities)
-            .filter(([, qty]) => qty > 0)
-            .map(([size, qty]) => ({ size, quantities: qty }));
-
-        if (formattedQuantities.length === 0) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số lượng cho ít nhất một size" }));
-            return;
-        }
-
-        const productData: CreateProduct = {
-            productId: form.productId,
-            productName: form.productName,
-            category: form.category,
-            color: form.color,
-            pattern: form.pattern,
-            sizeType: form.isNumberSize ? "Number" : "Letter",
-            quantities: formattedQuantities,
-            createdBy: user.id,
-            image: form.imageFile
-        };
-
-        createMutation.mutate({ productData, productsOrderId: productsOrder.id });
-    }
 
     // Xử lý khi người dùng chọn hình ảnh để tải lên
     const imageSearchMutation = useMutation({
@@ -186,6 +95,19 @@ export function ImportProductForm() {
 
         onError: () => {
 
+        }
+    });
+
+    // Tạo mã sản phẩm tự động khi chọn phân loại
+    const createProductIdMutation = useMutation({
+        mutationFn: (productName: string) => CreateProductIdByCategory(productName),
+
+        onSuccess: (data) => {
+            setField("productId", data.productId);
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo mã sản phẩm tự động" }));
         }
     });
 
@@ -221,6 +143,77 @@ export function ImportProductForm() {
         value: p.productName,
         data: p
     }));
+
+    const createMutation = useMutation({
+        mutationFn: (newProduct: CreateProduct) => OwnerCreateProduct(newProduct),
+
+        onSuccess: () => {
+            setForm(initialFormState);
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại" }));
+        }
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if(!user.id) {
+            return;
+        }
+
+        if(!form.productName) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
+            return;
+        }
+
+        if(!form.category) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui chọn phân loại" }));
+            return;
+        }
+
+        if(!form.color) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn màu" }));
+            return;
+        }
+
+        if(!form.importPrice) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá nhập" }));
+            return;
+        }
+
+        if(!form.salePrice) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá bán" }));
+            return;
+        }
+
+        const sizeQuantities = form.isNumberSize ? form.numberQuantities : form.letterQuantities;
+        const formattedQuantities = Object.entries(sizeQuantities)
+            .filter(([, qty]) => qty > 0)
+            .map(([size, qty]) => ({ size, quantities: qty }));
+
+        if (formattedQuantities.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số lượng cho ít nhất một size" }));
+            return;
+        }
+
+        const newProduct : CreateProduct = {
+            productId: form.productId,
+            productName: form.productName,
+            category: form.category,
+            color: form.color,
+            pattern: form.pattern,
+            sizeType: form.isNumberSize ? "Number" : "Letter",
+            quantities: formattedQuantities,
+            createdBy: user.id,
+            image: form.imageFile,
+            importPrice: form.importPrice,
+            salePrice: form.salePrice,
+        }
+
+        createMutation.mutate(newProduct);
+    };
 
     return (
         <div className="flex gap-[10vw]">
@@ -312,7 +305,7 @@ export function ImportProductForm() {
                         value={form.productName}
                         onChange={(e) => setField("productName", e.target.value)}
                         suggestions={suggestions}
-                        onSuggestionClick={(item) => { dispatch(setEditingProduct(item.data)) }}
+                        onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)) }}
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
                                 <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
@@ -320,6 +313,24 @@ export function ImportProductForm() {
                             </div>
                         )}
                     />
+
+                    <div className="flex items-center justify-between gap-5">
+                        <TextInput
+                            label={"Giá nhập"} 
+                            placeHolder="" 
+                            value={formatThousands(form.importPrice)}
+                            inputType="text"
+                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))} // store raw number
+                        />
+
+                        <TextInput
+                            label={"Giá bán"} 
+                            placeHolder="" 
+                            value={formatThousands(form.salePrice)}
+                            inputType="text"
+                            onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
+                        />
+                    </div>
 
                     <div className="flex items-center justify-between gap-5">
                         <SelectInput 
@@ -361,7 +372,7 @@ export function ImportProductForm() {
                             ${createMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`} 
                             disabled={createMutation.isPending}
                         >
-                            {createMutation.isPending ? "Đang thêm..." : "Thêm vào danh sách duyệt"}
+                            {createMutation.isPending ? "Đang thêm..." : "Thêm sản phẩm"}
                         </button>
                     </div>
                 </form>

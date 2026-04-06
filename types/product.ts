@@ -3,6 +3,12 @@ export interface ProductQuantity {
     quantities: number
 }
 
+export interface ProductQuantityChange {
+    size: string;
+    oldQuantity: number;
+    newQuantity: number;
+}
+
 export interface CreateProduct {
     productId: string,
     productName: string,
@@ -12,7 +18,9 @@ export interface CreateProduct {
     sizeType: "Letter" | "Number",
     quantities: ProductQuantity[],
     createdBy: string,
-    image: File | null
+    image: File | null,
+    importPrice?: number,
+    salePrice?: number,
 }
 
 export interface Product {
@@ -26,8 +34,11 @@ export interface Product {
     quantities: ProductQuantity[],
     createdBy: string,
     createdAt: string,
-    status: "Pending" | "Approved" | "Sending",
+    status: "Pending" | "Approved",
     imageURL: string
+    quantityChanges?: ProductQuantityChange[],
+    importPrice: number,
+    salePrice: number,
 }
 
 export interface UpdateProduct {
@@ -38,4 +49,7 @@ export interface UpdateProduct {
     pattern?: string,
     sizeType?: "Letter" | "Number",
     quantities?: ProductQuantity[],
+    image?: File | null,
+    importPrice?: number,
+    salePrice?: number,
 }
