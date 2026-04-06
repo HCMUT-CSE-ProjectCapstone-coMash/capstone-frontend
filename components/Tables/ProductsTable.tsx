@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { RootState } from "@/utilities/store";
 import { toggleProductId } from "@/utilities/printStore";
+import Image from "next/image";
 
 export function ProductsTable() {
     const router = useRouter();
@@ -29,6 +30,11 @@ export function ProductsTable() {
 
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
+        {title: "Hình ảnh", key: "imageUrl", render: (row) => (
+            <div className="w-fit mx-auto">
+                <Image src={row.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+            </div>
+        )},
         { title: "Tên sản phẩm", key: "productName", render: (row) => (
             <button onClick={() => dispatch(setOwnerEditingProduct(row))}>{row.productName}</button>
         )},
