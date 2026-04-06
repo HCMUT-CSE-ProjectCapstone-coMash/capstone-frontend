@@ -8,10 +8,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DeleteProductFromProductsOrders, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
 import { formatThousands } from "@/utilities/numberFormat";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { setEditingProduct } from "@/utilities/productEditStore";
+import { ProductsOrder } from "@/types/productsOrder";
+import { setProductsOrder } from "@/utilities/productsOrderStore";
 
 export function ProductOrderTable() {
     const router = useRouter();
@@ -24,6 +27,21 @@ export function ProductOrderTable() {
         queryFn: () => GetProductsOrderById(productsOrdersId as string),
         enabled: !!productsOrdersId,
     });
+
+    useEffect(() => {
+        if (data) {
+            const productsOrder: ProductsOrder = {
+                id: data.id,
+                createdBy: data.createdBy,
+                createdAt: data.createdAt,
+                orderName: data.orderName,
+                orderDescription: data.orderDescription,
+                orderStatus: data.orderStatus,
+                products: data.products,
+            }
+            dispatch(setProductsOrder(productsOrder));
+        }
+    }, [data, dispatch]);
 
     const deleteMutation = useMutation({
         mutationFn: ({ orderId, productId } : { orderId: string, productId: string}) => DeleteProductFromProductsOrders(orderId, productId),
@@ -40,7 +58,11 @@ export function ProductOrderTable() {
 
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
-        { title: "Tên sản phẩm", key: "productName", render: (row) => <span>{row.productName}</span> },
+        { title: "Tên sản phẩm", key: "productName", render: (row) => (
+            <button onClick={() => dispatch(setEditingProduct(row))}>
+                {row.productName}
+            </button>
+        )},
         { title: "Số lượng", key: "quantities", render: (row) => {
             if (row.quantityChanges && row.quantityChanges.length > 0) {
                 return (
@@ -83,7 +105,7 @@ export function ProductOrderTable() {
                 <TrashIcon width={20} height={20} className=""/>
             </button>
         )},
-    ], [deleteMutation, productsOrdersId]);
+    ], [dispatch, deleteMutation, productsOrdersId]);
 
     const products = data?.products || [];
     const orderName = data?.orderName || "Chi tiết đơn hàng";

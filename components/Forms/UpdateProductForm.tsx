@@ -137,7 +137,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
 
-            setInitialForm(form);
+            dispatch(clearEditingProduct());
         },
 
         onError: () => {
@@ -172,12 +172,12 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             if (alreadyExists) {
                 dispatch(updateProductInOrder(newProduct));
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
-                setInitialForm(form);
             } else {
                 dispatch(addProductToOrder(newProduct));
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
-                dispatch(clearEditingProduct());
             }
+
+            dispatch(clearEditingProduct());
         },
 
         onError: () => {
@@ -236,7 +236,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             sizeType: form.isNumberSize ? "Number" : "Letter",
             quantities: formattedQuantities
         };
-
+        
         if (form.status === "Pending")
             updateMutation.mutate({ productId: editProduct.id, updateData });
         else 
