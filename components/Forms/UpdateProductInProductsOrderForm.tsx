@@ -338,12 +338,14 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
                     </div>
 
                     <div className="flex justify-end mt-5 gap-x-5">
-                        <button
-                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
-                            onClick={() => dispatch(clearEditingProduct())}
-                        >
-                            {"Huỷ bỏ"}
-                        </button>
+                        {user.role === "employee" && (
+                            <button
+                                className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
+                                onClick={() => dispatch(clearEditingProduct())}
+                            >
+                                {"Huỷ bỏ"}
+                            </button>
+                        )}
 
                         <button
                             className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
@@ -351,8 +353,8 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
                             disabled={isPending || isUnchanged}
                         >
                             {isPending 
-                                ? form.status === "Pending" ? "Đang lưu..." : "Đang cập nhật..."
-                                : form.status === "Pending" ? "Lưu thay đổi" : "Cập nhật"}
+                                ? (form.status === "Pending" && user.role === "employee") ? "Đang lưu..." : "Đang cập nhật..."
+                                : (form.status === "Pending" && user.role === "employee") ? "Lưu thay đổi" : "Cập nhật"}
                         </button>
                     </div>
                 </form>

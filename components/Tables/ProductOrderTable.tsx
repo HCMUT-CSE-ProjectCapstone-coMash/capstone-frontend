@@ -9,18 +9,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { DeleteProductFromProductsOrders, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useEffect, useMemo } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { setEditingProduct } from "@/utilities/productEditStore";
+import { clearEditingProduct, setEditingProduct } from "@/utilities/productEditStore";
 import { ProductsOrder } from "@/types/productsOrder";
 import { setProductsOrder } from "@/utilities/productsOrderStore";
+import { RootState } from "@/utilities/store";
+import { UpdateProductInProductsOrderForm } from "../Forms/UpdateProductInProductsOrderForm";
 
 export function ProductOrderTable() {
     const router = useRouter();
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
     const { productsOrdersId } = useParams();
+    const editProduct = useSelector((state: RootState) => state.productEdit.editingProduct);
 
     const { data, isLoading } = useQuery({
         queryKey: ["productsOrderDetails", productsOrdersId],
@@ -107,27 +110,51 @@ export function ProductOrderTable() {
         )},
     ], [dispatch, deleteMutation, productsOrdersId]);
 
-    const products = data?.products || [];
+    const products: Product[] = data?.products || [];
     const orderName = data?.orderName || "Chi tiết đơn hàng";
 
-    return (
+    const currentIndex = products.findIndex((p) => p.id === editProduct?.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < products.length - 1;
 
+    return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <p className="text-purple text-2xl font-medium">{orderName}</p>
                 <button
-                    onClick={() => router.back()}
+                    onClick={() => editProduct ? dispatch(clearEditingProduct()) : router.back()}
                     className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
                 >
                     Danh sách sản phẩm chờ duyệt
                 </button>
             </div>
 
-            <Table 
-                columns={columns} 
-                data={products} 
-                isLoading={isLoading} 
-            />
+            {editProduct ? (
+                <div className="flex flex-col gap-4">
+                    <UpdateProductInProductsOrderForm editProduct={editProduct}/>
+                    <div className="flex items-center justify-between w-1/6 ml-auto">
+                        <button
+                            onClick={() => dispatch(setEditingProduct(products[currentIndex - 1]))}
+                            disabled={!hasPrev}
+                            className={`py-2 px-4 rounded-lg border border-purple text-purple text-sm font-medium transition
+                                ${hasPrev ? "hover:bg-purple/5 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                        >
+                            ← Trước
+                        </button>
+                        <span className="text-sm text-gray-500">{currentIndex + 1} / {products.length}</span>
+                        <button
+                            onClick={() => dispatch(setEditingProduct(products[currentIndex + 1]))}
+                            disabled={!hasNext}
+                            className={`py-2 px-4 rounded-lg border border-purple text-purple text-sm font-medium transition
+                                ${hasNext ? "hover:bg-purple/5 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                        >
+                            Sau →
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <Table columns={columns} data={products} isLoading={isLoading}/>
+            )}
         </div>
     );
 }
