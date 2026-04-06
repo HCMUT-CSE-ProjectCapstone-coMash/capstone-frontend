@@ -1,4 +1,4 @@
-import { CreateProduct, ProductQuantity, UpdateProduct } from "@/types/product";
+import { CreateProduct, UpdateProduct } from "@/types/product";
 import { axiosClient } from "../axiosClient";
 import { fileToBase64 } from "@/utilities/image";
 
