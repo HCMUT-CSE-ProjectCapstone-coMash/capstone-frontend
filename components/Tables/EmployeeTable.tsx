@@ -26,7 +26,7 @@ export function EmployeeTable({ employees }: EmployeeTableProps) {
     return (
         <div className="w-full">
             {/* --- Nút Thêm Nhân Viên --- */}
-            <div className="flex justify-end mb-5">
+            <div className="flex justify-end mb-10.25">
                 <button
                     onClick={() => router.push(`${OwnerEmployeeManagementPageRoute}/them-nhan-vien`)}
                     className="py-2 px-3 rounded-lg text-white font-semibold bg-purple text-sm cursor-pointer inline-block text-center hover:opacity-90 transition-opacity"
