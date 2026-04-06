@@ -17,6 +17,7 @@ import { ProductsOrder } from "@/types/productsOrder";
 import { setProductsOrder } from "@/utilities/productsOrderStore";
 import { RootState } from "@/utilities/store";
 import { UpdateProductInProductsOrderForm } from "../Forms/UpdateProductInProductsOrderForm";
+import Image from "next/image";
 
 export function ProductOrderTable() {
     const router = useRouter();
@@ -61,6 +62,11 @@ export function ProductOrderTable() {
 
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
+        {title: "Hình ảnh", key: "imageUrl", render: (row) => (
+            <div className="w-fit mx-auto">
+                <Image src={row.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+            </div>
+        )},
         { title: "Tên sản phẩm", key: "productName", render: (row) => (
             <button onClick={() => dispatch(setEditingProduct(row))}>
                 {row.productName}
