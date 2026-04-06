@@ -305,7 +305,7 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
                     )}
 
                     <div className="flex items-center justify-between gap-5">
-                        <SelectInput disabled={form.status === "Approved"} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
+                        <SelectInput disabled={true} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
                         <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
                         <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
                     </div>
