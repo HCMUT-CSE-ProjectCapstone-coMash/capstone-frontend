@@ -17,7 +17,7 @@ export function SelectInput({ label, options, value, onChange, disabled }: Selec
             <p className="text-sm font-normal text-tgray9">{label}</p>
             <div className="relative flex-1">
                 <select 
-                    className={`text-sm p-2.5 rounded-lg border-[0.5px] border-solid border-tgray5 appearance-none w-full focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple transition-all ${disabledClass}`}
+                    className={`text-sm min-h-12.5 p-2.5 rounded-lg border-[0.5px] border-solid border-tgray5 appearance-none w-full focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple transition-all ${disabledClass}`}
                     value={value}
                     onChange={(e) => onChange(e.target.value)}
                     disabled={disabled}
