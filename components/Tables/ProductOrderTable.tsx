@@ -2,11 +2,11 @@
 
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { Product } from "@/types/product";
+import { Product, UpdateProduct } from "@/types/product";
 import { TrashIcon } from "@/public/assets/Icons";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DeleteProductFromProductsOrders, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
+import { ApproveProductsOrder, DeleteProductFromProductsOrders, DeleteProductsOrder, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,6 +18,9 @@ import { setProductsOrder } from "@/utilities/productsOrderStore";
 import { RootState } from "@/utilities/store";
 import { UpdateProductInProductsOrderForm } from "../Forms/UpdateProductInProductsOrderForm";
 import Image from "next/image";
+import { Cell } from "../Cell";
+import { OwnerUpdateProductInProductsOrder } from "@/api/products/products";
+
 
 export function ProductOrderTable() {
     const router = useRouter();
@@ -49,14 +52,22 @@ export function ProductOrderTable() {
 
     const deleteMutation = useMutation({
         mutationFn: ({ orderId, productId } : { orderId: string, productId: string}) => DeleteProductFromProductsOrders(orderId, productId),
-
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xoá sản phẩm thành công" }));
         },
-
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Xoá sản phẩm thất bại" }));
+        }
+    });
+    const updatePriceMutation = useMutation({
+        mutationFn: ({productId, data}: {productId: string; data: UpdateProduct;}) => OwnerUpdateProductInProductsOrder(productId, productsOrdersId as string, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật thành công"}));
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại"}));
         }
     });
 
@@ -99,8 +110,32 @@ export function ProductOrderTable() {
                 </div>
             );
         }},
-        { title: "Giá nhập", key: "importPrice", render: (row) => <span>{formatThousands(row.importPrice)} VND</span> },
-        { title: "Giá bán", key: "salePrice", render: (row) => <span>{formatThousands(row.salePrice)} VND</span> },
+        { title: "Giá nhập", key: "importPrice", render: (row) => 
+            <Cell
+                value={row.importPrice}
+                type="number"
+                formatter={(v) => `${formatThousands(v)} VND`}
+                onSave={(newValue) =>
+                    updatePriceMutation.mutate({
+                        productId: row.id,
+                        data: { importPrice: newValue }
+                    })
+                }
+            />
+        },
+        { title: "Giá bán", key: "salePrice", render: (row) => 
+            <Cell
+                value={row.salePrice}
+                type="number"
+                formatter={(v) => `${formatThousands(v)} VND`}
+                onSave={(newValue) =>
+                    updatePriceMutation.mutate({
+                        productId: row.id,
+                        data: { salePrice: newValue }
+                    })
+                }
+            />
+        },
         { title: "Trạng thái", key: "status", render: (row) => {
             if (row.status === "Approved") return <span className="text-purple">Nhập thêm</span>;
             if (row.status === "Pending") return <span className="text-pink">Hàng mới</span>;
@@ -122,6 +157,27 @@ export function ProductOrderTable() {
     const currentIndex = products.findIndex((p) => p.id === editProduct?.id);
     const hasPrev = currentIndex > 0;
     const hasNext = currentIndex < products.length - 1;
+    const approveMutation = useMutation({
+        mutationFn: (orderId: string) => ApproveProductsOrder(orderId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Duyệt đơn hàng thành công"}));
+            router.back();
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Duyệt đơn hàng thất bại"}));
+        }
+    });
+    const deleteOrderMutation = useMutation({
+        mutationFn: (orderId: string) => DeleteProductsOrder(orderId),
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Không duyệt thành công" }));
+            router.back();
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không duyệt thất bại"}));
+        }
+    });
 
     return (
         <div className="flex flex-col gap-4">
@@ -159,7 +215,32 @@ export function ProductOrderTable() {
                     </div>
                 </div>
             ) : (
-                <Table columns={columns} data={products} isLoading={isLoading}/>
+                <>
+                    <div className="flex flex-col gap-4 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
+                        {/* thanh filter va search */}
+                        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+                            <div className="h-11 min-w-[160px] flex-1 rounded-lg border border-gray-200 bg-gray-50" />
+                            <div className="h-11 min-w-[160px] flex-1 rounded-lg border border-gray-200 bg-gray-50" />
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                onClick={() => approveMutation.mutate(productsOrdersId as string)}
+                                disabled={approveMutation.isPending}
+                                className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer disabled:opacity-50"
+                            >
+                                {approveMutation.isPending ? "Đang duyệt..." : "Duyệt"}
+                            </button>
+                            <button
+                                onClick={() => deleteOrderMutation.mutate(productsOrdersId as string)}
+                                disabled={deleteOrderMutation.isPending}
+                                className="py-2 px-4 rounded-lg border border-red-500 bg-red text-white text-sm font-medium transition hover:bg-red-600 disabled:opacity-50"
+                            >
+                                {deleteOrderMutation.isPending ? "Đang xử lý..." : "Không duyệt"}
+                            </button>
+                        </div>
+                    </div>
+                    <Table columns={columns} data={products} isLoading={isLoading}/>
+                </>
             )}
         </div>
     );
