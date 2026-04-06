@@ -10,7 +10,7 @@ import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { useDispatch, useSelector } from "react-redux";
 import { clearEditingProduct } from "@/utilities/productEditStore";
-import { CreateProductsOrderDetailForApprovedProduct, PatchProductInProductsOrder } from "@/api/products/products";
+import { CreateProductsOrderDetailForApprovedProduct, OwnerUpdateProductInProductsOrder, PatchProductInProductsOrder } from "@/api/products/products";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { addProductToOrder, updateProductInOrder } from "@/utilities/productsOrderStore";
@@ -188,6 +188,20 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         }
     });
 
+    const OwnerUpdateProductInProductsOrderMutation = useMutation({
+        mutationFn: ({ productId, productsOrderId, ownerUpdateData } : 
+            { productId: string, productsOrderId: string, ownerUpdateData : UpdateProduct }) => OwnerUpdateProductInProductsOrder(productId, productsOrderId, ownerUpdateData),
+
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
+            dispatch(clearEditingProduct());
+        },
+
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật sản phẩm thất bại"}));
+        }
+    });
+
     // Xử lý submit form: validate dữ liệu, gọi mutation cập nhật sản phẩm
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -239,6 +253,13 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             sizeType: form.isNumberSize ? "Number" : "Letter",
             quantities: formattedQuantities
         };
+
+        if (user.role === "owner") {
+            updateData.importPrice = form.importPrice;
+            updateData.salePrice = form.salePrice;
+            OwnerUpdateProductInProductsOrderMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, ownerUpdateData: updateData });
+            return;
+        }
         
         if (form.status === "Pending") {
             updateMutation.mutate({ productId: editProduct.id, updateData });
@@ -294,7 +315,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     />
 
                     <TextInput
-                        disabled={form.status === "Approved"}
+                        disabled={form.status === "Approved" && user.role === "employee"}
                         label={"Tên sản phẩm"}
                         placeHolder=""
                         value={form.productName}
@@ -323,8 +344,8 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
                     <div className="flex items-center justify-between gap-5">
                         <SelectInput disabled={form.status === "Approved"} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
-                        <SelectInput disabled={form.status === "Approved"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
-                        <SelectInput disabled={form.status === "Approved"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
+                        <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
+                        <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
                     </div>
 
                     <div className="flex items-center justify-between">

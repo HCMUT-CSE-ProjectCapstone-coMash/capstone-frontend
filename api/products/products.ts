@@ -207,3 +207,34 @@ export async function FetchProducts(currentPage: number, pageSize: number) {
 
     return response.data;
 }
+
+export async function OwnerUpdateProductInProductsOrder(productId: string, productsOrderId: string, updateData: UpdateProduct) {
+    const formData = new FormData();
+
+    if (updateData.productName) formData.append("ProductName", updateData.productName);
+    if (updateData.color) formData.append("Color", updateData.color);
+    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
+    if (updateData.importPrice) formData.append("ImportPrice", updateData.importPrice.toString());
+    if (updateData.salePrice) formData.append("SalePrice", updateData.salePrice.toString());
+    
+    if (updateData.quantities) {
+        updateData.quantities.forEach((quantity, index) => {
+            formData.append(`Quantities[${index}].Size`, quantity.size);
+            formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+        })
+    }
+
+    const response = await axiosClient.patch(
+        `/product/owner-patch-in-products-order/${productId}/${productsOrderId}`,
+        formData,
+        { 
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+    );
+
+    return response.data;
+}
