@@ -24,6 +24,7 @@ export const OwnerProductsInProductsOrderPageRoute = (productsOrdersId: string) 
     `${OwnerBaseRoute}/san-pham/cho-duyet/chi-tiet/${productsOrdersId}`;
 
 export const OwnerEmployeeManagementPageRoute = `${OwnerBaseRoute}/quan-ly-nhan-vien`;
+export const OwnerAddEmployeePageRoute = `${OwnerEmployeeManagementPageRoute}/them-nhan-vien`;
 export const OwnerImportPageRoute = `${OwnerBaseRoute}/nhap-hang`;
 export const OwnerSellPageRoute = `${OwnerBaseRoute}/ban-hang`;
 export const OwnerSalePageRoute = `${OwnerBaseRoute}/khuyen-mai`;
