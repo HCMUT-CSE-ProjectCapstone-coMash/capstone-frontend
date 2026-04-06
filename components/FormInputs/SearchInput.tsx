@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { SearchIcon } from "@/public/assets/Icons";
 
 interface Suggestion<T> {
     label: string;
@@ -17,10 +18,11 @@ interface SearchInputProps<T> {
     suggestions: Suggestion<T>[],
     onSuggestionClick: (item: Suggestion<T>) => void,
     renderItem: (item: Suggestion<T>) => React.ReactNode;
-    isError?: boolean
+    isError?: boolean,
+    isIcon?: boolean,
 }
 
-export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError } : SearchInputProps<T>) {
+export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError, isIcon = false } : SearchInputProps<T>) {
     const isLeft = labelPosition === "left";
     const borderClass = isError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-tgray5 focus:border-purple focus:ring-purple";
 
@@ -30,7 +32,12 @@ export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosit
         <div className={`w-full font-display ${isLeft ? "flex items-center gap-x-4" : "flex flex-col gap-y-2.5"}`}>
             <label className={`text-sm font-normal text-tgray9 ${isLeft ? "w-25" : ""}`}>{label}</label>
 
-            <div className="relative w-full">
+            <div className="relative w-full flex items-center">
+                {isIcon && (
+                    <div className="absolute left-3 flex items-center pointer-events-none">
+                        <SearchIcon height={24} width={24} className="w-5 h-5 text-tgray9" /> 
+                    </div>
+                )}
                 <input
                     placeholder={placeHolder}
                     value={value} 
