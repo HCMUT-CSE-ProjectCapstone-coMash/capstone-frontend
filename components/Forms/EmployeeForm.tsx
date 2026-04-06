@@ -8,6 +8,7 @@ import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 
 interface EmployeeFormState {
+    employeeId: string;
     employeeName: string;
     employeeGender: string;
     employeeBirthDate: string;
@@ -17,6 +18,7 @@ interface EmployeeFormState {
 }
 
 const initialEmployeeFormState: EmployeeFormState = {
+    employeeId: "",
     employeeName: "",
     employeeGender: "",
     employeeBirthDate: "",
@@ -47,21 +49,57 @@ export function EmployeeForm() {
             return;
         }
 
+        if (!form.employeeGender.trim()) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giới tính nhân viên" }));
+            return;
+        }
+
+        if (!form.employeeBirthDate.trim()) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập ngày sinh nhân viên" }));
+            return;
+        }
+
         if (!form.employeePhone.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số điện thoại nhân viên" }));
+            return;
+        }
+
+        if (!form.employeeMail.trim()) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập email nhân viên" }));
             return;
         }
 
         const dataToSubmit = {
             ...form,
         };
-        console.log("Dữ liệu hóa đơn chuẩn bị gửi:", dataToSubmit);
+        console.log("Dữ liệu nhân viên chuẩn bị gửi:", dataToSubmit);
         
-        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công!" }));
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm nhân viên thành công!" }));
+
+    };
+
+    const formatDateInput = (value: string) => {
+        // Loại bỏ tất cả các ký tự không phải là số
+        const onlyNumbers = value.replace(/\D/g, "");
+
+        // Cắt chuỗi và chèn dấu '/'
+        if (onlyNumbers.length <= 2) {
+            return onlyNumbers;
+        } else if (onlyNumbers.length <= 4) {
+            return `${onlyNumbers.slice(0, 2)}/${onlyNumbers.slice(2)}`;
+        } else {
+            return `${onlyNumbers.slice(0, 2)}/${onlyNumbers.slice(2, 4)}/${onlyNumbers.slice(4, 8)}`;
+        }
     };
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+            <TextInput
+                label={"Mã số nhân viên"} 
+                placeHolder="" 
+                value={form.employeeId}
+                onChange={(e) => setField("employeeId", e.target.value)} 
+            />
             <TextInput
                 label={"Tên nhân viên"} 
                 placeHolder="Nhập tên" 
@@ -83,7 +121,10 @@ export function EmployeeForm() {
                     label={"Ngày sinh"} 
                     placeHolder="dd/mm/yyyy" 
                     value={form.employeeBirthDate}
-                    onChange={(e) => setField("employeeBirthDate", e.target.value)} 
+                    onChange={(e) => {
+                        const formattedDate = formatDateInput(e.target.value);
+                        setField("employeeBirthDate", formattedDate);
+                    }}
                     />
                 </div>
             </div>
@@ -102,6 +143,14 @@ export function EmployeeForm() {
                     onChange={(e) => setField("employeeMail", e.target.value)} 
                 />
             </div>
+            <button 
+                type="submit" 
+                onClick={handleSubmit}
+                className="p-2.5 w-45 mt-2.5 self-end rounded-lg text-white font-semibold bg-pink text-base cursor-pointer hover:bg-opacity-90 transition-all"
+            >
+                Thêm nhân viên
+            </button>
         </form>
+        
     );
 }
