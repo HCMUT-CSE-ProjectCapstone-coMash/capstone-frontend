@@ -1,6 +1,6 @@
 "use client";
 
-import { Product, ProductQuantity, UpdateProduct } from "@/types/product";
+import { Product, UpdateProduct } from "@/types/product";
 import { useEffect, useMemo, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
@@ -10,7 +10,7 @@ import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { useDispatch, useSelector } from "react-redux";
 import { clearEditingProduct } from "@/utilities/productEditStore";
-import { CreateProductsOrderDetailForApprovedProduct, PatchProductInProductsOrder } from "@/api/products/products";
+import { OwnerUpdateProductInProductsOrder, EmployeeUpdateProductInProductsOrder } from "@/api/products/products";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { addProductToOrder, updateProductInOrder } from "@/utilities/productsOrderStore";
@@ -80,7 +80,7 @@ const getMinQuantities = (product: Product, sizes: string[]): Record<string, num
     return map;
 };
 
-export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
+export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductFormProps) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
@@ -113,33 +113,12 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         setForm((prev) => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
     };
 
-    // Tạo mutation cập nhật sản phẩm, gọi API update và xử lý kết quả
-    const updateMutation = useMutation({
-        mutationFn: ({ productId, updateData }: { productId: string, updateData: UpdateProduct }) => PatchProductInProductsOrder(productId, updateData),
+    const OwnerUpdateProductInProductsOrderMutation = useMutation({
+        mutationFn: ({ productId, productsOrderId, ownerUpdateData } : 
+            { productId: string, productsOrderId: string, ownerUpdateData : UpdateProduct }) => OwnerUpdateProductInProductsOrder(productId, productsOrderId, ownerUpdateData),
 
-        onSuccess: (data) => {
-            const newProduct: Product = {
-                id: data.id,
-                productId: data.productId,
-                productName: data.productName,
-                category: data.category,
-                color: data.color,
-                pattern: data.pattern,
-                sizeType: data.sizeType,
-                quantities: data.quantities,
-                createdBy: data.createdBy,
-                createdAt: data.createdAt,
-                status: data.status,
-                imageURL: data.imageURL,
-                quantityChanges: data.quantityChanges,
-                importPrice: data.importPrice,
-                salePrice: data.salePrice
-            }
-
-            dispatch(updateProductInOrder(newProduct));
-
+        onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
-
             dispatch(clearEditingProduct());
         },
 
@@ -148,8 +127,9 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         }
     });
 
-    const AddMoreProductMutation = useMutation({
-        mutationFn: ({ productId, productsOrderId, productQuantities } : { productId: string, productsOrderId: string, productQuantities: ProductQuantity[] }) => CreateProductsOrderDetailForApprovedProduct(productId, productsOrderId, productQuantities),
+    const EmployeeUpdateProductInProductsOrderMutation = useMutation({
+        mutationFn: ({ productId, productsOrderId, employeeUpdateData } : 
+            { productId: string, productsOrderId: string, employeeUpdateData : UpdateProduct }) => EmployeeUpdateProductInProductsOrder(productId, productsOrderId, employeeUpdateData),
 
         onSuccess: (data) => {
             const newProduct: Product = {
@@ -177,16 +157,18 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
             } else {
                 dispatch(addProductToOrder(newProduct));
-                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
             }
 
             dispatch(clearEditingProduct());
         },
 
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại"}));
+        onError: () => { 
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật sản phẩm thất bại"}));
         }
     });
+
+    const isPending = OwnerUpdateProductInProductsOrderMutation.isPending || EmployeeUpdateProductInProductsOrderMutation.isPending;
 
     // Xử lý submit form: validate dữ liệu, gọi mutation cập nhật sản phẩm
     const handleSubmit = (e: React.FormEvent) => {
@@ -239,12 +221,13 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             sizeType: form.isNumberSize ? "Number" : "Letter",
             quantities: formattedQuantities
         };
-        
-        if (form.status === "Pending") {
-            updateMutation.mutate({ productId: editProduct.id, updateData });
-        }
-        else {
-            AddMoreProductMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, productQuantities: formattedQuantities });
+
+        if (user.role === "owner") {
+            updateData.importPrice = form.importPrice;
+            updateData.salePrice = form.salePrice;
+            OwnerUpdateProductInProductsOrderMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, ownerUpdateData: updateData });
+        } else {
+            EmployeeUpdateProductInProductsOrderMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, employeeUpdateData: updateData });
         }
     }
 
@@ -294,7 +277,7 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     />
 
                     <TextInput
-                        disabled={form.status === "Approved"}
+                        disabled={form.status === "Approved" && user.role === "employee"}
                         label={"Tên sản phẩm"}
                         placeHolder=""
                         value={form.productName}
@@ -323,8 +306,8 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
 
                     <div className="flex items-center justify-between gap-5">
                         <SelectInput disabled={form.status === "Approved"} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
-                        <SelectInput disabled={form.status === "Approved"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
-                        <SelectInput disabled={form.status === "Approved"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
+                        <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
+                        <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -362,23 +345,15 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                             {"Huỷ bỏ"}
                         </button>
 
-                        {form.status === "Pending" ? (
-                            <button
-                                className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
-                                    ${updateMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                                disabled={updateMutation.isPending}
-                            >
-                                {updateMutation.isPending ? "Đang cập nhật..." : "Lưu thay đổi"}
-                            </button>
-                        ) : (
-                            <button
-                                className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
-                                    ${AddMoreProductMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                                disabled={AddMoreProductMutation.isPending}
-                            >
-                                {AddMoreProductMutation.isPending ? "Đang cập nhật..." : "Cập nhật"}
-                            </button>
-                        )}
+                        <button
+                            className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
+                                ${isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                            disabled={isPending || isUnchanged}
+                        >
+                            {isPending 
+                                ? form.status === "Pending" ? "Đang lưu..." : "Đang cập nhật..."
+                                : form.status === "Pending" ? "Lưu thay đổi" : "Cập nhật"}
+                        </button>
                     </div>
                 </form>
             </div>

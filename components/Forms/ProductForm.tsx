@@ -2,7 +2,7 @@
 
 import { useSelector } from "react-redux";
 import { ImportProductForm } from "./ImportProductForm";
-import { UpdateProductForm } from "./UpdateProductForm";
+import { UpdateProductInProductsOrderForm } from "./UpdateProductInProductsOrderForm";
 import { OwnerImportProductForm } from "./OwnerImportProductForm";
 import { OwnerUpdateProductForm } from "./OwnerUpdateProductForm";
 import { RootState } from "@/utilities/store";
@@ -13,6 +13,6 @@ export function ProductForm() {
     const ownerEditProduct = useSelector((state: RootState) => state.ownerProductEdit.ownerEditingProduct);
 
     return user.role === "employee"
-        ? (editProduct ? <UpdateProductForm editProduct={editProduct}/> : <ImportProductForm/>)
+        ? (editProduct ? <UpdateProductInProductsOrderForm editProduct={editProduct}/> : <ImportProductForm/>)
         : (ownerEditProduct ? <OwnerUpdateProductForm editProduct={ownerEditProduct}/> : <OwnerImportProductForm/>);
 }

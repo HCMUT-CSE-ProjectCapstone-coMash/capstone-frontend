@@ -1,4 +1,4 @@
-import { CreateProduct, ProductQuantity, UpdateProduct } from "@/types/product";
+import { CreateProduct, UpdateProduct } from "@/types/product";
 import { axiosClient } from "../axiosClient";
 import { fileToBase64 } from "@/utilities/image";
 
@@ -62,33 +62,6 @@ export async function AnalyzeImage(imageFile: File) {
     return response.data;
 }
 
-// Nhân viên cập nhật thông tin sản phẩm trong đơn hàng
-export async function PatchProductInProductsOrder(productId: string, updateData: UpdateProduct) {
-    const formData = new FormData();
-
-    if (updateData.productId) formData.append("ProductId", updateData.productId);
-    if (updateData.productName) formData.append("ProductName", updateData.productName);
-    if (updateData.category) formData.append("Category", updateData.category);
-    if (updateData.color) formData.append("Color", updateData.color);
-    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
-    if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
-
-    if (updateData.quantities) {
-        updateData.quantities.forEach((quantity, index) => {
-            formData.append(`Quantities[${index}].Size`, quantity.size);
-            formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
-        })
-    }
-
-    const response = await axiosClient.patch(
-        "/product/patch/" + productId,
-        updateData,
-        { withCredentials: true }
-    )
-
-    return response.data;
-}
-
 export async function FetchApprovedProductByName(productName: string) {
     const response = await axiosClient.get(
         "/product/fetch-by-name/" + productName,
@@ -102,28 +75,6 @@ export async function CreateProductIdByCategory(category: string) {
     const response = await axiosClient.get(
         "/product/create-product-id-by-category/" + category,
         { withCredentials: true }
-    );
-
-    return response.data;
-}
-
-export async function CreateProductsOrderDetailForApprovedProduct(productId: string, productsOrderId: string, productQuantities: ProductQuantity[]) {
-    const formData = new FormData();
-
-    productQuantities.forEach((quantity, index) => {
-        formData.append(`Quantities[${index}].Size`, quantity.size);
-        formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
-    })
-
-    const response = await axiosClient.post(
-        "/product/create-detail-for-approved-product/" + productId + "/" + productsOrderId,
-        formData,
-        { 
-            withCredentials: true,
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        }
     );
 
     return response.data;
@@ -203,6 +154,66 @@ export async function FetchProducts(currentPage: number, pageSize: number) {
     const response = await axiosClient.get(
         `/product/fetch-all?page=${currentPage}&pageSize=${pageSize}`,
         { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function OwnerUpdateProductInProductsOrder(productId: string, productsOrderId: string, updateData: UpdateProduct) {
+    const formData = new FormData();
+
+    if (updateData.productName) formData.append("ProductName", updateData.productName);
+    if (updateData.color) formData.append("Color", updateData.color);
+    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
+    if (updateData.importPrice) formData.append("ImportPrice", updateData.importPrice.toString());
+    if (updateData.salePrice) formData.append("SalePrice", updateData.salePrice.toString());
+    
+    if (updateData.quantities) {
+        updateData.quantities.forEach((quantity, index) => {
+            formData.append(`Quantities[${index}].Size`, quantity.size);
+            formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+        })
+    }
+
+    const response = await axiosClient.patch(
+        `/product/owner-patch-in-products-order/${productId}/${productsOrderId}`,
+        formData,
+        { 
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
+    );
+
+    return response.data;
+}
+
+export async function EmployeeUpdateProductInProductsOrder(productId: string, productsOrderId: string, updateData: UpdateProduct) {
+    const formData = new FormData();
+
+    if (updateData.productName) formData.append("ProductName", updateData.productName);
+    if (updateData.color) formData.append("Color", updateData.color);
+    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
+    
+    if (updateData.quantities) {
+        updateData.quantities.forEach((quantity, index) => {
+            formData.append(`Quantities[${index}].Size`, quantity.size);
+            formData.append(`Quantities[${index}].Quantities`, quantity.quantities.toString());
+        })
+    }
+
+    const response = await axiosClient.patch(
+        `/product/employee-patch-in-products-order/${productId}/${productsOrderId}`,
+        formData,
+        { 
+            withCredentials: true,
+            headers: {
+                "Content-Type": "multipart/form-data"
+            }
+        }
     );
 
     return response.data;
