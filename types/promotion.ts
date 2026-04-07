@@ -14,6 +14,8 @@ export interface CreateBasePromotion {
     startDate: string
     endDate: string
     description: string
+    discountType: DiscountType  // applies to PRODUCT & COMBO
+    discountValue: number       // applies to PRODUCT & COMBO
 }
 
 export interface CreateProductPromotion extends CreateBasePromotion {
@@ -26,7 +28,7 @@ export interface CreateComboPromotion extends CreateBasePromotion {
     comboIds: string[]
 }
 
-export interface CreateOrderPromotion extends CreateBasePromotion {
+export interface CreateOrderPromotion extends Omit<CreateBasePromotion, "discountType" | "discountValue"> {
     promotionType: "ORDER"
     levels: PromotionLevel[]
 }
@@ -36,22 +38,20 @@ export type CreatePromotion =
     | CreateComboPromotion
     | CreateOrderPromotion
 
-//Lấy từ backend
+// Lấy từ backend
 
 interface BasePromotion {
     id: string
     promotionId: string
     promotionName: string
     promotionType: PromotionType
-
     startDate: string
     endDate: string
-
     isActive: boolean
-
     createdAt: string
-
     description: string
+    discountType?: DiscountType  // optional — not present for ORDER
+    discountValue?: number       // optional — not present for ORDER
 }
 
 export interface ProductPromotion extends BasePromotion {
@@ -70,6 +70,3 @@ export type Promotion =
     | ProductPromotion
     | ComboPromotion
     | OrderPromotion
-
-
-
