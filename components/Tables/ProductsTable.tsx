@@ -14,6 +14,8 @@ import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
+import { useDebounce } from "@/hooks/useDebounce";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 
 export function ProductsTable() {
     const router = useRouter();
@@ -24,9 +26,14 @@ export function ProductsTable() {
 
     const [selectedCategory, setSelectedCategory] = useState<string>("");
 
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
+
+    const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
+
     const { data, isLoading } = useQuery({
-        queryKey: ["products", currentPage, selectedCategory],
-        queryFn: () => FetchProducts(currentPage, pageSize, selectedCategory),
+        queryKey: ["products", currentPage, selectedCategory, effectiveSearch],
+        queryFn: () => FetchProducts(currentPage, pageSize, selectedCategory, effectiveSearch),
     });
 
     const barcodeEntries = useSelector((state: RootState) => state.barcode.entries);
@@ -127,6 +134,13 @@ export function ProductsTable() {
                             {cat.label}
                         </button>
                     ))}
+
+                    <NormalSearchInput 
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        placeholder={"Tìm kiếm theo tên sản phẩm"}
+                        className="w-2xs"
+                    />
                 </div>
 
                 <button
