@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 // import { Profile } from "./Profile";
 import { TextInput } from "../FormInputs/TextInput";
-import { MoneyInput } from "../FormInputs/MoneyInput";
 import { RadioInput } from "../FormInputs/RadioInput";
 import { SearchInput } from "../FormInputs/SearchInput";
+import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { useDispatch } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -85,9 +85,8 @@ export function InvoiceForm() {
     const totalAmount = 120000;
 
     // Đổi từ 100000 thành "100.000" khi hiển thị 
-    const handleMoneyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const rawValue = e.target.value.replace(/\D/g, "");
-        const formattedValue = rawValue ? Number(rawValue).toLocaleString("vi-VN") : "";
+    const handleMoneyChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const formattedValue = formatThousands(e.target.value);
         setField("customerMoney", formattedValue);
     };
 
@@ -97,22 +96,22 @@ export function InvoiceForm() {
         setField("paymentMethod", selectedMethod);
 
         if (selectedMethod === "transfer") {
-            setField("customerMoney", totalAmount.toLocaleString("vi-VN"));
+            // Format số totalAmount thành chuỗi có dấu chấm
+            setField("customerMoney", formatThousands(totalAmount));
         } else if (selectedMethod === "debit") {
-             // Tùy chọn: tự động xóa số tiền khách đưa khi chọn Ghi nợ để thu ngân tự nhập số tiền khách trả trước
-             setField("customerMoney", "");
+            setField("customerMoney", "");
         }
     };
 
     // --- TÍNH TOÁN TIỀN THỐI / TIỀN NỢ ---
-    const rawCustomerMoney = form.customerMoney.replace(/\./g, ""); 
-    const customerMoneyNum = Number(rawCustomerMoney);
-    
+    // Sử dụng parseFormattedNumber để lấy giá trị số từ chuỗi định dạng
+    const customerMoneyNum = parseFormattedNumber(form.customerMoney);
+
     const isDebit = form.paymentMethod === "debit";
-    
+
     // Tiền thối (chỉ tính khi khách đưa dư)
     const returnMoney = customerMoneyNum > totalAmount ? customerMoneyNum - totalAmount : 0;
-    
+
     // Tiền nợ (chỉ tính khi khách đưa thiếu)
     const debtAmount = totalAmount > customerMoneyNum ? totalAmount - customerMoneyNum : 0;
 
@@ -247,12 +246,11 @@ export function InvoiceForm() {
                 />
                 
                 <div>
-                    <MoneyInput
+                    <TextInput
                         label= "Số tiền khách đưa"
                         placeHolder="0" 
                         labelPosition="right"
                         value={form.customerMoney} 
-                        inputType="text" 
                         onChange={handleMoneyChange} 
                     />
                 </div>
