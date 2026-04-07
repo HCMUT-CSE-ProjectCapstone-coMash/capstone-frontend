@@ -207,7 +207,7 @@ export function EmployeeForm() {
                         <div className="w-1/2">
                             <TextInput
                             label={"Ngày sinh"} 
-                            placeHolder="dd/mm/yyyy" 
+                            placeHolder="DD/MM/YYYY" 
                             value={form.employeeBirthDate}
                             onChange={(e) => {
                                 const formattedDate = formatDateInput(e.target.value);
