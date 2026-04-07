@@ -10,6 +10,10 @@ import { clearUser } from "@/utilities/userStore";
 import { LoginPageRoute } from "@/const/routes";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { clearEditingProduct } from "@/utilities/productEditStore";
+import { clearProductsOrder } from "@/utilities/productsOrderStore";
+import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
+import { clearBarCode } from "@/utilities/barcodeSlice";
 
 interface ProfileProps {
     userName: string
@@ -23,6 +27,13 @@ function LogoutOption() {
         mutationFn: logout,
         onSuccess: () => {
             dispatch(clearUser());
+
+            // Clear all editing states to prevent data leak between users
+            dispatch(clearEditingProduct());
+            dispatch(clearOwnerEditingProduct());
+            dispatch(clearProductsOrder());
+            dispatch(clearBarCode());
+
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng xuất thành công" }));
 
             router.replace(LoginPageRoute);

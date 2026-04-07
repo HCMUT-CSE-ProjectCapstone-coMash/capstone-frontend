@@ -1,7 +1,7 @@
 "use client";
 
-import { Product, ProductQuantity, UpdateProduct } from "@/types/product";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Product, UpdateProduct } from "@/types/product";
+import { useEffect, useMemo, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
@@ -10,12 +10,12 @@ import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { useDispatch, useSelector } from "react-redux";
 import { clearEditingProduct } from "@/utilities/productEditStore";
-import { CreateProductsOrderDetailForApprovedProduct, PatchProductInProductsOrder } from "@/api/products/products";
+import { OwnerUpdateProductInProductsOrder, EmployeeUpdateProductInProductsOrder } from "@/api/products/products";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { addProductToOrder, updateProductInOrder } from "@/utilities/productsOrderStore";
 import { RootState } from "@/utilities/store";
-import { parseFormattedNumber } from "@/utilities/numberFormat";
+import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 
 interface FormState {
     productId: string;
@@ -29,6 +29,8 @@ interface FormState {
     imageFile: File | null;
     imagePreviewUrl: string | null;
     status: "Pending" | "Approved",
+    importPrice: number;
+    salePrice: number;
 }
 
 interface UpdateProductFormProps {
@@ -64,7 +66,9 @@ const mapProductToForm = (product: Product): FormState => {
         numberQuantities: isNumber ? quantityMap : createInitialQuantities(sizesNumber),
         imageFile: null,
         imagePreviewUrl: product.imageURL ?? null,
-        status: product.status
+        status: product.status,
+        importPrice: product.importPrice,
+        salePrice: product.salePrice
     };
 };
 
@@ -76,8 +80,9 @@ const getMinQuantities = (product: Product, sizes: string[]): Record<string, num
     return map;
 };
 
-export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
+export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductFormProps) {
     const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user);
     const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
 
     const [form, setForm] = useState<FormState>(() => mapProductToForm(editProduct));
@@ -108,36 +113,13 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         setForm((prev) => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
     };
 
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const OwnerUpdateProductInProductsOrderMutation = useMutation({
+        mutationFn: ({ productId, productsOrderId, ownerUpdateData } : 
+            { productId: string, productsOrderId: string, ownerUpdateData : UpdateProduct }) => OwnerUpdateProductInProductsOrder(productId, productsOrderId, ownerUpdateData),
 
-    // Tạo mutation cập nhật sản phẩm, gọi API update và xử lý kết quả
-    const updateMutation = useMutation({
-        mutationFn: ({ productId, updateData }: { productId: string, updateData: UpdateProduct }) => PatchProductInProductsOrder(productId, updateData),
-
-        onSuccess: (data) => {
-            const newProduct: Product = {
-                id: data.id,
-                productId: data.productId,
-                productName: data.productName,
-                category: data.category,
-                color: data.color,
-                pattern: data.pattern,
-                sizeType: data.sizeType,
-                quantities: data.quantities,
-                createdBy: data.createdBy,
-                createdAt: data.createdAt,
-                status: data.status,
-                imageURL: data.imageURL,
-                quantityChanges: data.quantityChanges,
-                importPrice: data.importPrice,
-                salePrice: data.salePrice
-            }
-
-            dispatch(updateProductInOrder(newProduct));
-
+        onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
-
-            setInitialForm(form);
+            dispatch(clearEditingProduct());
         },
 
         onError: () => {
@@ -145,8 +127,9 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
         }
     });
 
-    const AddMoreProductMutation = useMutation({
-        mutationFn: ({ productId, productsOrderId, productQuantities } : { productId: string, productsOrderId: string, productQuantities: ProductQuantity[] }) => CreateProductsOrderDetailForApprovedProduct(productId, productsOrderId, productQuantities),
+    const EmployeeUpdateProductInProductsOrderMutation = useMutation({
+        mutationFn: ({ productId, productsOrderId, employeeUpdateData } : 
+            { productId: string, productsOrderId: string, employeeUpdateData : UpdateProduct }) => EmployeeUpdateProductInProductsOrder(productId, productsOrderId, employeeUpdateData),
 
         onSuccess: (data) => {
             const newProduct: Product = {
@@ -172,18 +155,20 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             if (alreadyExists) {
                 dispatch(updateProductInOrder(newProduct));
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
-                setInitialForm(form);
             } else {
                 dispatch(addProductToOrder(newProduct));
-                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
-                dispatch(clearEditingProduct());
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
             }
+
+            dispatch(clearEditingProduct());
         },
 
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại"}));
+        onError: () => { 
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật sản phẩm thất bại"}));
         }
     });
+
+    const isPending = OwnerUpdateProductInProductsOrderMutation.isPending || EmployeeUpdateProductInProductsOrderMutation.isPending;
 
     // Xử lý submit form: validate dữ liệu, gọi mutation cập nhật sản phẩm
     const handleSubmit = (e: React.FormEvent) => {
@@ -237,25 +222,14 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             quantities: formattedQuantities
         };
 
-        if (form.status === "Pending")
-            updateMutation.mutate({ productId: editProduct.id, updateData });
-        else 
-            AddMoreProductMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, productQuantities: formattedQuantities });
+        if (user.role === "owner") {
+            updateData.importPrice = form.importPrice;
+            updateData.salePrice = form.salePrice;
+            OwnerUpdateProductInProductsOrderMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, ownerUpdateData: updateData });
+        } else {
+            EmployeeUpdateProductInProductsOrderMutation.mutate({ productId: editProduct.id, productsOrderId: productsOrder.id, employeeUpdateData: updateData });
+        }
     }
-    
-    // Xử lý file ảnh: lưu file vào state và tạo URL preview
-    const handleFiles = (files: FileList | null) => {
-        if (!files || files.length === 0) return;
-        setField("imageFile", files[0]);
-        setField("imagePreviewUrl", null);
-    };
-
-    const openFilePicker = () => fileInputRef.current?.click();
-
-    const removeImage = () => {
-        setField("imageFile", null);
-        setField("imagePreviewUrl", null);
-    };
 
     // Sử dụng useMemo để tạo URL preview từ file ảnh, và useEffect để giải phóng URL khi component unmount hoặc file thay đổi
     const objectUrl = useMemo(() => {
@@ -277,74 +251,21 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
             <div>
                 <p>Hình ảnh sản phẩm</p>
 
-                <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={(e) => handleFiles(e.target.files)}
-                />
-
                 <div className="w-md">
-                    {previewSrc ? (
-                        <div className="relative group h-118.75 w-full">
-                            <Image
-                                src={previewSrc}
-                                alt=""
-                                fill
-                                className="object-cover"
-                                unoptimized
-                            />
-                            <button
-                                type="button"
-                                onClick={removeImage}
-                                className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full
-                                           flex items-center justify-center text-sm
-                                           opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="h-118.75 bg-tgray05 flex items-center justify-center">
-                            <div className="flex flex-col items-center gap-4">
-                                <p className="text-lg text-gray-700 mb-2">
-                                    Kéo & thả hình ảnh muốn tải lên
-                                </p>
-                                <button
-                                    className="text-lg font-medium underline cursor-pointer text-gray-dark"
-                                    onClick={openFilePicker}
-                                >
-                                    hoặc từ máy tính của bạn
-                                </button>
-                                <button className="text-lg font-medium underline cursor-pointer text-gray-dark">
-                                    hoặc từ điện thoại của bạn
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <div className="relative group h-118.75 w-full mt-3">
+                        <Image
+                            src={previewSrc ?? "/placeholder-image.png"}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            unoptimized
+                        />
+                    </div>
                 </div>
             </div>
 
             <div>
-                <div className="flex items-center justify-between mb-5">
-                    <p>Thông tin sản phẩm</p>
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
-                            
-                        >
-                            Thêm ảnh từ máy tính
-                        </button>
-                        <button
-                            type="button"
-                            className="py-2 px-3 rounded-lg text-white bg-pink text-sm cursor-pointer"
-                        >
-                            Thêm ảnh từ điện thoại
-                        </button>
-                    </div>
-                </div>
+                <p className="mb-5">Thông tin sản phẩm</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
@@ -356,17 +277,37 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     />
 
                     <TextInput
-                        disabled={form.status === "Approved"}
+                        disabled={form.status === "Approved" && user.role === "employee"}
                         label={"Tên sản phẩm"}
                         placeHolder=""
                         value={form.productName}
                         onChange={(e) => setField("productName", e.target.value)}
                     />
 
+                    {user.role === "owner" && (
+                        <div className="flex items-center justify-between gap-5">
+                            <TextInput
+                                label={"Giá nhập"} 
+                                placeHolder="" 
+                                value={formatThousands(form.importPrice)}
+                                inputType="text"
+                                onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))} // store raw number
+                            />
+
+                            <TextInput
+                                label={"Giá bán"} 
+                                placeHolder="" 
+                                value={formatThousands(form.salePrice)}
+                                inputType="text"
+                                onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
+                            />
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between gap-5">
-                        <SelectInput disabled={form.status === "Approved"} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
-                        <SelectInput disabled={form.status === "Approved"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
-                        <SelectInput disabled={form.status === "Approved"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
+                        <SelectInput disabled={true} label={"Phân loại"} options={categories} value={form.category} onChange={(value) => setField("category", value)} />
+                        <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
+                        <SelectInput disabled={form.status === "Approved" && user.role === "employee"} label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -397,30 +338,24 @@ export function UpdateProductForm({ editProduct }: UpdateProductFormProps) {
                     </div>
 
                     <div className="flex justify-end mt-5 gap-x-5">
-                        <button
-                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
-                            onClick={() => dispatch(clearEditingProduct())}
-                        >
-                            {"Huỷ bỏ"}
-                        </button>
-
-                        {form.status === "Pending" ? (
+                        {user.role === "employee" && (
                             <button
-                                className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
-                                    ${updateMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                                disabled={updateMutation.isPending}
+                                className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
+                                onClick={() => dispatch(clearEditingProduct())}
                             >
-                                {updateMutation.isPending ? "Đang cập nhật..." : "Lưu thay đổi"}
-                            </button>
-                        ) : (
-                            <button
-                                className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
-                                    ${AddMoreProductMutation.isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-                                disabled={AddMoreProductMutation.isPending}
-                            >
-                                {AddMoreProductMutation.isPending ? "Đang cập nhật..." : "Cập nhật"}
+                                {"Huỷ bỏ"}
                             </button>
                         )}
+
+                        <button
+                            className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
+                                ${isPending || isUnchanged ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                            disabled={isPending || isUnchanged}
+                        >
+                            {isPending 
+                                ? (form.status === "Pending" && user.role === "employee") ? "Đang lưu..." : "Đang cập nhật..."
+                                : (form.status === "Pending" && user.role === "employee") ? "Lưu thay đổi" : "Cập nhật"}
+                        </button>
                     </div>
                 </form>
             </div>
