@@ -13,7 +13,7 @@ import { AlertType } from "@/types/alert";
 import { clearEditingProduct } from "@/utilities/productEditStore";
 import { clearProductsOrder } from "@/utilities/productsOrderStore";
 import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
-import { clearSelectedIds } from "@/utilities/printStore";
+import { clearBarCode } from "@/utilities/barcodeSlice";
 
 interface ProfileProps {
     userName: string
@@ -32,7 +32,7 @@ function LogoutOption() {
             dispatch(clearEditingProduct());
             dispatch(clearOwnerEditingProduct());
             dispatch(clearProductsOrder());
-            dispatch(clearSelectedIds());
+            dispatch(clearBarCode());
 
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng xuất thành công" }));
 

@@ -150,9 +150,15 @@ export async function OwnerUpdateProduct(updateData: UpdateProduct, productId: s
     return response.data;
 }
 
-export async function FetchProducts(currentPage: number, pageSize: number) {
+export async function FetchProducts(currentPage: number, pageSize: number, category?: string) {
+    const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
+    });
+    if (category) params.append("category", category);
+
     const response = await axiosClient.get(
-        `/product/fetch-all?page=${currentPage}&pageSize=${pageSize}`,
+        `/product/fetch-all?${params}`,
         { withCredentials: true }
     );
 

@@ -8,25 +8,62 @@ import { formatThousands } from "@/utilities/numberFormat";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Table } from "./Table";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { RootState } from "@/utilities/store";
-import { toggleProductId } from "@/utilities/printStore";
 import Image from "next/image";
+import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
 
 export function ProductsTable() {
     const router = useRouter();
     const dispatch = useDispatch();
-    const selectedIds = useSelector((state: RootState) => state.print.selectedIds);
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
 
+    const [selectedCategory, setSelectedCategory] = useState<string>("");
+
     const { data, isLoading } = useQuery({
-        queryKey: ["products", currentPage],
-        queryFn: () => FetchProducts(currentPage, pageSize),
+        queryKey: ["products", currentPage, selectedCategory],
+        queryFn: () => FetchProducts(currentPage, pageSize, selectedCategory),
     });
+
+    const barcodeEntries = useSelector((state: RootState) => state.barcode.entries);
+
+    const isProductSelected = useCallback((product: Product): boolean => {
+        return barcodeEntries.some((entry) => entry.id === product.id);
+    }, [barcodeEntries]);
+    
+    const handleToggle = useCallback((product: Product) => {
+        if (isProductSelected(product)) {
+            dispatch(removeBarcode({ id: product.id }));
+        } else {
+            dispatch(addBarcode({
+                id: product.id,
+                productId: product.productId,
+                productName: product.productName,
+                category: product.category,
+                color: product.color,
+                pattern: product.pattern,
+                salePrice: product.salePrice,
+                quantities: product.quantities,
+            }));
+        }
+    }, [dispatch, isProductSelected]);
+
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+        setCurrentPage(1);
+    };
+
+    const categories = [
+        { label: "Xem tất cả", value: "" },
+        { label: "Áo", value: "Áo" },
+        { label: "Quần", value: "Quần" },
+        { label: "Đầm", value: "Đầm" },
+        { label: "Váy", value: "Váy" },
+    ];
 
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
@@ -56,12 +93,12 @@ export function ProductsTable() {
         { title: "In mã", key: "id", render: (row) => (
             <input
                 type="checkbox"
-                checked={selectedIds.includes(row.id)}
-                onChange={() => dispatch(toggleProductId(row.id))}
+                checked={isProductSelected(row)}
+                onChange={() => handleToggle(row)}
                 className="w-4 h-4 accent-purple cursor-pointer"
             />
         )},
-    ], [dispatch, selectedIds]);
+    ], [dispatch, handleToggle, isProductSelected]);
 
     const products = data?.items ?? [];
     const total = data?.total ?? 0;
@@ -75,6 +112,27 @@ export function ProductsTable() {
                     className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
                 >
                     Danh sách sản phẩm chờ duyệt
+                </button>
+            </div>
+
+            <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.value}
+                            onClick={() => handleCategoryChange(cat.value)}
+                            className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
+                                selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
+                        >
+                            {cat.label}
+                        </button>
+                    ))}
+                </div>
+
+                <button
+                    className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer"
+                >
+                    In mã vạch sản phẩm
                 </button>
             </div>
 
