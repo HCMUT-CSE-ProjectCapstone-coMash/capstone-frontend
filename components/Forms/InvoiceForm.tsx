@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { MoneyInput } from "../FormInputs/MoneyInput";
 import { RadioInput } from "../FormInputs/RadioInput";
@@ -59,6 +59,7 @@ const paymentOptions = [
 export function InvoiceForm() {
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
     const [searchQuery, setSearchQuery] = useState("");
+    const [currentTime, setCurrentTime] = useState<string>("");
     const dispatch = useDispatch();
 
     const setField = <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => {
@@ -117,6 +118,32 @@ export function InvoiceForm() {
     // Xác định Text và Số tiền hiển thị dựa trên phương thức thanh toán
     const displayLabel = isDebit ? "Số tiền còn nợ" : "Số tiền hoàn trả";
     const displayAmount = isDebit ? debtAmount : returnMoney;
+
+    useEffect(() => {
+    const updateTime = () => {
+        const now = new Date();
+        
+        // Lấy ngày, tháng, năm
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0'); // Tháng trong JS bắt đầu từ 0
+        const year = now.getFullYear();
+        
+        // Lấy giờ, phút
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        // Nối chuỗi theo định dạng mong muốn
+        setCurrentTime(`${day}/${month}/${year} - ${hours}:${minutes}`);
+    };
+
+    updateTime(); // Gọi ngay lần đầu tiên component mount
+
+    // (Tùy chọn) Cập nhật lại thời gian mỗi 60 giây để đồng hồ chạy real-time
+    const intervalId = setInterval(updateTime, 60000); 
+
+    // Cleanup function để tránh rò rỉ bộ nhớ
+    return () => clearInterval(intervalId);
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -181,7 +208,7 @@ export function InvoiceForm() {
             >
                 <div className="flex flex-row justify-between">
                     <div className="text-sm text-tgray9">Thời gian bán hàng</div>
-                    <div className="text-sm">9/11/2025 - 11:44</div>
+                    <div className="text-sm">{currentTime || "--/--/---- - --:--"}</div>
                 </div>
                 
                 <div className="flex flex-row justify-between">
