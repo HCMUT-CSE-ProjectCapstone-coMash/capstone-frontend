@@ -183,6 +183,7 @@ export function EmployeeForm() {
             <div className="w-2/3">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
+                        disabled = {true}
                         label={"Mã số nhân viên"} 
                         placeHolder="" 
                         value={form.employeeId}
