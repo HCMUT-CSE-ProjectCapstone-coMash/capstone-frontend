@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+// import { Profile } from "./Profile";
 import { TextInput } from "../FormInputs/TextInput";
 import { MoneyInput } from "../FormInputs/MoneyInput";
 import { RadioInput } from "../FormInputs/RadioInput";
@@ -213,7 +214,7 @@ export function InvoiceForm() {
                 
                 <div className="flex flex-row justify-between">
                     <div className="text-sm text-tgray9">Người bán hàng</div>
-                    <div className="text-sm">Đoàn Lê Vy</div>
+                    <div className="text-sm">Phó Ngọc Song Khuê</div>
                 </div>
 
                 <div className="flex flex-col gap-y-4">
