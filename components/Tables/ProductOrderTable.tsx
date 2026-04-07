@@ -7,7 +7,6 @@ import { TrashIcon } from "@/public/assets/Icons";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApproveProductsOrder, DeleteProductFromProductsOrders, DeleteProductsOrder, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
-import { formatThousands } from "@/utilities/numberFormat";
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
@@ -113,8 +112,6 @@ export function ProductOrderTable() {
         { title: "Giá nhập", key: "importPrice", render: (row) => 
             <Cell
                 value={row.importPrice}
-                type="number"
-                formatter={(v) => `${formatThousands(v)} VND`}
                 onSave={(newValue) =>
                     updatePriceMutation.mutate({
                         productId: row.id,
@@ -126,8 +123,6 @@ export function ProductOrderTable() {
         { title: "Giá bán", key: "salePrice", render: (row) => 
             <Cell
                 value={row.salePrice}
-                type="number"
-                formatter={(v) => `${formatThousands(v)} VND`}
                 onSave={(newValue) =>
                     updatePriceMutation.mutate({
                         productId: row.id,

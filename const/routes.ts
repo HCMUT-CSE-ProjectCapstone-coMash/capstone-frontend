@@ -22,6 +22,8 @@ export const OwnerProductPageRoute = `${OwnerBaseRoute}/san-pham`;
 export const OwnerProductsOrderPageRoute = `${OwnerBaseRoute}/san-pham/cho-duyet`;
 export const OwnerProductsInProductsOrderPageRoute = (productsOrdersId: string) => 
     `${OwnerBaseRoute}/san-pham/cho-duyet/chi-tiet/${productsOrdersId}`;
+export const OwnerProductsOrderHistoryPageRoute = (productsOrdersId: string) => 
+    `${OwnerBaseRoute}/san-pham/cho-duyet/lich-su/${productsOrdersId}`;
 
 export const OwnerEmployeeManagementPageRoute = `${OwnerBaseRoute}/quan-ly-nhan-vien`;
 export const OwnerAddEmployeePageRoute = `${OwnerEmployeeManagementPageRoute}/them-nhan-vien`;

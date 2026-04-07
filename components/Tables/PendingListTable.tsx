@@ -6,7 +6,7 @@ import { Table } from "./Table";
 import { GetProductsOrdersExcludingPending } from "@/api/productsOrder/productsOrder";
 import { ProductsOrderWithCreator } from "@/types/productsOrder";
 import { useQuery } from "@tanstack/react-query";
-import { OwnerProductsInProductsOrderPageRoute } from "@/const/routes";
+import { OwnerProductsInProductsOrderPageRoute, OwnerProductsOrderHistoryPageRoute } from "@/const/routes";
 
 const statusLabel = (status: ProductsOrderWithCreator["orderStatus"]): string =>
     status === "Sending" ? "Chưa duyệt" : "Đã duyệt";
@@ -39,7 +39,15 @@ export function PendingListTable() {
                         </button>
                     </div>
                 ) : (
-                    <div className="text-sm text-gray-500">&nbsp;</div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        <button
+                            type="button"
+                            onClick={() => router.push(OwnerProductsOrderHistoryPageRoute(row.id))}
+                            className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+                        >
+                            Xem lịch sử
+                        </button>
+                    </div>
                 ),
         },
     ];
