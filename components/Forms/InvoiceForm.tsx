@@ -22,7 +22,8 @@ const initialInvoiceFormState: InvoiceFormState = {
     customerMoney: "",
     paymentMethod: "cash",
 };
-
+ 
+// Mock dữ liệu hóa đơn cũ để làm suggestion khi search theo số điện thoại
 interface InvoiceMock {
     id: string;
     invoiceId: string;
@@ -81,12 +82,14 @@ export function InvoiceForm() {
 
     const totalAmount = 120000;
 
+    // Đổi từ 100000 thành "100.000" khi hiển thị 
     const handleMoneyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const rawValue = e.target.value.replace(/\D/g, "");
         const formattedValue = rawValue ? Number(rawValue).toLocaleString("vi-VN") : "";
         setField("customerMoney", formattedValue);
     };
 
+    // Xử lý thay đổi phương thức thanh toán
     const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedMethod = e.target.value;
         setField("paymentMethod", selectedMethod);
