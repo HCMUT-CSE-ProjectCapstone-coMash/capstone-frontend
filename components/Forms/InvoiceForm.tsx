@@ -157,15 +157,15 @@ export function InvoiceForm() {
                     renderItem={(item) => (
                         <div className="flex flex-col w-full py-1 gap-y-1">
                             {/* Dòng 1: [SĐT] - [Mã hoá đơn] */}
-                            <div className="flex items-center text-sm text-purple font-medium gap-x-1">
+                            <div className="flex items-center text-sm font-medium gap-x-1">
                                 <span>{item.data.phone}</span>
-                                <span className="text-tgray9 font-normal">- [{item.data.invoiceId}]</span>
+                                <span>- [{item.data.invoiceId}]</span>
                             </div>
 
                             {/* Dòng 2: [Thời gian] và [Tổng tiền] căn lề phải */}
                             <div className="flex justify-between items-end w-full mt-1">
-                                <span className="text-xs text-tgray9 italic">[{item.data.saleTime}]</span>
-                                <span className="text-sm font-semibold text-black">
+                                <span >[{item.data.saleTime}]</span>
+                                <span>
                                     [{item.data.totalAmount.toLocaleString("vi-VN")}] VND
                                 </span>
                             </div>
