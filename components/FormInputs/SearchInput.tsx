@@ -17,10 +17,11 @@ interface SearchInputProps<T> {
     suggestions: Suggestion<T>[],
     onSuggestionClick: (item: Suggestion<T>) => void,
     renderItem: (item: Suggestion<T>) => React.ReactNode;
-    isError?: boolean
+    isError?: boolean,
+    isItemDisabled?: (item: Suggestion<T>) => boolean;
 }
 
-export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError } : SearchInputProps<T>) {
+export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError, isItemDisabled } : SearchInputProps<T>) {
     const isLeft = labelPosition === "left";
     const borderClass = isError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-tgray5 focus:border-purple focus:ring-purple";
 
@@ -42,18 +43,26 @@ export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosit
 
                 {showSuggestions && suggestions.length > 0 && (
                     <ul className="absolute z-10 w-full mt-1 bg-white border border-tgray5 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {suggestions.map((item, index) => (
-                            <li
-                                key={index}
-                                onMouseDown={() => {
-                                    onSuggestionClick(item);
-                                    setShowSuggestions(false);
-                                }}
-                                className="px-4 py-2.5 text-sm text-tgray9 hover:bg-purple hover:text-white cursor-pointer transition-colors"
-                            >
-                                {renderItem(item)}
-                            </li>
-                        ))}
+                        {suggestions.map((item, index) => {
+                            const disabled = isItemDisabled?.(item) ?? false;
+                            return (
+                                <li
+                                    key={index}
+                                    onMouseDown={() => {
+                                        if (disabled) return;
+                                        onSuggestionClick(item);
+                                        setShowSuggestions(false);
+                                    }}
+                                    className={`px-4 py-2.5 text-sm transition-colors
+                                        ${disabled
+                                            ? "opacity-50 cursor-not-allowed text-tgray9"
+                                            : "hover:bg-purple hover:text-white cursor-pointer text-tgray9"
+                                        }`}
+                                >
+                                    {renderItem(item)}
+                                </li>
+                            );
+                        })}
                     </ul>
                 )}
             </div>
