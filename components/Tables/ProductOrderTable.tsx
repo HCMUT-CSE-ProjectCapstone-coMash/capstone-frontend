@@ -7,7 +7,7 @@ import { TrashIcon } from "@/public/assets/Icons";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApproveProductsOrder, DeleteProductFromProductsOrders, DeleteProductsOrder, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -19,6 +19,9 @@ import { UpdateProductInProductsOrderForm } from "../Forms/UpdateProductInProduc
 import Image from "next/image";
 import { Cell } from "../Cell";
 import { OwnerUpdateProductInProductsOrder } from "@/api/products/products";
+import { useDebounce } from "@/hooks/useDebounce";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { removeDiacritics } from "@/utilities/removeDiacritics";
 
 export function ProductOrderTable() {
     const router = useRouter();
@@ -26,6 +29,10 @@ export function ProductOrderTable() {
     const queryClient = useQueryClient();
     const { productsOrdersId } = useParams();
     const editProduct = useSelector((state: RootState) => state.productEdit.editingProduct);
+
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
 
     const { data, isLoading } = useQuery({
         queryKey: ["productsOrderDetails", productsOrdersId],
@@ -157,11 +164,10 @@ export function ProductOrderTable() {
         { title: "Trạng thái", key: "status", render: (row) => {
             if (row.status === "Approved") return <span className="text-purple">Nhập thêm</span>;
             if (row.status === "Pending") return <span className="text-pink">Hàng mới</span>;
-            return <span>{row.status}</span>;
         }},
         { title: "", key: "id", render: (row) => (
             <button 
-                className="text-red-500 hover:text-red-700 transition"
+                className="text-red-500 hover:text-red-700 transition cursor-pointer"
                 onClick={() => deleteMutation.mutate({ orderId: productsOrdersId as string, productId: row.id })}
             >
                 <TrashIcon width={20} height={20} className=""/>
@@ -169,7 +175,21 @@ export function ProductOrderTable() {
         )},
     ], [dispatch, deleteMutation, productsOrdersId, updatePriceMutation]);
 
+    const categories = [
+        { label: "Xem tất cả", value: "" },
+        { label: "Áo", value: "Áo" },
+        { label: "Quần", value: "Quần" },
+        { label: "Đầm", value: "Đầm" },
+        { label: "Váy", value: "Váy" },
+    ];
+
     const products: Product[] = data?.products || [];
+    const filteredProducts = products.filter((p) => {
+        const matchCategory = selectedCategory ? p.category === selectedCategory : true;
+        const matchSearch = debouncedSearch ? removeDiacritics(p.productName.toLowerCase()).includes(removeDiacritics(debouncedSearch.toLowerCase())) : true;
+        return matchCategory && matchSearch;
+    });
+
     const orderName = data?.orderName || "Chi tiết đơn hàng";
 
     const currentIndex = products.findIndex((p) => p.id === editProduct?.id);
@@ -214,9 +234,25 @@ export function ProductOrderTable() {
             ) : (
                 <>
                     <div className="flex flex-col gap-4 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            
+                        <div className="flex gap-2">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat.value}
+                                    onClick={() => setSelectedCategory(cat.value)}
+                                    className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
+                                        selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
+                                >
+                                    {cat.label}
+                                </button>
+                            ))}
+                            <NormalSearchInput
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Tìm kiếm theo tên sản phẩm"
+                                className="w-2xs"
+                            />
                         </div>
+
                         <div className="flex gap-3">
                             <button
                                 onClick={() => approveMutation.mutate(productsOrdersId as string)}
@@ -228,13 +264,13 @@ export function ProductOrderTable() {
                             <button
                                 onClick={() => deleteOrderMutation.mutate(productsOrdersId as string)}
                                 disabled={deleteOrderMutation.isPending}
-                                className="py-2 px-4 rounded-lg border border-red-500 bg-red text-white text-sm font-medium transition hover:bg-red-600 disabled:opacity-50"
+                                className="py-2 px-4 rounded-lg border border-red-500 bg-red text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer disabled:opacity-50"
                             >
                                 {deleteOrderMutation.isPending ? "Đang xử lý..." : "Không duyệt"}
                             </button>
                         </div>
                     </div>
-                    <Table columns={columns} data={products} isLoading={isLoading}/>
+                    <Table columns={columns} data={filteredProducts} isLoading={isLoading}/>
                 </>
             )}
         </div>

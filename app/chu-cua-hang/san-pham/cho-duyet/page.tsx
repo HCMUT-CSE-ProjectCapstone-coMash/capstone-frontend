@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { PendingListTable } from "@/components/Tables/PendingListTable";
 
 
-export default function ProductpendingPage() {
+export default function ProductPendingPage() {
     const router = useRouter();
 
     return (
@@ -20,7 +20,7 @@ export default function ProductpendingPage() {
                 </button>
             </div>
 
-            <div className="mt-12 flex flex-col gap-5">
+            <div className="flex flex-col gap-5">
                 <PendingListTable />
             </div>
         </main>
