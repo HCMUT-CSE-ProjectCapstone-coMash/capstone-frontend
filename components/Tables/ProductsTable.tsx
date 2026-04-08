@@ -16,10 +16,13 @@ import Image from "next/image";
 import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
 import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { BarcodeForm } from "../Forms/BarcodeForm";
 
 export function ProductsTable() {
     const router = useRouter();
     const dispatch = useDispatch();
+    const [isModalOpen, setModalOpen] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
@@ -55,6 +58,8 @@ export function ProductsTable() {
                 pattern: product.pattern,
                 salePrice: product.salePrice,
                 quantities: product.quantities,
+                imageUrl: product.imageURL,
+                printQuantities: {},
             }));
         }
     }, [dispatch, isProductSelected]);
@@ -145,6 +150,7 @@ export function ProductsTable() {
 
                 <button
                     className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer"
+                    onClick={() => setModalOpen(true)}
                 >
                     In mã vạch sản phẩm
                 </button>
@@ -161,6 +167,13 @@ export function ProductsTable() {
                     onChange: setCurrentPage,
                 }}
             />
+
+            <LayoutModal
+                isOpen={isModalOpen}
+                onClose={() => setModalOpen(false)}
+            >
+                <BarcodeForm onClose={() => setModalOpen(false)}/>
+            </LayoutModal>
         </div>
-    )
+    );
 }

@@ -1,9 +1,9 @@
 import { ProductQuantity } from "@/types/product";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-function MakeKey(id: string, size: string): string {
-    return `${id}-${size}`;
-}
+// function MakeKey(id: string, size: string): string {
+//     return `${id}-${size}`;
+// }
 
 interface BarcodeEntry {
     id: string;
@@ -14,6 +14,8 @@ interface BarcodeEntry {
     pattern: string | null;
     salePrice: number;
     quantities: ProductQuantity[];
+    imageUrl: string;
+    printQuantities: Record<string, number>;
 }
 
 interface BarcodeState {
@@ -38,11 +40,18 @@ const barcodeSlide = createSlice({
             state.entries = state.entries.filter((e) => e.id !== action.payload.id);
         },
 
+        updatePrintQuantity(state, action: PayloadAction<{ id: string; size: string; quantity: number }>) {
+            const entry = state.entries.find((e) => e.id === action.payload.id);
+            if (entry) {
+                entry.printQuantities[action.payload.size] = action.payload.quantity;
+            }
+        },
+
         clearBarCode(state) {
             state.entries = [];
-        }
+        },
     }
 });
 
-export const { addBarcode, removeBarcode, clearBarCode } = barcodeSlide.actions;
+export const { addBarcode, removeBarcode, updatePrintQuantity, clearBarCode } = barcodeSlide.actions;
 export default barcodeSlide.reducer;
