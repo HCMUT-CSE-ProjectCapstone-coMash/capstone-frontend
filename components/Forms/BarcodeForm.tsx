@@ -57,7 +57,9 @@ export function BarcodeForm({ onClose } : BarcodeForm) {
                         <div key={entry.id} className="p-3 rounded border border-gray-200">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <Image src={entry.imageUrl} alt="" width={32} height={32} className="object-cover" unoptimized/>
+                                    <div className="relative w-8 h-8">
+                                        <Image src={entry.imageUrl} alt="" fill className="object-cover" unoptimized/>
+                                    </div>
                                     <div>
                                         <p className="font-medium">{entry.productName}</p>
                                         <p className="text-sm text-gray-500">

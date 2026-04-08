@@ -317,7 +317,9 @@ export function ImportProductForm() {
                         renderItem={(item) => (
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                    <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+                                    <div className="relative w-8 h-8">
+                                        <Image src={item.data.imageURL} fill alt="" className="object-cover" unoptimized/>
+                                    </div>
                                     <span>{item.label}</span>
                                 </div>
 

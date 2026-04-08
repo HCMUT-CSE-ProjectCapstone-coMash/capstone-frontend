@@ -308,7 +308,9 @@ export function OwnerImportProductForm() {
                         onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)) }}
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
-                                <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+                                <div className="relative w-8 h-8">
+                                    <Image src={item.data.imageURL} alt="" fill className="object-cover" unoptimized/>
+                                </div>
                                 <span>{item.label}</span>
                             </div>
                         )}

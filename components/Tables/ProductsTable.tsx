@@ -85,8 +85,8 @@ export function ProductsTable() {
         const cols: Column<Product>[] = [
             { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
             {title: "Hình ảnh", key: "imageUrl", render: (row) => (
-                <div className="w-fit mx-auto">
-                    <Image src={row.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+                <div className="relative w-8 h-8 mx-auto">
+                    <Image src={row.imageURL} alt="" fill className="object-cover" unoptimized/>
                 </div>
             )},
             { title: "Tên sản phẩm", key: "productName", render: (row) => (
@@ -135,12 +135,14 @@ export function ProductsTable() {
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <p className="text-purple text-2xl font-medium">Danh sách sản phẩm</p>
-                <button
-                    onClick={() => router.push(OwnerProductsOrderPageRoute)}
-                    className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
-                >
-                    Danh sách sản phẩm chờ duyệt
-                </button>
+                {!isEmployee && (
+                    <button
+                        onClick={() => router.push(OwnerProductsOrderPageRoute)}
+                        className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
+                    >
+                        Danh sách sản phẩm chờ duyệt
+                    </button>
+                )}
             </div>
 
             <div className="flex items-center justify-between">
