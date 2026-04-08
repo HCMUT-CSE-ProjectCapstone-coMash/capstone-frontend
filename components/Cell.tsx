@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 
 type CellProps = {
@@ -8,53 +8,40 @@ type CellProps = {
 
 export function Cell({ value, onSave }: CellProps) {
     const [editing, setEditing] = useState(false);
-    const [display, setDisplay] = useState("");
+    const [draft, setDraft] = useState(0);
 
-    useEffect(() => {
-        if (!editing) {
-            setDisplay(formatThousands(value));
-        }
-    }, [value, editing]);
-
+    const handleStart = () => {
+        setDraft(value);
+        setEditing(true);
+    };
+    
     const handleSave = () => {
-        const parsed = parseFormattedNumber(display);
-
-        if (parsed !== value) {
-            onSave(parsed);
-        }
-
+        if (draft !== value) onSave(draft);
         setEditing(false);
     };
 
-    if (editing) {
-        return (
-            <input
-                autoFocus
-                type="text"
-                value={display}
-                onChange={(e) => {
-                    setDisplay(e.target.value);
-                }}
-                onBlur={handleSave}
-                onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSave();
-                    if (e.key === "Escape") {
-                        setDisplay(formatThousands(value));
-                        setEditing(false);
-                    }
-                }}
-                onFocus={(e) => e.target.select()}
-                className="border rounded px-2 py-1 w-28 text-center focus:outline-purple"
-            />
-        );
-    }
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") handleSave();
+        if (e.key === "Escape") setEditing(false);
+    };
 
-    return (
+    return editing ? (
+        <input
+            autoFocus
+            type="text"
+            value={formatThousands(draft)}
+            onChange={(e) => setDraft(parseFormattedNumber(e.target.value))}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            onFocus={(e) => e.target.select()}
+            className="border rounded px-2 py-1 w-28 text-center focus:outline-purple"
+        />
+    ) : (
         <span
-            onClick={() => setEditing(true)}
+            onClick={handleStart}
             className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
         >
-            {formatThousands(value)} VND
+            {formatThousands(value)} VNĐ
         </span>
     );
 }

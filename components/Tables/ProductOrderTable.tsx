@@ -20,7 +20,6 @@ import Image from "next/image";
 import { Cell } from "../Cell";
 import { OwnerUpdateProductInProductsOrder } from "@/api/products/products";
 
-
 export function ProductOrderTable() {
     const router = useRouter();
     const dispatch = useDispatch();
@@ -59,6 +58,7 @@ export function ProductOrderTable() {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Xoá sản phẩm thất bại" }));
         }
     });
+
     const updatePriceMutation = useMutation({
         mutationFn: ({productId, data}: {productId: string; data: UpdateProduct;}) => OwnerUpdateProductInProductsOrder(productId, productsOrdersId as string, data),
         onSuccess: () => {
@@ -67,6 +67,29 @@ export function ProductOrderTable() {
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại"}));
+        }
+    });
+
+    const approveMutation = useMutation({
+        mutationFn: (orderId: string) => ApproveProductsOrder(orderId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Duyệt đơn hàng thành công"}));
+            router.back();
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Duyệt đơn hàng thất bại"}));
+        }
+    });
+    
+    const deleteOrderMutation = useMutation({
+        mutationFn: (orderId: string) => DeleteProductsOrder(orderId),
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Không duyệt thành công" }));
+            router.back();
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không duyệt thất bại"}));
         }
     });
 
@@ -144,7 +167,7 @@ export function ProductOrderTable() {
                 <TrashIcon width={20} height={20} className=""/>
             </button>
         )},
-    ], [dispatch, deleteMutation, productsOrdersId]);
+    ], [dispatch, deleteMutation, productsOrdersId, updatePriceMutation]);
 
     const products: Product[] = data?.products || [];
     const orderName = data?.orderName || "Chi tiết đơn hàng";
@@ -152,27 +175,6 @@ export function ProductOrderTable() {
     const currentIndex = products.findIndex((p) => p.id === editProduct?.id);
     const hasPrev = currentIndex > 0;
     const hasNext = currentIndex < products.length - 1;
-    const approveMutation = useMutation({
-        mutationFn: (orderId: string) => ApproveProductsOrder(orderId),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Duyệt đơn hàng thành công"}));
-            router.back();
-        },
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Duyệt đơn hàng thất bại"}));
-        }
-    });
-    const deleteOrderMutation = useMutation({
-        mutationFn: (orderId: string) => DeleteProductsOrder(orderId),
-        onSuccess: () => {
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Không duyệt thành công" }));
-            router.back();
-        },
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Không duyệt thất bại"}));
-        }
-    });
 
     return (
         <div className="flex flex-col gap-4">
@@ -212,12 +214,10 @@ export function ProductOrderTable() {
             ) : (
                 <>
                     <div className="flex flex-col gap-4 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
-                        {/* thanh filter va search */}
-                        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-                            <div className="h-11 min-w-[160px] flex-1 rounded-lg border border-gray-200 bg-gray-50" />
-                            <div className="h-11 min-w-[160px] flex-1 rounded-lg border border-gray-200 bg-gray-50" />
+                        <div>
+                            
                         </div>
-                        <div className="flex flex-wrap gap-3">
+                        <div className="flex gap-3">
                             <button
                                 onClick={() => approveMutation.mutate(productsOrdersId as string)}
                                 disabled={approveMutation.isPending}
