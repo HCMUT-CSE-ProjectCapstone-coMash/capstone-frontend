@@ -22,6 +22,8 @@ import { BarcodeForm } from "../Forms/BarcodeForm";
 export function ProductsTable() {
     const router = useRouter();
     const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user);
+
     const [isModalOpen, setModalOpen] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -77,40 +79,54 @@ export function ProductsTable() {
         { label: "Váy", value: "Váy" },
     ];
 
-    const columns: Column<Product>[] = useMemo(() => [
-        { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
-        {title: "Hình ảnh", key: "imageUrl", render: (row) => (
-            <div className="w-fit mx-auto">
-                <Image src={row.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
-            </div>
-        )},
-        { title: "Tên sản phẩm", key: "productName", render: (row) => (
-            <button onClick={() => dispatch(setOwnerEditingProduct(row))}>{row.productName}</button>
-        )},
-        { title: "Phân loại", key: "category", render: (row) => <span>{row.category}</span> },
-        { title: "Màu sắc", key: "color", render: (row) => <span>{row.color}</span> },
-        { title: "Họa tiết", key: "pattern", render: (row) => <span>{row.pattern || "Không"}</span> },
-        { title: "Số lượng", key: "quantities", render: (row) => (
-            <>
-                {row.quantities.map((quantity) => (
-                    <div key={quantity.size} className="flex justify-center items-center gap-2 text-sm">
-                        <span className="font-medium">{quantity.size}:</span>
-                        <span className="text-purple font-bold">{quantity.quantities}</span>
-                    </div>
-                ))}
-            </>
-        )},
-        { title: "Giá nhập", key: "importPrice", render: (row) => <span>{formatThousands(row.importPrice)} VND</span> },
-        { title: "Giá bán", key: "salePrice", render: (row) => <span>{formatThousands(row.salePrice)} VND</span> },
-        { title: "In mã", key: "id", render: (row) => (
-            <input
-                type="checkbox"
-                checked={isProductSelected(row)}
-                onChange={() => handleToggle(row)}
-                className="w-4 h-4 accent-purple cursor-pointer"
-            />
-        )},
-    ], [dispatch, handleToggle, isProductSelected]);
+    const isEmployee = user.role === "employee";
+
+    const columns: Column<Product>[] = useMemo(() => {
+        const cols: Column<Product>[] = [
+            { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
+            {title: "Hình ảnh", key: "imageUrl", render: (row) => (
+                <div className="w-fit mx-auto">
+                    <Image src={row.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+                </div>
+            )},
+            { title: "Tên sản phẩm", key: "productName", render: (row) => (
+                isEmployee 
+                    ? <span>{row.productName}</span> 
+                    : <button onClick={() => dispatch(setOwnerEditingProduct(row))}>{row.productName}</button>
+            )},    
+            { title: "Phân loại", key: "category", render: (row) => <span>{row.category}</span> },
+            { title: "Màu sắc", key: "color", render: (row) => <span>{row.color}</span> },
+            { title: "Họa tiết", key: "pattern", render: (row) => <span>{row.pattern || "Không"}</span> },
+            { title: "Số lượng", key: "quantities", render: (row) => (
+                <>
+                    {row.quantities.map((quantity) => (
+                        <div key={quantity.size} className="flex justify-center items-center gap-2 text-sm">
+                            <span className="font-medium">{quantity.size}:</span>
+                            <span className="text-purple font-bold">{quantity.quantities}</span>
+                        </div>
+                    ))}
+                </>
+            )}
+        ];
+
+        if (!isEmployee) {
+            cols.push({ title: "Giá nhập", key: "importPrice", render: (row) => <span>{formatThousands(row.importPrice)} VND</span> })
+        }
+
+        cols.push(
+            { title: "Giá bán", key: "salePrice", render: (row) => <span>{formatThousands(row.salePrice)} VND</span> },
+            { title: "In mã", key: "id", render: (row) => (
+                <input
+                    type="checkbox"
+                    checked={isProductSelected(row)}
+                    onChange={() => handleToggle(row)}
+                    className="w-4 h-4 accent-purple cursor-pointer"
+                />
+            )}
+        );
+
+        return cols;
+    }, [dispatch, handleToggle, isProductSelected, isEmployee]);
 
     const products = data?.items ?? [];
     const total = data?.total ?? 0;
