@@ -85,8 +85,8 @@ export function ProductsTable() {
         const cols: Column<Product>[] = [
             { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
             {title: "Hình ảnh", key: "imageUrl", render: (row) => (
-                <div className="relative w-8 h-8 mx-auto">
-                    <Image src={row.imageURL} alt="" fill className="object-cover" unoptimized/>
+                <div className="relative w-20 h-20 mx-auto">
+                    <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
                 </div>
             )},
             { title: "Tên sản phẩm", key: "productName", render: (row) => (

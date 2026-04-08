@@ -309,7 +309,7 @@ export function OwnerImportProductForm() {
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
                                 <div className="relative w-8 h-8">
-                                    <Image src={item.data.imageURL} alt="" fill className="object-cover" unoptimized/>
+                                    <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
                                 </div>
                                 <span>{item.label}</span>
                             </div>
@@ -322,7 +322,7 @@ export function OwnerImportProductForm() {
                             placeHolder="" 
                             value={formatThousands(form.importPrice)}
                             inputType="text"
-                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))} // store raw number
+                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
                         />
 
                         <TextInput

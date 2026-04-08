@@ -318,7 +318,7 @@ export function ImportProductForm() {
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-8 h-8">
-                                        <Image src={item.data.imageURL} fill alt="" className="object-cover" unoptimized/>
+                                        <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
                                     </div>
                                     <span>{item.label}</span>
                                 </div>

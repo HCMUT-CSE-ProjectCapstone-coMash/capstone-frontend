@@ -254,11 +254,9 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
                 <div className="w-md">
                     <div className="relative group h-118.75 w-full mt-3">
                         <Image
-                            src={previewSrc ?? "/placeholder-image.png"}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            unoptimized
+                            src={previewSrc ?? "/placeholder-image.png"} alt="" fill
+                            className="object-cover" unoptimized
+                            placeholder="blur" blurDataURL={"/assets/image/light-pink.png"}
                         />
                     </div>
                 </div>
