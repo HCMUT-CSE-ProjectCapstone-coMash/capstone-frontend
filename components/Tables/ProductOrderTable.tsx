@@ -63,8 +63,8 @@ export function ProductOrderTable() {
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
         {title: "Hình ảnh", key: "imageUrl", render: (row) => (
-            <div className="w-fit mx-auto">
-                <Image src={row.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+            <div className="mx-auto relative w-20 h-20">
+                <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
             </div>
         )},
         { title: "Tên sản phẩm", key: "productName", render: (row) => (
