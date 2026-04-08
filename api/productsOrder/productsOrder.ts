@@ -37,9 +37,16 @@ export async function FetchOrCreateOrder(userId: string) {
     return response.data;
 }
 
-export async function GetProductsOrdersExcludingPending() {
+export async function GetProductsOrdersExcludingPending(currentPage: number, pageSize: number, search?: string) {
+    const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    if (search) params.append("search", search);
+
     const response = await axiosClient.get(
-        "products-orders/fetch-excluding-pending", 
+        `products-orders/fetch-excluding-pending?${params}`, 
         { withCredentials: true }
     );
     return response.data;
