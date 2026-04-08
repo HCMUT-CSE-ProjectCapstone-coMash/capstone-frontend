@@ -1,0 +1,47 @@
+import { useState } from "react";
+import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+
+type CellProps = {
+    value: number;
+    onSave: (value: number) => void;
+};
+
+export function Cell({ value, onSave }: CellProps) {
+    const [editing, setEditing] = useState(false);
+    const [draft, setDraft] = useState(0);
+
+    const handleStart = () => {
+        setDraft(value);
+        setEditing(true);
+    };
+    
+    const handleSave = () => {
+        if (draft !== value) onSave(draft);
+        setEditing(false);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") handleSave();
+        if (e.key === "Escape") setEditing(false);
+    };
+
+    return editing ? (
+        <input
+            autoFocus
+            type="text"
+            value={formatThousands(draft)}
+            onChange={(e) => setDraft(parseFormattedNumber(e.target.value))}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            onFocus={(e) => e.target.select()}
+            className="border rounded px-2 py-1 w-28 text-center focus:outline-purple"
+        />
+    ) : (
+        <span
+            onClick={handleStart}
+            className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+        >
+            {formatThousands(value)} VNĐ
+        </span>
+    );
+}
