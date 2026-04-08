@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// import { Profile } from "./Profile";
 import { TextInput } from "../FormInputs/TextInput";
 import { RadioInput } from "../FormInputs/RadioInput";
 import { SearchInput } from "../FormInputs/SearchInput";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { RootState } from "@/utilities/store";
 
 interface InvoiceFormState {
     customerName: string;
@@ -58,6 +58,7 @@ const paymentOptions = [
 ];
 
 export function InvoiceForm() {
+    const user = useSelector((state: RootState) => state.user); // Lấy thông tin user từ Redux store
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
     const [searchQuery, setSearchQuery] = useState("");
     const [currentTime, setCurrentTime] = useState<string>("");
@@ -213,7 +214,7 @@ export function InvoiceForm() {
                 
                 <div className="flex flex-row justify-between">
                     <div className="text-sm text-tgray9">Người bán hàng</div>
-                    <div className="text-sm">Phó Ngọc Song Khuê</div>
+                    <div className="text-sm">{user.fullName}</div>
                 </div>
 
                 <div className="flex flex-col gap-y-4">

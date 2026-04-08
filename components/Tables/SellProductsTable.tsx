@@ -68,13 +68,13 @@ export function SellProductsTable() {
             <tbody>
                 <ProductRow 
                     name="Đầm đen cách điệu" 
-                    price="200.000VND" 
+                    price="200.000 VND" 
                     discount="10%" 
                 />
 
                 <ProductRow 
                     name="Quần jean ngắn sọc" 
-                    price="120.000VND" 
+                    price="120.000 VND" 
                     discount="" 
                 />
             </tbody>
