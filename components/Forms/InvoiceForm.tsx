@@ -68,21 +68,6 @@ export function InvoiceForm() {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
-    // Lọc suggestion dựa trên Số điện thoại (phone)
-    const suggestions = MOCK_INVOICES
-        .filter(inv => inv.phone.includes(searchQuery))
-        .map(inv => ({
-            label: inv.phone,
-            value: inv.phone,
-            data: inv
-        }));
-
-    const handleSuggestionClick = (item: { data: InvoiceMock }) => {
-        console.log("Đã chọn hóa đơn:", item.data);
-        setSearchQuery(item.data.phone);
-        // Có thể thêm logic load dữ liệu hóa đơn cũ vào form tại đây
-    };
-
     const totalAmount = 120000;
 
     // Đổi từ 100000 thành "100.000" khi hiển thị 
@@ -175,101 +160,67 @@ export function InvoiceForm() {
     };
 
     return (
-        <div className="relative">
-            <div className="absolute bottom-full mb-7 right-0 w-full max-w-md">
-                <SearchInput<InvoiceMock>
-                    label=""
-                    placeHolder="Nhập số điện thoại khách hàng"
-                    isIcon={true}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    suggestions={searchQuery.length > 0 ? suggestions : []} 
-                    onSuggestionClick={handleSuggestionClick}
-                    renderItem={(item) => (
-                        <div className="flex flex-col w-full py-1 gap-y-1">
-                            {/* Dòng 1: [SĐT] - [Mã hoá đơn] */}
-                            <div className="flex items-center text-sm font-medium gap-x-1">
-                                <span>{item.data.phone}</span>
-                                <span>- [{item.data.invoiceId}]</span>
-                            </div>
-
-                            {/* Dòng 2: [Thời gian] và [Tổng tiền] căn lề phải */}
-                            <div className="flex justify-between items-end w-full mt-1">
-                                <span >[{item.data.saleTime}]</span>
-                                <span>
-                                    [{item.data.totalAmount.toLocaleString("vi-VN")}] VND
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                />
+        <form 
+            className="flex flex-col w-full bg-gwhite p-5 rounded-lg font-normal gap-y-5"
+        >
+            <div className="flex flex-row justify-between">
+                <div className="text-sm text-tgray9">Thời gian bán hàng</div>
+                <div className="text-sm">{currentTime || "--/--/---- - --:--"}</div>
             </div>
-            <form 
-                className="bg-gwhite flex flex-col justify-between p-5 w-152.25 min-h-161.5 rounded-lg font-normal gap-y-4"
+            
+            <div className="flex flex-row justify-between">
+                <div className="text-sm text-tgray9">Người bán hàng</div>
+                <div className="text-sm">{user.fullName}</div>
+            </div>
+
+            <TextInput 
+                label={"Tên khách hàng"} 
+                placeHolder="Nhập tên" 
+                value={form.customerName}
+                onChange={(e) => setField("customerName", e.target.value)}
+            />
+
+            <TextInput 
+                label={"Số điện thoại khách hàng"} 
+                placeHolder="Nhập số điện thoại" 
+                value={form.customerPhone}
+                onChange={(e) => setField("customerPhone", e.target.value)}
+            />
+
+            <div className="flex flex-row justify-between items-center">
+                <div className="text-sm text-tgray9">Tổng tiền</div>
+                <div className="text-sm font-semibold">{totalAmount.toLocaleString("vi-VN")} VND</div>
+            </div>
+            
+            <RadioInput
+                label="Phương thức thanh toán"
+                labelPosition="right"
+                options={paymentOptions}
+                value={form.paymentMethod}
+                onChange={handlePaymentMethodChange} 
+            />
+
+            <TextInput
+                label= "Số tiền khách đưa"
+                placeHolder="0" 
+                labelPosition="right"
+                value={form.customerMoney} 
+                onChange={handleMoneyChange} 
+            />
+            
+            {/* --- CẬP NHẬT HIỂN THỊ LABEL VÀ AMOUNT --- */}
+            <div className="flex flex-row justify-between items-center">
+                <div className="text-sm text-tgray9">{displayLabel}</div>
+                <div className="text-sm font-semibold">{displayAmount.toLocaleString("vi-VN")} VND</div>
+            </div>
+            
+            <button 
+                type="submit" 
+                onClick={handleSubmit}
+                className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all"
             >
-                <div className="flex flex-row justify-between">
-                    <div className="text-sm text-tgray9">Thời gian bán hàng</div>
-                    <div className="text-sm">{currentTime || "--/--/---- - --:--"}</div>
-                </div>
-                
-                <div className="flex flex-row justify-between">
-                    <div className="text-sm text-tgray9">Người bán hàng</div>
-                    <div className="text-sm">{user.fullName}</div>
-                </div>
-
-                <div className="flex flex-col gap-y-4">
-                    <TextInput 
-                        label={"Tên khách hàng"} 
-                        placeHolder="Nhập tên" 
-                        value={form.customerName}
-                        onChange={(e) => setField("customerName", e.target.value)}
-                    />
-
-                    <TextInput 
-                        label={"Số điện thoại khách hàng"} 
-                        placeHolder="Nhập số điện thoại" 
-                        value={form.customerPhone}
-                        onChange={(e) => setField("customerPhone", e.target.value)}
-                    />
-                </div>
-
-                <div className="flex flex-row justify-between items-center">
-                    <div className="text-sm text-tgray9">Tổng tiền</div>
-                    <div className="text-sm font-semibold">{totalAmount.toLocaleString("vi-VN")} VND</div>
-                </div>
-                
-                <RadioInput
-                    label="Phương thức thanh toán"
-                    labelPosition="right"
-                    options={paymentOptions}
-                    value={form.paymentMethod}
-                    onChange={handlePaymentMethodChange} 
-                />
-                
-                <div>
-                    <TextInput
-                        label= "Số tiền khách đưa"
-                        placeHolder="0" 
-                        labelPosition="right"
-                        value={form.customerMoney} 
-                        onChange={handleMoneyChange} 
-                    />
-                </div>
-                
-                {/* --- CẬP NHẬT HIỂN THỊ LABEL VÀ AMOUNT --- */}
-                <div className="flex flex-row justify-between items-center">
-                    <div className="text-sm text-tgray9">{displayLabel}</div>
-                    <div className="text-sm font-semibold">{displayAmount.toLocaleString("vi-VN")} VND</div>
-                </div>
-                
-                <button 
-                    type="submit" 
-                    onClick={handleSubmit}
-                    className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all"
-                >
-                    Xuất hóa đơn  
-                </button>
-            </form>
-        </div>
+                Xuất hóa đơn  
+            </button>
+        </form>
     );
 }

@@ -1,19 +1,71 @@
+"use client";
+import { FetchApprovedProductByName } from "@/api/products/products";
+import { SearchInput } from "@/components/FormInputs/SearchInput";
+import { useDebounce } from "@/hooks/useDebounce";
+import { ProductWithOrderStatus } from "@/types/product";
+import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
+import { useState } from "react";
 import { InvoiceForm } from "@/components/Forms/InvoiceForm";
 import { SellProductsTable } from "@/components/Tables/SellProductsTable";
 
-
 export default function SellPage() {
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const debouncedName = useDebounce(searchTerm, 500);
+
+    const { data: products = [] } = useQuery({
+        queryKey: ["products", debouncedName],
+        queryFn: () => FetchApprovedProductByName(debouncedName),
+        enabled: debouncedName.length > 2,
+        staleTime: 0,
+        gcTime: 0
+    });
+
+    const suggestions = products.map((p: ProductWithOrderStatus) => ({
+        label: p.productName,
+        value: p.productName,
+        data: p
+    }));
+
     return (
-        <main className="px-20 pt-10 pb-25">
-            <div className="relative">
-                <p className="text-purple text-3xl font-medium">Bán hàng</p>
-                <div className="mt-7 flex justify-between gap-[5vw]">
-                    <div className="flex-2">
-                        <SellProductsTable/>
-                    </div>
-                    <div className="flex-1">
-                        <InvoiceForm/>
-                    </div>
+        <main className="px-10 pt-10 pb-25">
+            <div className="grid grid-cols-5 gap-x-10 gap-y-5">
+                {/* Row 1: title + search */}
+                <div className="col-span-3 flex items-center">
+                    <p className="text-purple text-3xl font-medium">Bán hàng</p>
+                </div>
+
+                <div className="col-span-2">
+                    <SearchInput<ProductWithOrderStatus>
+                        label=""
+                        placeHolder="Tìm kiếm sản phẩm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        suggestions={suggestions}
+                        isItemDisabled={(item) => item.data.isInPendingOrder}
+                        onSuggestionClick={(item) => {}}
+                        renderItem={(item) => (
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-8 h-8">
+                                        <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
+                                    </div>
+                                    <span>{item.label}</span>
+                                </div>
+                                {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
+                            </div>
+                        )}
+                    />
+                </div>
+
+                {/* Row 2: table + form */}
+                <div className="col-span-3">
+                    <SellProductsTable/>
+                </div>
+
+                <div className="col-span-2">
+                    <InvoiceForm/>
                 </div>
             </div>
         </main>
