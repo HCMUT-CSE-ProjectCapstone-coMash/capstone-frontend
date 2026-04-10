@@ -80,3 +80,19 @@ export function SearchIcon({ width, height, className }: IconProps) {
         </svg>
     )
 }
+
+export function AddIcon({ width, height, className }: IconProps) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} className={className} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11 11V5H13V11H19V13H13V19H11V13H5V11H11Z"></path>
+        </svg>
+    )
+}
+
+export function MinusIcon({ width, height, className }: IconProps) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} className={className} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 11V13H19V11H5Z"></path>
+        </svg>
+    )
+}

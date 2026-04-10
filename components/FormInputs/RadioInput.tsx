@@ -2,27 +2,19 @@ import React from "react";
 
 // Định nghĩa kiểu dữ liệu cho từng tùy chọn radio
 export interface RadioOption {
-    id: string;
+    value: string;
     label: string;
-}
+};
 
 interface RadioInputProps {
-    label?: string;
+    label: string;
     value: string;
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     options: RadioOption[];
-    name?: string;
     labelPosition?: "right" | "top";
 }
 
-export function RadioInput({ 
-    label, 
-    value, 
-    onChange, 
-    options,
-    name = "radio_group",
-    labelPosition = "top" 
-}: RadioInputProps) {
+export function RadioInput({ label, value, onChange, options, labelPosition = "top" }: RadioInputProps) {
     const isRight = labelPosition === "right";
     
     return (
@@ -36,10 +28,10 @@ export function RadioInput({
             {/* Vùng chứa các Radio Buttons */}
             <div className={`flex items-center gap-6 text-sm ${isRight ? 'w-auto' : 'w-full'}`}>
                 {options.map((option) => {
-                    const isChecked = value === option.id;
+                    const isChecked = value === option.value;
                     
                     return (
-                        <label key={option.id} className="group flex items-center gap-2 cursor-pointer">
+                        <label key={option.value} className="group flex items-center gap-2 cursor-pointer">
                             {/* Text hiển thị (Tiền mặt, Chuyển khoản...) */}
                             <span className={`text-sm transition-colors ${isChecked ? 'text-black font-weight-400' : 'text-tgray6 group-hover:text-black'}`}>
                                 {option.label}
@@ -49,8 +41,7 @@ export function RadioInput({
                             <div className="relative flex items-center justify-center w-4.5 h-4.5">
                                 <input
                                     type="radio"
-                                    name={name}
-                                    value={option.id}
+                                    value={option.value}
                                     checked={isChecked}
                                     onChange={onChange}
                                     className="sr-only" // Ẩn input mặc định của trình duyệt

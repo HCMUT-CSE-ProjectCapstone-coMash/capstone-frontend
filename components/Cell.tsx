@@ -4,9 +4,10 @@ import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat"
 type CellProps = {
     value: number;
     onSave: (value: number) => void;
+    isPercentage?: boolean
 };
 
-export function Cell({ value, onSave }: CellProps) {
+export function Cell({ value, onSave, isPercentage = false }: CellProps) {
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(0);
 
@@ -37,11 +38,22 @@ export function Cell({ value, onSave }: CellProps) {
             className="border rounded px-2 py-1 w-28 text-center focus:outline-purple"
         />
     ) : (
-        <span
-            onClick={handleStart}
-            className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
-        >
-            {formatThousands(value)} VNĐ
-        </span>
+        <>
+            {isPercentage ? (
+                <span  
+                    onClick={handleStart}
+                    className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                >
+                    {value} %
+                </span>
+            ): (
+                <span  
+                    onClick={handleStart}
+                    className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+                >
+                    {formatThousands(value)} VNĐ
+                </span>
+            )}
+        </>
     );
 }
