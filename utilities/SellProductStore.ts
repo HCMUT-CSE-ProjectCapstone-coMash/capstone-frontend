@@ -1,3 +1,4 @@
+import { Customer } from "@/types/customer";
 import { Product } from "@/types/product";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
@@ -9,6 +10,7 @@ export interface SellProduct extends Product {
 
 interface SellProductState {
     products: SellProduct[];
+    customer?: Customer;
 };
 
 const initialState: SellProductState = {
@@ -55,11 +57,16 @@ const SellProductSlice = createSlice({
             }
         },
 
-        clearProducts: (state) => {
+        clearSellProducts: (state) => {
             state.products = [];
+            state.customer = undefined;
         },
+
+        setCustomer: (state, action: PayloadAction<Customer | undefined>) => {
+            state.customer = action.payload;
+        }
     }
 });
 
-export const { addProduct, removeProduct, updateQuantity, updateDiscount, clearProducts } = SellProductSlice.actions;
+export const { addProduct, removeProduct, updateQuantity, updateDiscount, clearSellProducts, setCustomer} = SellProductSlice.actions;
 export default SellProductSlice.reducer;

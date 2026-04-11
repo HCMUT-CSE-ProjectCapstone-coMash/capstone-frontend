@@ -10,6 +10,11 @@ import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { RootState } from "@/utilities/store";
 import { PaymentMethod } from "@/const/PaymentMethod";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
+import { AxiosError } from "axios";
+import { Customer } from "@/types/customer";
+import { setCustomer } from "@/utilities/SellProductStore";
 
 interface InvoiceFormState {
     customerName: string;
@@ -35,13 +40,12 @@ export function InvoiceForm() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user); // Lấy thông tin user từ Redux store
     const products = useSelector((state: RootState) => state.sellProduct.products);
+    const selectedCustomer = useSelector((state: RootState) => state.sellProduct.customer);
 
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
     const setField = <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
-
-    const [searchTerm, setSearchTerm] = useState("");
 
     const [currentTime, setCurrentTime] = useState<string>("");
 
@@ -77,6 +81,21 @@ export function InvoiceForm() {
     const displayLabel = isDebit ? "Số tiền còn nợ" : "Số tiền hoàn trả";
     const displayAmount = isDebit ? debtAmount : returnMoney;
 
+    const createCustomerMutation = useMutation({
+        mutationFn: ({ customerName, customerPhone, userId } : { customerName: string, customerPhone: string, userId: string }) => CreateCustomer(customerName, customerPhone, userId),
+
+        onSuccess: (data) => {
+            setField("customerName", data.customerName);
+            setField("customerPhone", data.customerPhone);
+            dispatch(setCustomer(data));
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Tạo khách hàng thành công: ${data.customerName}` }));
+        },
+
+        onError: (error: AxiosError<{ message: string }>) => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: error.response?.data.message }));
+        }
+    });
+
     useEffect(() => {
     const updateTime = () => {
         const now = new Date();
@@ -103,6 +122,64 @@ export function InvoiceForm() {
     return () => clearInterval(intervalId);
     }, []);
 
+    // Tìm kiếm khách hàng theo tên và số điện thoại với react-query
+    const { data: customersByName = [] } = useQuery({
+        queryKey: ["customersByName", form.customerName, ],
+        queryFn: () => FetchCustomerByName(form.customerName, ),
+        enabled: form.customerName.length >= 2,
+        staleTime: 0,
+        gcTime: 0
+    });
+
+    const nameSuggestions = customersByName.map((c: Customer) => ({
+        label: c.customerName,
+        value: c.customerId,
+        data: c
+    }));
+
+    const { data: customersByPhone = [] } = useQuery({
+        queryKey: ["customersByPhone", form.customerPhone],
+        queryFn: () => FetchCustomerByPhone(form.customerPhone),
+        enabled: form.customerPhone.length >= 3,
+        staleTime: 0,
+        gcTime: 0,
+    });
+    
+    const phoneSuggestions = customersByPhone.map((c: Customer) => ({
+        label: c.customerPhone,
+        value: c.customerId,
+        data: c,
+    }));
+
+    // Xử lý tạo khách hàng mới
+    const handleCreateCustomer = () => {
+        if (!user.id) return;
+
+        if (!form.customerName) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên khách hàng" }));
+            return;
+        }
+        
+        if (!form.customerPhone) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số điện thoại khách hàng" }));
+            return;
+        }        
+
+        createCustomerMutation.mutate({
+            customerName: form.customerName,
+            customerPhone: form.customerPhone,
+            userId: user.id
+        });
+    };
+
+    // Xử lý xóa khách hàng đã chọn
+    const handleClearCustomer = () => {
+        dispatch(setCustomer(undefined));
+        setField("customerName", "");
+        setField("customerPhone", "");
+    };
+
+    // Xử lý submit form (xuất hóa đơn)
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
@@ -123,19 +200,79 @@ export function InvoiceForm() {
                 <div className="text-sm">{user.fullName}</div>
             </div>
 
-            <TextInput 
-                label={"Tên khách hàng"} 
-                placeHolder="Nhập tên" 
-                value={form.customerName}
-                onChange={(e) => setField("customerName", e.target.value)}
-            />
+            {selectedCustomer ? (
+                <div className="flex flex-col gap-y-5">
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm text-tgray9">Tên khách hàng</div>
+                        <div className="text-sm">{selectedCustomer.customerName}</div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm text-tgray9">Số điện thoại</div>
+                        <div className="text-sm">{selectedCustomer.customerPhone}</div>
+                    </div>
+                    <div className="flex justify-end">
+                        <button
+                            type="button"
+                            className="py-2 px-4 rounded-lg border border-red-500 text-red-500 text-sm font-medium transition hover:bg-red-50 hover:cursor-pointer"
+                            onClick={handleClearCustomer}
+                        >
+                            Đổi khách hàng
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    <SearchInput<Customer>
+                        label={"Tên khách hàng"}
+                        placeHolder="Nhập tên khách hàng để tìm kiếm hoặc tạo mới"
+                        value={form.customerName}
+                        onChange={(e) => {
+                            setField("customerName", e.target.value);
+                        }}
+                        suggestions={nameSuggestions}
+                        onSuggestionClick={(item) => {
+                            setField("customerName", item.label);
+                            setField("customerPhone", item.data.customerPhone);
+                            dispatch(setCustomer(item.data));
+                        }}                
+                        renderItem={(item) => (
+                            <div className="flex justify-between items-center">
+                                <p>{item.label} - {item.data.customerPhone}</p>
+                            </div>
+                        )}
+                    />
 
-            <TextInput 
-                label={"Số điện thoại khách hàng"} 
-                placeHolder="Nhập số điện thoại" 
-                value={form.customerPhone}
-                onChange={(e) => setField("customerPhone", e.target.value)}
-            />
+                    <SearchInput<Customer>
+                        label={"Số điện thoại khách hàng"}
+                        placeHolder="Nhập số điện thoại để tìm kiếm hoặc tạo mới"
+                        value={form.customerPhone}
+                        onChange={(e) => {
+                            setField("customerPhone", e.target.value);
+                        }}
+                        suggestions={phoneSuggestions}
+                        onSuggestionClick={(item) => {
+                            setField("customerName", item.data.customerName);
+                            setField("customerPhone", item.label);
+                            dispatch(setCustomer(item.data));
+                        }}
+                        renderItem={(item) => (
+                            <div className="flex justify-between items-center">
+                                <p>{item.data.customerName} - {item.label}</p>
+                            </div>
+                        )}
+                    />
+
+                    <div className="flex justify-end">
+                        <button
+                            type="button"
+                            className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer"
+                            onClick={handleCreateCustomer}
+                        >
+                            Tạo khách hàng mới
+                        </button>
+                    </div>
+                </>
+            )}
 
             <div className="flex flex-row justify-between items-center">
                 <div className="text-sm text-tgray9">Tổng tiền</div>
