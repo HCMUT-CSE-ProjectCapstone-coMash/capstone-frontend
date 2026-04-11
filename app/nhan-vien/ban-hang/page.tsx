@@ -7,13 +7,13 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
 import { InvoiceForm } from "@/components/Forms/InvoiceForm";
-import { SellProductsTable } from "@/components/Tables/SellProductsTable";
+import { SaleProductsTable } from "@/components/Tables/SaleProductsTable";
 import { useDispatch } from "react-redux";
-import { addProduct } from "@/utilities/SellProductStore";
+import { addProduct } from "@/utilities/SaleProductStore";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 
-export default function SellPage() {
+export default function SalePage() {
     const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -110,7 +110,7 @@ export default function SellPage() {
 
                 {/* Row 2: table + form */}
                 <div className="col-span-3">
-                    <SellProductsTable/>
+                    <SaleProductsTable/>
                 </div>
 
                 <div className="col-span-2">

@@ -71,4 +71,4 @@ export interface ProductWithOrderStatus {
     importPrice: number,
     salePrice: number,
     isInPendingOrder: boolean
-}
+};

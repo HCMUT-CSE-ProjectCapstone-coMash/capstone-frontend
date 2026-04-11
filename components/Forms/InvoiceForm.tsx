@@ -14,7 +14,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
 import { AxiosError } from "axios";
 import { Customer } from "@/types/customer";
-import { setCustomer } from "@/utilities/SellProductStore";
+import { setCustomer } from "@/utilities/SaleProductStore";
+import { SaleOrderRequest } from "@/types/saleOrder";
+import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
+import { useDebounce } from "@/hooks/useDebounce";
 
 interface InvoiceFormState {
     customerName: string;
@@ -38,9 +41,9 @@ const paymentOptions: { value: string, label: string }[] = [
 
 export function InvoiceForm() {
     const dispatch = useDispatch();
-    const user = useSelector((state: RootState) => state.user); // Lấy thông tin user từ Redux store
-    const products = useSelector((state: RootState) => state.sellProduct.products);
-    const selectedCustomer = useSelector((state: RootState) => state.sellProduct.customer);
+    const user = useSelector((state: RootState) => state.user);
+    const products = useSelector((state: RootState) => state.saleProduct.products);
+    const selectedCustomer = useSelector((state: RootState) => state.saleProduct.customer);
 
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
     const setField = <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => {
@@ -81,18 +84,39 @@ export function InvoiceForm() {
     const displayLabel = isDebit ? "Số tiền còn nợ" : "Số tiền hoàn trả";
     const displayAmount = isDebit ? debtAmount : returnMoney;
 
+    // Mutation để tạo khách hàng mới
     const createCustomerMutation = useMutation({
         mutationFn: ({ customerName, customerPhone, userId } : { customerName: string, customerPhone: string, userId: string }) => CreateCustomer(customerName, customerPhone, userId),
 
         onSuccess: (data) => {
             setField("customerName", data.customerName);
             setField("customerPhone", data.customerPhone);
-            dispatch(setCustomer(data));
+            dispatch(setCustomer({
+                id: data.customerId,
+                customerName: data.customerName,
+                customerPhone: data.customerPhone,
+                customerStatus: data.customerStatus,
+                createdAt: data.createdAt,
+                createdBy: data.createdBy
+            }));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: `Tạo khách hàng thành công: ${data.customerName}` }));
         },
 
         onError: (error: AxiosError<{ message: string }>) => {
             dispatch(addAlert({ type: AlertType.ERROR, message: error.response?.data.message }));
+        }
+    });
+
+    // Mutation để tạo đơn hàng mới (xuất hóa đơn)
+    const createSaleOrderMutation = useMutation({
+        mutationFn: ({ saleOrder }: { saleOrder: SaleOrderRequest }) => CreateSaleOrder(saleOrder),
+
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công!" }));
+        },
+
+        onError: () => {
+
         }
     });
 
@@ -122,32 +146,35 @@ export function InvoiceForm() {
     return () => clearInterval(intervalId);
     }, []);
 
+    const debouncedName = useDebounce(form.customerName, 500);
+    const debouncedPhone = useDebounce(form.customerPhone, 500);
+
     // Tìm kiếm khách hàng theo tên và số điện thoại với react-query
     const { data: customersByName = [] } = useQuery({
-        queryKey: ["customersByName", form.customerName, ],
-        queryFn: () => FetchCustomerByName(form.customerName, ),
-        enabled: form.customerName.length >= 2,
+        queryKey: ["customersByName", debouncedName, ],
+        queryFn: () => FetchCustomerByName(debouncedName, ),
+        enabled: debouncedName.length >= 2,
         staleTime: 0,
         gcTime: 0
     });
 
     const nameSuggestions = customersByName.map((c: Customer) => ({
         label: c.customerName,
-        value: c.customerId,
+        value: c.id,
         data: c
     }));
 
     const { data: customersByPhone = [] } = useQuery({
-        queryKey: ["customersByPhone", form.customerPhone],
-        queryFn: () => FetchCustomerByPhone(form.customerPhone),
-        enabled: form.customerPhone.length >= 3,
+        queryKey: ["customersByPhone", debouncedPhone],
+        queryFn: () => FetchCustomerByPhone(debouncedPhone),
+        enabled: debouncedPhone.length >= 3,
         staleTime: 0,
         gcTime: 0,
     });
     
     const phoneSuggestions = customersByPhone.map((c: Customer) => ({
         label: c.customerPhone,
-        value: c.customerId,
+        value: c.id,
         data: c,
     }));
 
@@ -182,8 +209,28 @@ export function InvoiceForm() {
     // Xử lý submit form (xuất hóa đơn)
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!user.id) return;
         
-        // dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công!" }));
+        if (products.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm sản phẩm vào hóa đơn" }));
+            return;
+        }
+        console.log(selectedCustomer)
+        const invoiceData: SaleOrderRequest = {
+            customerId: selectedCustomer ? selectedCustomer.id : "",
+            userId: user.id,
+            paymentMethod: form.paymentMethod,
+            customerMoney: form.customerMoney,
+            products: products.map((p) => ({
+                productId: p.id,
+                selectedSize: p.selectedSize,
+                quantity: p.quantity,
+                discount: p.discount
+            }))
+        };
+
+        createSaleOrderMutation.mutate({ saleOrder: invoiceData });
     };
 
     return (
@@ -233,7 +280,14 @@ export function InvoiceForm() {
                         onSuggestionClick={(item) => {
                             setField("customerName", item.label);
                             setField("customerPhone", item.data.customerPhone);
-                            dispatch(setCustomer(item.data));
+                            dispatch(setCustomer({ 
+                                id: item.data.id,
+                                customerName: item.data.customerName,
+                                customerPhone: item.data.customerPhone,
+                                customerStatus: item.data.customerStatus,
+                                createdAt: item.data.createdAt,
+                                createdBy: item.data.createdBy
+                            }));
                         }}                
                         renderItem={(item) => (
                             <div className="flex justify-between items-center">
@@ -253,7 +307,14 @@ export function InvoiceForm() {
                         onSuggestionClick={(item) => {
                             setField("customerName", item.data.customerName);
                             setField("customerPhone", item.label);
-                            dispatch(setCustomer(item.data));
+                            dispatch(setCustomer({ 
+                                id: item.data.id,
+                                customerName: item.data.customerName,
+                                customerPhone: item.data.customerPhone,
+                                customerStatus: item.data.customerStatus,
+                                createdAt: item.data.createdAt,
+                                createdBy: item.data.createdBy
+                            }));
                         }}
                         renderItem={(item) => (
                             <div className="flex justify-between items-center">

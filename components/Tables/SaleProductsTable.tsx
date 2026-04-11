@@ -1,7 +1,7 @@
 "use client";
 
 import { Column } from "@/types/UIType";
-import { removeProduct, SellProduct, updateDiscount, updateQuantity } from "@/utilities/SellProductStore";
+import { removeProduct, SaleProduct, updateDiscount, updateQuantity } from "@/utilities/SaleProductStore";
 import { Table } from "./Table";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
@@ -13,15 +13,15 @@ import { AlertType } from "@/types/alert";
 import { AddIcon, MinusIcon } from "@/public/assets/Icons";
 import { Cell } from "../Cell";
 
-export function SellProductsTable() {
+export function SaleProductsTable() {
     const dispatch = useDispatch();
-    const products = useSelector((state: RootState) => state.sellProduct.products);
+    const products = useSelector((state: RootState) => state.saleProduct.products);
 
-    const getAvailableQuantity = (row: SellProduct) => {
+    const getAvailableQuantity = (row: SaleProduct) => {
         return row.quantities.find((q) => q.size === row.selectedSize)?.quantities ?? 0;
     };
 
-    const columns: Column<SellProduct>[] = [
+    const columns: Column<SaleProduct>[] = [
         { title: "Hình ảnh", key: "productId", render: (row) => (
             <div className="relative w-20 h-20 mx-auto">
                 <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
@@ -30,7 +30,7 @@ export function SellProductsTable() {
         { title: "Tên sản phẩm", key: "productName", render: (row) => <span>{row.productName} - {row.selectedSize}</span>},
         { title: "Đơn giá", key: "salePrice", render: (row) => {
             const discountedPrice = Math.round(row.salePrice * (1 - row.discount / 100));
-            console.log(row.salePrice * (1 - row.discount / 100))
+
             return (
                 <div className="flex flex-col items-center gap-1">
                     {row.discount > 0 ? (
