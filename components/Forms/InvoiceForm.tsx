@@ -216,12 +216,13 @@ export function InvoiceForm() {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm sản phẩm vào hóa đơn" }));
             return;
         }
-        console.log(selectedCustomer)
+        
         const invoiceData: SaleOrderRequest = {
             customerId: selectedCustomer ? selectedCustomer.id : "",
             userId: user.id,
             paymentMethod: form.paymentMethod,
-            customerMoney: form.customerMoney,
+            debitMoney: 0,
+            discount: 0,
             products: products.map((p) => ({
                 productId: p.id,
                 selectedSize: p.selectedSize,

@@ -9,6 +9,7 @@ export interface SaleOrderRequest {
     customerId: string;
     userId: string;
     paymentMethod: string;
-    customerMoney: number;
+    debitMoney: number;
+    discount: number,
     products: SaleProductRequest[];
 }
