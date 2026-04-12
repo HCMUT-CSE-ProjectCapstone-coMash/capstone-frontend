@@ -14,10 +14,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
 import { AxiosError } from "axios";
 import { Customer } from "@/types/customer";
-import { setCustomer } from "@/utilities/SaleProductStore";
-import { SaleOrderRequest } from "@/types/saleOrder";
+import { clearSaleProducts, setCustomer } from "@/utilities/SaleProductStore";
+import { SaleOrderRequest, SaleOrderResponse } from "@/types/saleOrder";
 import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
+import { PrintBill } from "../PrintBill";
 
 interface InvoiceFormState {
     customerName: string;
@@ -56,6 +57,8 @@ export function InvoiceForm() {
         const discountedPrice = Math.round(product.salePrice * (1 - product.discount / 100));
         return sum + discountedPrice * product.quantity;
     }, 0);
+
+    const [completedOrder, setCompletedOrder] = useState<SaleOrderResponse | null>(null);
 
     // Xử lý thay đổi phương thức thanh toán
     const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,12 +114,13 @@ export function InvoiceForm() {
     const createSaleOrderMutation = useMutation({
         mutationFn: ({ saleOrder }: { saleOrder: SaleOrderRequest }) => CreateSaleOrder(saleOrder),
 
-        onSuccess: () => {
+        onSuccess: (data) => {
+            setCompletedOrder(data);
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công!" }));
         },
 
         onError: () => {
-
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Xuất hóa đơn thất bại. Vui lòng thử lại." }));
         }
     });
 
@@ -221,8 +225,7 @@ export function InvoiceForm() {
             customerId: selectedCustomer ? selectedCustomer.id : "",
             userId: user.id,
             paymentMethod: form.paymentMethod,
-            debitMoney: 0,
-            discount: 0,
+            debitMoney: debtAmount,
             products: products.map((p) => ({
                 productId: p.id,
                 selectedSize: p.selectedSize,
@@ -363,13 +366,31 @@ export function InvoiceForm() {
                 <div className="text-sm font-semibold">{formatThousands(displayAmount)} VND</div>
             </div>
             
-            <button 
-                type="submit" 
-                onClick={handleSubmit}
-                className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all"
-            >
-                Xuất hóa đơn  
-            </button>
+            {completedOrder ? (
+                <div className="flex gap-3 self-center">
+                    <PrintBill order={completedOrder}/>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setCompletedOrder(null);
+                            setForm(initialInvoiceFormState);
+                            dispatch(clearSaleProducts());
+                        }}
+                        className="p-2.5 w-45 rounded-lg text-purple font-semibold border border-purple text-base cursor-pointer hover:bg-purple/10 transition-all"
+                    >
+                        Tạo đơn mới
+                    </button>
+                </div>
+            ) : (
+                <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    disabled={createSaleOrderMutation.isPending}
+                    className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Xuất hóa đơn"}
+                </button>
+            )}
         </form>
     );
 }

@@ -2,7 +2,7 @@
 import { FetchApprovedProductByName } from "@/api/products/products";
 import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
-import { ProductWithOrderStatus } from "@/types/product";
+import { ProductQuantity, ProductWithOrderStatus } from "@/types/product";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
@@ -52,6 +52,13 @@ export default function SalePage() {
         const availableSizes = product.quantities.map((q) => q.size);
         const selectedSize = availableSizes.includes(potentialSize) ? potentialSize : availableSizes[0];
     
+        const sizeEntry = product.quantities.find((q) => q.size === selectedSize);
+        if (!sizeEntry || sizeEntry.quantities <= 0) {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm đã hết hàng" }));
+            setSearchTerm("");
+            return;
+        }
+
         handleAddProduct(product, selectedSize);
         setSearchTerm("");
     };
@@ -72,10 +79,17 @@ export default function SalePage() {
         );
     
         if (!matched) return;
+
+        const sizeEntry = matched.quantities.find((q: ProductQuantity) => q.size.toUpperCase() === potentialSize);
+        if (!sizeEntry || sizeEntry.quantities <= 0) {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm đã hết hàng" }));
+            setTimeout(() => setSearchTerm(""), 0);
+            return;
+        }
     
         handleAddProduct(matched, potentialSize);
         setTimeout(() => setSearchTerm(""), 0);
-    }, [debouncedName, products, handleAddProduct]);
+    }, [debouncedName, products, handleAddProduct, dispatch]);
 
     return (
         <main className="px-10 pt-10 pb-25">
