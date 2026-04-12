@@ -12,10 +12,14 @@ import { useDispatch } from "react-redux";
 import { addProduct } from "@/utilities/SaleProductStore";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { SaleOrderResponse } from "@/types/saleOrder";
 
 export default function SalePage() {
     const dispatch = useDispatch();
     const [searchTerm, setSearchTerm] = useState("");
+    const [completedOrder, setCompletedOrder] = useState<SaleOrderResponse | null>(null);
+
+    const isDisabled = completedOrder !== null;
 
     const debouncedName = useDebounce(searchTerm, 500);
 
@@ -119,16 +123,17 @@ export default function SalePage() {
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
+                        disabled={isDisabled}
                     />
                 </div>
 
                 {/* Row 2: table + form */}
                 <div className="col-span-3">
-                    <SaleProductsTable/>
+                    <SaleProductsTable disabled={isDisabled}/>
                 </div>
 
                 <div className="col-span-2">
-                    <InvoiceForm/>
+                    <InvoiceForm completedOrder={completedOrder} setCompletedOrder={setCompletedOrder}/>
                 </div>
             </div>
         </main>

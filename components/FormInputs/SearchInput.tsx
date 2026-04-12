@@ -20,10 +20,11 @@ interface SearchInputProps<T> {
     renderItem: (item: Suggestion<T>) => React.ReactNode;
     isError?: boolean,
     isItemDisabled?: (item: Suggestion<T>) => boolean;
-    isIcon?: boolean
+    isIcon?: boolean,
+    disabled?: boolean,
 }
 
-export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError, isItemDisabled, isIcon = false } : SearchInputProps<T>) {
+export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError, isItemDisabled, isIcon = false, disabled = false } : SearchInputProps<T>) {
     const isLeft = labelPosition === "left";
     const borderClass = isError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-tgray5 focus:border-purple focus:ring-purple";
 
@@ -41,14 +42,15 @@ export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosit
                 )}
                 <input
                     placeholder={placeHolder}
+                    disabled={disabled}
                     value={value} 
                     onChange={onChange}
-                    onFocus={() => setShowSuggestions(true)}
+                    onFocus={() => !disabled && setShowSuggestions(true)}
                     onBlur={() => setShowSuggestions(false)}
-                    className={`w-full h-12 ${isIcon ? 'pl-10' : 'px-2.5'} px-2.5 rounded-lg border-[0.5px] border-solid focus:outline-none focus:ring-1 transition-colors caret-purple ${borderClass}`}
+                    className={`w-full h-12 ${isIcon ? 'pl-10' : 'px-2.5'} px-2.5 rounded-lg border-[0.5px] border-solid focus:outline-none focus:ring-1 transition-colors caret-purple ${borderClass} ${disabled ? "cursor-not-allowed opacity-70 bg-gray-100" : ""}`}
                 />
 
-                {showSuggestions && suggestions.length > 0 && (
+                {!disabled && showSuggestions && suggestions.length > 0 && (
                     <ul className="absolute z-10 w-full mt-1 bg-white border border-tgray5 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                         {suggestions.map((item, index) => {
                             const disabled = isItemDisabled?.(item) ?? false;

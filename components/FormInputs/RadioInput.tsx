@@ -12,9 +12,10 @@ interface RadioInputProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
     options: RadioOption[];
     labelPosition?: "right" | "top";
+    disabled?: boolean;
 }
 
-export function RadioInput({ label, value, onChange, options, labelPosition = "top" }: RadioInputProps) {
+export function RadioInput({ label, value, onChange, options, labelPosition = "top", disabled = false }: RadioInputProps) {
     const isRight = labelPosition === "right";
     
     return (
@@ -31,7 +32,7 @@ export function RadioInput({ label, value, onChange, options, labelPosition = "t
                     const isChecked = value === option.value;
                     
                     return (
-                        <label key={option.value} className="group flex items-center gap-2 cursor-pointer">
+                        <label key={option.value} className={`group flex items-center gap-2 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}>
                             {/* Text hiển thị (Tiền mặt, Chuyển khoản...) */}
                             <span className={`text-sm transition-colors ${isChecked ? 'text-black font-weight-400' : 'text-tgray6 group-hover:text-black'}`}>
                                 {option.label}
@@ -45,6 +46,7 @@ export function RadioInput({ label, value, onChange, options, labelPosition = "t
                                     checked={isChecked}
                                     onChange={onChange}
                                     className="sr-only" // Ẩn input mặc định của trình duyệt
+                                    disabled={disabled}
                                 />
                                 
                                 {/* Vòng tròn viền */}

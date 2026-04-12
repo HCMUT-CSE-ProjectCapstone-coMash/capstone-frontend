@@ -40,11 +40,18 @@ const paymentOptions: { value: string, label: string }[] = [
     { value: PaymentMethod.DEBIT, label: "Ghi nợ" }
 ];
 
-export function InvoiceForm() {
+interface InvoiceFormProps {
+    completedOrder: SaleOrderResponse | null;
+    setCompletedOrder: (order: SaleOrderResponse | null) => void;
+}
+
+export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormProps) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const products = useSelector((state: RootState) => state.saleProduct.products);
     const selectedCustomer = useSelector((state: RootState) => state.saleProduct.customer);
+
+    const isDisabled = completedOrder !== null;
 
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
     const setField = <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => {
@@ -57,8 +64,6 @@ export function InvoiceForm() {
         const discountedPrice = Math.round(product.salePrice * (1 - product.discount / 100));
         return sum + discountedPrice * product.quantity;
     }, 0);
-
-    const [completedOrder, setCompletedOrder] = useState<SaleOrderResponse | null>(null);
 
     // Xử lý thay đổi phương thức thanh toán
     const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -264,8 +269,9 @@ export function InvoiceForm() {
                     <div className="flex justify-end">
                         <button
                             type="button"
-                            className="py-2 px-4 rounded-lg border border-red-500 text-red-500 text-sm font-medium transition hover:bg-red-50 hover:cursor-pointer"
+                            className={`py-2 px-4 rounded-lg border border-red-500 text-red-500 text-sm font-medium transition hover:bg-red-50 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
                             onClick={handleClearCustomer}
+                            disabled={isDisabled}
                         >
                             Đổi khách hàng
                         </button>
@@ -298,6 +304,7 @@ export function InvoiceForm() {
                                 <p>{item.label} - {item.data.customerPhone}</p>
                             </div>
                         )}
+                        disabled={isDisabled}
                     />
 
                     <SearchInput<Customer>
@@ -325,13 +332,15 @@ export function InvoiceForm() {
                                 <p>{item.data.customerName} - {item.label}</p>
                             </div>
                         )}
+                        disabled={isDisabled}
                     />
 
                     <div className="flex justify-end">
                         <button
                             type="button"
-                            className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer"
+                            className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleCreateCustomer}
+                            disabled={isDisabled}
                         >
                             Tạo khách hàng mới
                         </button>
@@ -350,6 +359,7 @@ export function InvoiceForm() {
                 options={paymentOptions}
                 value={form.paymentMethod}
                 onChange={handlePaymentMethodChange} 
+                disabled={isDisabled}
             />
 
             <TextInput

@@ -13,7 +13,11 @@ import { AlertType } from "@/types/alert";
 import { AddIcon, MinusIcon } from "@/public/assets/Icons";
 import { Cell } from "../Cell";
 
-export function SaleProductsTable() {
+interface SaleProductsTableProps {
+    disabled?: boolean;
+}
+
+export function SaleProductsTable({ disabled = false }: SaleProductsTableProps) {
     const dispatch = useDispatch();
     const products = useSelector((state: RootState) => state.saleProduct.products);
 
@@ -49,7 +53,7 @@ export function SaleProductsTable() {
             const available = getAvailableQuantity(row);
             return (
                 <div className="flex items-center justify-center gap-4">
-                    <button className="cursor-pointer"
+                    <button className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
                         onClick={() => {
                             if (row.quantity <= 1) {
                                 dispatch(addAlert({ type: AlertType.WARNING, message: "Số lượng tối thiểu là 1" }));
@@ -57,11 +61,12 @@ export function SaleProductsTable() {
                             }
                             dispatch(updateQuantity({ productId: row.productId, selectedSize: row.selectedSize, quantity: row.quantity - 1 }));
                         }}
+                        disabled={disabled}
                     >
                         <MinusIcon width={24} height={24} className=""/>
                     </button>
                     <p>{row.quantity}</p>
-                    <button className="cursor-pointer"
+                    <button className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
                         onClick={() => {
                             if (row.quantity >= available) {
                                 dispatch(addAlert({ type: AlertType.WARNING, message: `Số lượng tối đa là ${available}` }));
@@ -69,6 +74,7 @@ export function SaleProductsTable() {
                             }
                             dispatch(updateQuantity({ productId: row.productId, selectedSize: row.selectedSize, quantity: row.quantity + 1 }));
                         }}
+                        disabled={disabled}
                     >
                         <AddIcon width={24} height={24} className=""/>
                     </button>
@@ -87,15 +93,17 @@ export function SaleProductsTable() {
                     dispatch(updateDiscount({ productId: row.productId, selectedSize: row.selectedSize, discount: newDiscount }));
                     dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật chiết khấu thành công" }));
                 }}
+                disabled={disabled}
             />
         )},
         { title: "Xoá", key: "delete", render: (row) => (
             <button
-                className="cursor-pointer"
+                className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
                 onClick={() => {
                     dispatch(removeProduct({ productId: row.productId, selectedSize: row.selectedSize }));
                     dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xoá sản phẩm thành công" }));
                 }}
+                disabled={disabled}
             >
                 <TrashIcon width={24} height={24} className={"text-red-500"}/>
             </button>
