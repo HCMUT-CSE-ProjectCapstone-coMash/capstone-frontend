@@ -1,31 +1,23 @@
 import { axiosClient } from "../axiosClient";
 
 /**
- * Lấy danh sách nhân viên từ endpoint /auth/employees
+ * Lấy danh sách nhân viên kết hợp tìm kiếm và phân trang
  * @param currentPage Trang hiện tại
  * @param pageSize Số lượng bản ghi mỗi trang
  * @param search Từ khóa tìm kiếm (tên hoặc SĐT)
  */
 export async function FetchEmployees(currentPage: number, pageSize: number, search?: string) {
-    // 1. Khởi tạo params để gửi kèm URL
-    const params = new URLSearchParams({
-        page: currentPage.toString(),
-        pageSize: pageSize.toString(),
+    const response = await axiosClient.get("/auth/employees", {
+        // Axios sẽ tự động nối các params này thành: /auth/employees?page=1&pageSize=10&search=...
+        params: {
+            page: currentPage,
+            pageSize: pageSize,
+            // Nếu search là rỗng hoặc undefined, Axios sẽ tự động loại bỏ nó khỏi URL
+            search: search || undefined, 
+        },
+        withCredentials: true 
     });
 
-    // 2. Nếu có từ khóa tìm kiếm thì mới append vào params
-    if (search) {
-        params.append("search", search);
-    }
-
-    // 3. Thực hiện gọi API GET
-    const response = await axiosClient.get(
-        `/auth/employees?${params}`, 
-        { 
-            withCredentials: true // Quan trọng để gửi kèm Cookie/Token
-        }
-    );
-
-    // 4. Trả về dữ liệu từ server (thường là { items: [], total: ... })
+    // Vì Backend đang trả về mảng trực tiếp [...], response.data sẽ là mảng đó
     return response.data;
 }
