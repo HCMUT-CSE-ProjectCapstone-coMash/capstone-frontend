@@ -8,7 +8,6 @@ import { axiosClient } from "../axiosClient";
  */
 export async function FetchEmployees(currentPage: number, pageSize: number, search?: string) {
     const response = await axiosClient.get("/auth/employees", {
-        // Axios sẽ tự động nối các params này thành: /auth/employees?page=1&pageSize=10&search=...
         params: {
             page: currentPage,
             pageSize: pageSize,
@@ -18,6 +17,5 @@ export async function FetchEmployees(currentPage: number, pageSize: number, sear
         withCredentials: true 
     });
 
-    // Vì Backend đang trả về mảng trực tiếp [...], response.data sẽ là mảng đó
     return response.data;
 }
