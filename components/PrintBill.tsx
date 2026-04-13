@@ -15,8 +15,7 @@ export function PrintBill({ order }: PrintBillProps) {
 
     useEffect(() => {
         if (barcodeRef.current) {
-            const shortId = order.id.split("-").slice(0, 2).join("-"); 
-            JsBarcode(barcodeRef.current, shortId, {
+            JsBarcode(barcodeRef.current, order.saleOrderId, {
                 format: "CODE128",
                 width: 1.5,
                 height: 40,
@@ -24,7 +23,7 @@ export function PrintBill({ order }: PrintBillProps) {
                 margin: 0,
             });
         }
-    }, [order.id]);
+    }, [order.saleOrderId]);
 
     const handlePrint = () => {
         if (!billRef.current) return;
@@ -35,7 +34,7 @@ export function PrintBill({ order }: PrintBillProps) {
         printWindow.document.write(`
             <html>
             <head>
-                <title>Hóa đơn #${order.id}</title>
+                <title>Hóa đơn #${order.saleOrderId}</title>
                 <style>
                     body {
                         font-family: 'Courier New', monospace;
@@ -71,7 +70,7 @@ export function PrintBill({ order }: PrintBillProps) {
 
                 <div className="barcode-wrapper">
                     <svg ref={barcodeRef} />
-                    <p className="barcode-id">{order.id.split("-").slice(0, 2).join("-")}</p>
+                    <p className="barcode-id">{order.saleOrderId}</p>
                 </div>
 
                 <p className="info">Ngày: {formattedDate}</p>

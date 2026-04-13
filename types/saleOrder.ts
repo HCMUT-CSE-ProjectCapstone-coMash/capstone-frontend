@@ -26,6 +26,7 @@ export interface SaleOrderDetailResponse {
 
 export interface SaleOrderResponse {
     id: string;
+    saleOrderId: string,
     customerId: string | null;
     customerName: string | null;
     createdBy: string;
