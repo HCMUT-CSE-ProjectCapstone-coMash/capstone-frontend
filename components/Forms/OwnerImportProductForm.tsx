@@ -149,6 +149,7 @@ export function OwnerImportProductForm() {
 
         onSuccess: () => {
             setForm(initialFormState);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
 
         onError: () => {
