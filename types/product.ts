@@ -10,7 +10,6 @@ export interface ProductQuantityChange {
 }
 
 export interface CreateProduct {
-    productId: string,
     productName: string,
     category: string,
     color: string,
