@@ -223,3 +223,12 @@ export async function EmployeeUpdateProductInProductsOrder(productId: string, pr
 
     return response.data;
 }
+
+export async function OwnerDeleteProduct(productId: string) {
+    const response = await axiosClient.delete(
+        "/product/owner-delete/" + productId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
