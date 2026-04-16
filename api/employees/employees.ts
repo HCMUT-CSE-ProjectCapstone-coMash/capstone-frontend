@@ -8,15 +8,16 @@ import { EmployeeFormState } from "@/types/employee";
  * @param search Từ khóa tìm kiếm (tên hoặc SĐT)
  */
 export async function FetchEmployees(currentPage: number, pageSize: number, search?: string) {
-    const response = await axiosClient.get("/auth/employees?${params}", {
-        params: {
-            page: currentPage,
-            pageSize: pageSize,
-            // Nếu search là rỗng hoặc undefined, Axios sẽ tự động loại bỏ nó khỏi URL
-            search: search || undefined, 
-        },
-        withCredentials: true 
+    const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
     });
+    if (search) params.append("search", search);
+
+    const response = await axiosClient.get(
+        `/auth/employees?${params}`,
+        { withCredentials: true }
+    );
 
     return response.data;
 }
