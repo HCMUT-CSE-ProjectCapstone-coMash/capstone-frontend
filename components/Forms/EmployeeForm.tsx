@@ -38,7 +38,7 @@ export function EmployeeForm() {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
-    const { data: idData, isLoading: isLoadingId } = useQuery({
+    const { data: idData} = useQuery({
         queryKey: ["new-employee-id"],
         queryFn: GetNewEmployeeId,
         staleTime: Infinity, // Chỉ lấy 1 lần duy nhất khi mở form
@@ -100,7 +100,7 @@ export function EmployeeForm() {
             formData.append("Image", form.imageFile); // Tên field "Image" phải khớp với Backend
         }
 
-        mutation.mutate(form);
+        mutation.mutate({ ...form, employeeId: idData?.employeeId ?? "" });
         
     };
 
@@ -202,7 +202,7 @@ export function EmployeeForm() {
                         disabled = {true}
                         label={"Mã số nhân viên"} 
                         placeHolder="" 
-                        value={idData.items}
+                        value={idData?.employeeId ?? "" }
                         onChange={(e) => setField("employeeId", e.target.value)} 
                     />
                     <TextInput

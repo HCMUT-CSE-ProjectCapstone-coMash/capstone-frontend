@@ -33,6 +33,7 @@ export async function CreateEmployeeAsync(employeeData: EmployeeFormState) {
     const formData = new FormData();
 
     // Map các trường từ State sang Key mà Backend mong đợi (PascalCase)
+    formData.append("EmployeeId", employeeData.employeeId);
     formData.append("FullName", employeeData.fullName);
     formData.append("Gender", employeeData.gender);
     formData.append("DateOfBirth", employeeData.dateOfBirth);
