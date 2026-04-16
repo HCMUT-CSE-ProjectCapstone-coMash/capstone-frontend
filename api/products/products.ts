@@ -150,16 +150,21 @@ export async function OwnerUpdateProduct(updateData: UpdateProduct, productId: s
     return response.data;
 }
 
-export async function FetchProducts(currentPage: number, pageSize: number, category?: string, search?: string) {
+export async function FetchEmployees(currentPage: number, pageSize: number, search?: string) {
+    // 1. Khởi tạo params với các giá trị bắt buộc
     const params = new URLSearchParams({
         page: currentPage.toString(),
         pageSize: pageSize.toString(),
     });
-    if (category) params.append("category", category);
-    if (search) params.append("search", search);
 
+    // 2. Kiểm tra và thêm tham số tìm kiếm nếu có
+    if (search) {
+        params.append("search", search);
+    }
+
+    // 3. Thực hiện gọi API với query string đã build
     const response = await axiosClient.get(
-        `/product/fetch-all?${params}`,
+        `/auth/employees?${params}`, 
         { withCredentials: true }
     );
 

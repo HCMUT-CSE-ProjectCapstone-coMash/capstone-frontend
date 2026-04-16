@@ -1,5 +1,6 @@
 export type Employee = {
     id: string;
+    employeeId: string; // Mã số nhân viên (được tạo tự động)
     fullName: string;
     gender: string;
     dateOfBirth: string;

@@ -8,7 +8,7 @@ import { EmployeeFormState } from "@/types/employee";
  * @param search Từ khóa tìm kiếm (tên hoặc SĐT)
  */
 export async function FetchEmployees(currentPage: number, pageSize: number, search?: string) {
-    const response = await axiosClient.get("/auth/employees", {
+    const response = await axiosClient.get("/auth/employees?${params}", {
         params: {
             page: currentPage,
             pageSize: pageSize,

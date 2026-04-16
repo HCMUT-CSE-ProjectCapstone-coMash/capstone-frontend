@@ -32,8 +32,8 @@ export function EmployeeTable() {
     const columns: Column<Employee>[] = useMemo(() => [
         { 
             title: "Mã số nhân viên", 
-            key: "id", 
-            render: (row) => <span>{row.id}</span> 
+            key: "employeeId", 
+            render: (row) => <span>{row.employeeId}</span> 
         },
         { 
             title: "Tên nhân viên", 
@@ -52,8 +52,8 @@ export function EmployeeTable() {
         }
     ], []);
 
-    const employees = Array.isArray(data) ? data : [];
-
+    const employees = data?.items || [];
+    const total = data?.totalCount || 0;
     return (
         <div className="flex flex-col gap-4 w-full mt-10.25">
             {/* --- Header Section: Search & Button sát phải --- */}
@@ -82,6 +82,12 @@ export function EmployeeTable() {
                     columns={columns}
                     data={employees}
                     isLoading={isLoading}
+                    pagination={{
+                    current: currentPage,
+                    pageSize,
+                    total,
+                    onChange: setCurrentPage,
+                }}
                 />
             </div>
         </div>
