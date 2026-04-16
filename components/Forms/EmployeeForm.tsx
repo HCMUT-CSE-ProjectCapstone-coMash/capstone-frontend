@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useMemo, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { useDispatch } from "react-redux";
@@ -9,9 +9,10 @@ import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import Image from "next/image";
 import { EmployeeFormState } from "@/types/employee";
-import { CreateEmployeeAsync } from "@/api/employees/employees";
+import { CreateEmployeeAsync, GetNewEmployeeId } from "@/api/employees/employees";
 
 const initialEmployeeFormState: EmployeeFormState = {
+    employeeId: "",
     fullName: "",
     gender: "",
     dateOfBirth: "",
@@ -37,6 +38,13 @@ export function EmployeeForm() {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
+    const { data: idData, isLoading: isLoadingId } = useQuery({
+        queryKey: ["new-employee-id"],
+        queryFn: GetNewEmployeeId,
+        staleTime: Infinity, // Chỉ lấy 1 lần duy nhất khi mở form
+    });
+
+    
     // --- Mutation xử lý gửi data lên Database ---
     const mutation = useMutation({
         mutationFn: (employeeData: EmployeeFormState) => CreateEmployeeAsync(employeeData),
@@ -190,13 +198,13 @@ export function EmployeeForm() {
             {/* --- CỘT PHẢI: THÔNG TIN FORM --- */}
             <div className="w-2/3">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                    {/* <TextInput
+                    <TextInput
                         disabled = {true}
                         label={"Mã số nhân viên"} 
                         placeHolder="" 
-                        value={ "Hệ thống tự động tạo"}
-                        onChange={(e) => setField("id", e.target.value)} 
-                    /> */}
+                        value={idData.items}
+                        onChange={(e) => setField("employeeId", e.target.value)} 
+                    />
                     <TextInput
                         label={"Tên nhân viên"} 
                         placeHolder="Nhập tên" 

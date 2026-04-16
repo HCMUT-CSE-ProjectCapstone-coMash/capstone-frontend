@@ -21,6 +21,13 @@ export async function FetchEmployees(currentPage: number, pageSize: number, sear
     return response.data;
 }
 
+export async function GetNewEmployeeId() {
+    const response = await axiosClient.get("/auth/create-employee-id", {
+        withCredentials: true
+    });
+    return response.data; 
+}
+
 export async function CreateEmployeeAsync(employeeData: EmployeeFormState) {
     const formData = new FormData();
 
