@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { use } from "react";
 import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdForm";
-export default function EmployeeDetailPage() {
+
+export default function EmployeeDetailPage({ params }: { params: Promise<{ employeeId: string }> }) {
+    const { employeeId } = use(params);
 
     return (
         <main className="px-20 py-5">
@@ -16,8 +19,7 @@ export default function EmployeeDetailPage() {
                     Danh sách nhân viên
                 </Link>
             </div>
-            <DetailEmployeeByIdForm />
+            <DetailEmployeeByIdForm employeeId={employeeId} />
         </main>
-
-    )
+    );
 }
