@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
+import { OwnerEmployeeByIdPageRoute, OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { Employee } from "@/types/employee";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -83,11 +83,13 @@ export function EmployeeTable() {
                     data={employees}
                     isLoading={isLoading}
                     pagination={{
-                    current: currentPage,
-                    pageSize,
-                    total,
-                    onChange: setCurrentPage,
-                }}
+                        current: currentPage,
+                        pageSize,
+                        total,
+                        onChange: setCurrentPage,
+                    }}
+                    onRowClick={(employee) => router.push(OwnerEmployeeByIdPageRoute(employee.employeeId))}
+
                 />
             </div>
         </div>
