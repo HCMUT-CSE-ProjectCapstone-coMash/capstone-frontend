@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
-
+import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdForm";
 export default function EmployeeDetailPage() {
 
     return (
-        <main className="px-20 py-10">
+        <main className="px-20 py-5">
             <div className="flex justify-between items-center mb-12.5">
                 <div className="text-purple text-3xl font-medium">Nhân viên</div>
                 <Link
@@ -16,6 +16,8 @@ export default function EmployeeDetailPage() {
                     Danh sách nhân viên
                 </Link>
             </div>
+            <DetailEmployeeByIdForm />
         </main>
+
     )
 }
