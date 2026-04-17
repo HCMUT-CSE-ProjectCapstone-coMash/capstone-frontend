@@ -22,6 +22,7 @@ export interface SaleOrderDetailResponse {
     unitPrice: number;
     discount: number;
     subTotal: number;
+    profit: number;
 }
 
 export interface SaleOrderResponse {
@@ -35,5 +36,6 @@ export interface SaleOrderResponse {
     debitMoney: number;
     createdAt: string;
     totalPrice: number;
+    totalProfit: number;
     details: SaleOrderDetailResponse[];
 }

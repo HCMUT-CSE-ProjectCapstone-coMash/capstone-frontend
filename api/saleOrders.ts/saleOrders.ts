@@ -10,3 +10,17 @@ export async function CreateSaleOrder(saleOrder: SaleOrderRequest) {
 
     return response.data;
 }
+
+export async function FetchSaleOrders(currentPage: number, pageSize: number, timeRange?: string , search?: string) {
+    const params = new URLSearchParams({
+        currentPage: currentPage.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    if (timeRange) params.append("timeRange", timeRange);
+    if (search) params.append("search", search);
+
+    const response = await axiosClient.get("/sale-orders?" + params.toString(), { withCredentials: true });
+
+    return response.data;
+}
