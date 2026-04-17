@@ -1,62 +1,97 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
+import { OwnerEmployeeByIdPageRoute, OwnerEmployeeManagementPageRoute } from "@/const/routes";
+import { Employee } from "@/types/employee";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Table } from "./Table";
+import { Column } from "@/types/UIType";
+import { useDebounce } from "@/hooks/useDebounce";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { FetchEmployees } from "@/api/employees/employees";
 
-export type Employee = {
-    id: string;
-    name: string;
-    dob: string;
-    phone: string;
-};
-
-interface EmployeeTableProps {
-    employees?: Employee[]; 
-}
-
-export function EmployeeTable({ employees }: EmployeeTableProps) {
+export function EmployeeTable() {
     const router = useRouter();
+    
+    // --- 1. Quản lý State: Phân trang và Tìm kiếm ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+    
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const data: Employee[] = employees || [
-        { id: "NV123", name: "Phó N Song Khuê", dob: "04/06/2004", phone: "0901234567" },
-        { id: "NV124", name: "Đoàn Lê Vy", dob: "28/06/2004", phone: "0987654321" },
-        { id: "NV125", name: "Huỳnh Ngọc Nhơn", dob: "13/06/2004", phone: "0912345678" },
-    ];
+    // --- 2. Fetch Dữ liệu thật từ Database qua TanStack Query ---
+    const { data, isLoading } = useQuery({
+        // QueryKey bao gồm cả page và search để tự động refetch khi chúng thay đổi
+        queryKey: ["employees", currentPage, debouncedSearch],
+        queryFn: () => FetchEmployees(currentPage, pageSize, debouncedSearch),
+    });
 
+    // --- 3. Định nghĩa Cột ---
+    const columns: Column<Employee>[] = useMemo(() => [
+        { 
+            title: "Mã số nhân viên", 
+            key: "employeeId", 
+            render: (row) => <span>{row.employeeId}</span> 
+        },
+        { 
+            title: "Tên nhân viên", 
+            key: "fullName", 
+            render: (row) => <span>{row.fullName}</span> 
+        },
+        { 
+            title: "Ngày sinh", 
+            key: "dateOfBirth", 
+            render: (row) => <span>{row.dateOfBirth}</span> 
+        },
+        { 
+            title: "Số điện thoại", 
+            key: "phoneNumber", 
+            render: (row) => <span>{row.phoneNumber}</span> 
+        }
+    ], []);
+
+    const employees = data?.items || [];
+    const total = data?.totalCount || 0;
     return (
-        <div className="w-full">
-            {/* --- Nút Thêm Nhân Viên --- */}
-            <div className="flex justify-end mb-10.25">
+        <div className="flex flex-col gap-4 w-full mt-10.25">
+            {/* --- Header Section: Search & Button sát phải --- */}
+            <div className="flex items-center justify-end gap-4">
+                <NormalSearchInput 
+                    value={searchTerm} 
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm mới
+                    }}
+                    placeholder="Nhập tên nhân viên"
+                    className="w-80"
+                />
+                
                 <button
                     onClick={() => router.push(`${OwnerEmployeeManagementPageRoute}/them-nhan-vien`)}
-                    className="py-2 px-3 rounded-lg text-white font-semibold bg-purple text-sm cursor-pointer inline-block text-center hover:opacity-90 transition-opacity"
+                    className="py-2 px-4 rounded-lg bg-purple text-white text-sm font-semibold transition hover:bg-purple/90 cursor-pointer whitespace-nowrap"
                 >
                     Thêm nhân viên mới
                 </button>
             </div>
 
-            {/* --- Bảng Dữ Liệu --- */}
-            <table className="w-full text-sm text-black">
-                <thead>
-                    <tr className="border-b border-tgray5">
-                        <th className="pb-5 font-semibold text-center">Mã số nhân viên</th>
-                        <th className="pb-5 font-semibold text-center">Tên nhân viên</th>
-                        <th className="pb-5 font-semibold text-center">Ngày sinh</th>
-                        <th className="pb-5 font-semibold text-center">Số điện thoại</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {/* Nên dùng employee.id làm key thay vì index để React tối ưu render tốt hơn */}
-                    {data.map((employee) => (
-                        <tr key={employee.id} className="border-b border-tgray5 hover:bg-gray-50 transition-colors">
-                            <td className="py-5 text-center">{employee.id}</td>
-                            <td className="py-5 text-center">{employee.name}</td>
-                            <td className="py-5 text-center">{employee.dob}</td>
-                            <td className="py-5 text-center">{employee.phone}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            {/* --- Table Section --- */}
+            <div className="mt-6">
+                <Table
+                    columns={columns}
+                    data={employees}
+                    isLoading={isLoading}
+                    pagination={{
+                        current: currentPage,
+                        pageSize,
+                        total,
+                        onChange: setCurrentPage,
+                    }}
+                    onRowClick={(employee) => router.push(OwnerEmployeeByIdPageRoute(employee.employeeId))}
+
+                />
+            </div>
         </div>
     );
 }
