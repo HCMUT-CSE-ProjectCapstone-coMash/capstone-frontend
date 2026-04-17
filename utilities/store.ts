@@ -4,7 +4,8 @@ import userReducer from "./userStore";
 import productEditReducer from "./productEditStore";
 import productsOrderReducer from "./productsOrderStore";
 import ownerProductEditReducer from "./ownerProductEditStore";
-import printReducer from "./printStore";
+import barcodeReducer from "./barcodeSlice";
+import SaleProductReducer from "./SaleProductStore";
 
 export const store = configureStore({
     reducer: {
@@ -13,7 +14,8 @@ export const store = configureStore({
         productEdit: productEditReducer,
         productsOrder: productsOrderReducer,
         ownerProductEdit: ownerProductEditReducer,
-        print: printReducer,
+        barcode: barcodeReducer,
+        saleProduct: SaleProductReducer
     },
 });
 

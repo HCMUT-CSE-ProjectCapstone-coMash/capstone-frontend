@@ -2,21 +2,37 @@
 
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { Product } from "@/types/product";
+import { Product, UpdateProduct } from "@/types/product";
 import { TrashIcon } from "@/public/assets/Icons";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { DeleteProductFromProductsOrders, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
-import { formatThousands } from "@/utilities/numberFormat";
-import { useMemo } from "react";
-import { useDispatch } from "react-redux";
+import { ApproveProductsOrder, DeleteProductFromProductsOrders, DeleteProductsOrder, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
+import { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { clearEditingProduct, setEditingProduct } from "@/utilities/productEditStore";
+import { ProductsOrder } from "@/types/productsOrder";
+import { setProductsOrder } from "@/utilities/productsOrderStore";
+import { RootState } from "@/utilities/store";
+import { UpdateProductInProductsOrderForm } from "../Forms/UpdateProductInProductsOrderForm";
+import Image from "next/image";
+import { Cell } from "../Cell";
+import { OwnerUpdateProductInProductsOrder } from "@/api/products/products";
+import { useDebounce } from "@/hooks/useDebounce";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { removeDiacritics } from "@/utilities/removeDiacritics";
 
 export function ProductOrderTable() {
+    const router = useRouter();
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
     const { productsOrdersId } = useParams();
+    const editProduct = useSelector((state: RootState) => state.productEdit.editingProduct);
+
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
 
     const { data, isLoading } = useQuery({
         queryKey: ["productsOrderDetails", productsOrdersId],
@@ -24,22 +40,78 @@ export function ProductOrderTable() {
         enabled: !!productsOrdersId,
     });
 
+    useEffect(() => {
+        if (data) {
+            const productsOrder: ProductsOrder = {
+                id: data.id,
+                createdBy: data.createdBy,
+                createdAt: data.createdAt,
+                orderName: data.orderName,
+                orderDescription: data.orderDescription,
+                orderStatus: data.orderStatus,
+                products: data.products,
+            }
+            dispatch(setProductsOrder(productsOrder));
+        }
+    }, [data, dispatch]);
+
     const deleteMutation = useMutation({
         mutationFn: ({ orderId, productId } : { orderId: string, productId: string}) => DeleteProductFromProductsOrders(orderId, productId),
-
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xoá sản phẩm thành công" }));
         },
-
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Xoá sản phẩm thất bại" }));
         }
     });
 
+    const updatePriceMutation = useMutation({
+        mutationFn: ({productId, data}: {productId: string; data: UpdateProduct;}) => OwnerUpdateProductInProductsOrder(productId, productsOrdersId as string, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật thành công"}));
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại"}));
+        }
+    });
+
+    const approveMutation = useMutation({
+        mutationFn: (orderId: string) => ApproveProductsOrder(orderId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrdersId] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Duyệt đơn hàng thành công"}));
+            router.back();
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Duyệt đơn hàng thất bại"}));
+        }
+    });
+    
+    const deleteOrderMutation = useMutation({
+        mutationFn: (orderId: string) => DeleteProductsOrder(orderId),
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Không duyệt thành công" }));
+            router.back();
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không duyệt thất bại"}));
+        }
+    });
+
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
-        { title: "Tên sản phẩm", key: "productName", render: (row) => <span>{row.productName}</span> },
+        {title: "Hình ảnh", key: "imageUrl", render: (row) => (
+            <div className="mx-auto relative w-20 h-20">
+                <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
+            </div>
+        )},
+        { title: "Tên sản phẩm", key: "productName", render: (row) => (
+            <button onClick={() => dispatch(setEditingProduct(row))}>
+                {row.productName}
+            </button>
+        )},
         { title: "Số lượng", key: "quantities", render: (row) => {
             if (row.quantityChanges && row.quantityChanges.length > 0) {
                 return (
@@ -67,33 +139,140 @@ export function ProductOrderTable() {
                 </div>
             );
         }},
-        { title: "Giá nhập", key: "importPrice", render: (row) => <span>{formatThousands(row.importPrice)} VND</span> },
-        { title: "Giá bán", key: "salePrice", render: (row) => <span>{formatThousands(row.salePrice)} VND</span> },
+        { title: "Giá nhập", key: "importPrice", render: (row) => 
+            <Cell
+                value={row.importPrice}
+                onSave={(newValue) =>
+                    updatePriceMutation.mutate({
+                        productId: row.id,
+                        data: { importPrice: newValue }
+                    })
+                }
+            />
+        },
+        { title: "Giá bán", key: "salePrice", render: (row) => 
+            <Cell
+                value={row.salePrice}
+                onSave={(newValue) =>
+                    updatePriceMutation.mutate({
+                        productId: row.id,
+                        data: { salePrice: newValue }
+                    })
+                }
+            />
+        },
         { title: "Trạng thái", key: "status", render: (row) => {
             if (row.status === "Approved") return <span className="text-purple">Nhập thêm</span>;
             if (row.status === "Pending") return <span className="text-pink">Hàng mới</span>;
-            return <span>{row.status}</span>;
         }},
         { title: "", key: "id", render: (row) => (
             <button 
-                className="text-red-500 hover:text-red-700 transition"
+                className="text-red-500 hover:text-red-700 transition cursor-pointer"
                 onClick={() => deleteMutation.mutate({ orderId: productsOrdersId as string, productId: row.id })}
             >
                 <TrashIcon width={20} height={20} className=""/>
             </button>
         )},
-    ], [deleteMutation, productsOrdersId]);
+    ], [dispatch, deleteMutation, productsOrdersId, updatePriceMutation]);
 
-    const products = data?.products || [];
+    const categories = [
+        { label: "Xem tất cả", value: "" },
+        { label: "Áo", value: "Áo" },
+        { label: "Quần", value: "Quần" },
+        { label: "Đầm", value: "Đầm" },
+        { label: "Váy", value: "Váy" },
+    ];
+
+    const products: Product[] = data?.products || [];
+    const filteredProducts = products.filter((p) => {
+        const matchCategory = selectedCategory ? p.category === selectedCategory : true;
+        const matchSearch = debouncedSearch ? removeDiacritics(p.productName.toLowerCase()).includes(removeDiacritics(debouncedSearch.toLowerCase())) : true;
+        return matchCategory && matchSearch;
+    });
+
+    const orderName = data?.orderName || "Chi tiết đơn hàng";
+
+    const currentIndex = products.findIndex((p) => p.id === editProduct?.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < products.length - 1;
 
     return (
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+                <p className="text-purple text-2xl font-medium">{orderName}</p>
+                <button
+                    onClick={() => editProduct ? dispatch(clearEditingProduct()) : router.back()}
+                    className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
+                >
+                    Danh sách sản phẩm chờ duyệt
+                </button>
+            </div>
 
-        <div className="mt-8">
-            <Table 
-                columns={columns} 
-                data={products} 
-                isLoading={isLoading} 
-            />
+            {editProduct ? (
+                <div className="flex flex-col gap-4">
+                    <UpdateProductInProductsOrderForm editProduct={editProduct}/>
+                    <div className="flex items-center justify-between w-1/6 ml-auto">
+                        <button
+                            onClick={() => dispatch(setEditingProduct(products[currentIndex - 1]))}
+                            disabled={!hasPrev}
+                            className={`py-2 px-4 rounded-lg border border-purple text-purple text-sm font-medium transition
+                                ${hasPrev ? "hover:bg-purple/5 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                        >
+                            ← Trước
+                        </button>
+                        <span className="text-sm text-gray-500">{currentIndex + 1} / {products.length}</span>
+                        <button
+                            onClick={() => dispatch(setEditingProduct(products[currentIndex + 1]))}
+                            disabled={!hasNext}
+                            className={`py-2 px-4 rounded-lg border border-purple text-purple text-sm font-medium transition
+                                ${hasNext ? "hover:bg-purple/5 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                        >
+                            Sau →
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    <div className="flex flex-col gap-4 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex gap-2">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat.value}
+                                    onClick={() => setSelectedCategory(cat.value)}
+                                    className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
+                                        selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
+                                >
+                                    {cat.label}
+                                </button>
+                            ))}
+                            <NormalSearchInput
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder="Tìm kiếm theo tên sản phẩm"
+                                className="w-2xs"
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => approveMutation.mutate(productsOrdersId as string)}
+                                disabled={approveMutation.isPending}
+                                className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer disabled:opacity-50"
+                            >
+                                {approveMutation.isPending ? "Đang duyệt..." : "Duyệt"}
+                            </button>
+                            <button
+                                onClick={() => deleteOrderMutation.mutate(productsOrdersId as string)}
+                                disabled={deleteOrderMutation.isPending}
+                                className="py-2 px-4 rounded-lg border border-red-500 bg-red text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer disabled:opacity-50"
+                            >
+                                {deleteOrderMutation.isPending ? "Đang xử lý..." : "Không duyệt"}
+                            </button>
+                        </div>
+                    </div>
+                    <Table columns={columns} data={filteredProducts} isLoading={isLoading}/>
+                </>
+            )}
         </div>
     );
 }

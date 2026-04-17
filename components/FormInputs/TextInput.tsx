@@ -6,20 +6,21 @@ interface TextInputProps {
     onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void,
     disabled?: boolean,
     inputType?: "text" | "number" | "password" | "textarea",
-    labelPosition?: "left" | "top",
+    labelPosition?: "left" | "top" | "right",
     isError?: boolean
 }
 
 export function TextInput({ label, placeHolder, value, onChange, disabled, inputType="text", labelPosition="top", isError } : TextInputProps) {
     const isLeft = labelPosition === "left";
+    const isRight = labelPosition === "right";
 
     const borderClass = isError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-tgray5 focus:border-purple focus:ring-purple";
 
     const disabledClass = disabled ? "cursor-not-allowed opacity-70" : "";
     
     return (
-        <div className={`w-full font-display ${isLeft ? "flex items-center gap-x-4" : "flex flex-col gap-y-2.5"}`}>
-            <label className={`text-sm font-normal text-tgray9 ${isLeft ? "w-25" : ""}`}>{label}</label>
+        <div className={`w-full font-display ${isLeft ? "flex items-center gap-x-4" : isRight ? "flex justify-between items-center" : "flex flex-col gap-y-2.5"}`}>
+            <label className={`text-sm font-normal text-tgray9 ${isLeft ? "w-25" : isRight ? "w-400" : ""}`}>{label}</label>
 
             {inputType === "textarea" ? (
                 <textarea 

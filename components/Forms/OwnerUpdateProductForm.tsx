@@ -7,13 +7,15 @@ import { addAlert } from "@/utilities/alertStore";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { TextInput } from "../FormInputs/TextInput";
 import Image from "next/image";
 import { OwnerUpdateProduct } from "@/api/products/products";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { DeleteProductModal } from "../Modal/DeleteProductModal";
 
 interface FormState {
     productId: string;
@@ -32,7 +34,8 @@ interface FormState {
 }
 
 interface OwnerUpdateProductFormProps {
-    editProduct: Product
+    editProduct: Product,
+    isHasCancelButton?: boolean
 }
 
 const createInitialQuantities = (sizes: string[]) => Object.fromEntries(sizes.map((size) => [size, 0]));
@@ -70,8 +73,9 @@ const mapProductToForm = (product: Product): FormState => {
     };
 };
 
-export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormProps) {
+export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }: OwnerUpdateProductFormProps) {
     const dispatch = useDispatch();
+    const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
     const [form, setForm] = useState<FormState>(() => mapProductToForm(editProduct));
     const [initialForm, setInitialForm] = useState<FormState>(() => mapProductToForm(editProduct));
@@ -95,29 +99,10 @@ export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormPr
         setForm((prev) => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
     };
 
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
-
     const updateMutation = useMutation({
         mutationFn: ({ updateData, productId } : { updateData: UpdateProduct, productId: string }) => OwnerUpdateProduct(updateData, productId),
 
-        onSuccess: (data) => {
-            const updateProduct: Product = {
-                id: data.id,
-                productId: data.productId,
-                productName: data.productName,
-                category: data.category,
-                color: data.color,
-                pattern: data.pattern,
-                sizeType: data.sizeType,
-                quantities: data.quantities,
-                createdBy: data.createdBy,
-                createdAt: data.createdAt,
-                status: data.status,
-                imageURL: data.imageURL,
-                importPrice: data.importPrice,
-                salePrice: data.salePrice
-            }
-
+        onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
             dispatch(clearOwnerEditingProduct());
         },
@@ -177,20 +162,6 @@ export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormPr
 
         updateMutation.mutate({ updateData: updateData, productId: editProduct.id });
     }
-    
-    // Xử lý file ảnh: lưu file vào state và tạo URL preview
-    const handleFiles = (files: FileList | null) => {
-        if (!files || files.length === 0) return;
-        setField("imageFile", files[0]);
-        setField("imagePreviewUrl", null);
-    };
-
-    const openFilePicker = () => fileInputRef.current?.click();
-
-    const removeImage = () => {
-        setField("imageFile", null);
-        setField("imagePreviewUrl", null);
-    };
 
     // Sử dụng useMemo để tạo URL preview từ file ảnh, và useEffect để giải phóng URL khi component unmount hoặc file thay đổi
     const objectUrl = useMemo(() => {
@@ -212,74 +183,19 @@ export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormPr
             <div>
                 <p>Hình ảnh sản phẩm</p>
 
-                <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={(e) => handleFiles(e.target.files)}
-                />
-
                 <div className="w-md">
-                    {previewSrc ? (
-                        <div className="relative group h-118.75 w-full">
-                            <Image
-                                src={previewSrc}
-                                alt=""
-                                fill
-                                className="object-cover"
-                                unoptimized
-                            />
-                            <button
-                                type="button"
-                                onClick={removeImage}
-                                className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full
-                                           flex items-center justify-center text-sm
-                                           opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="h-118.75 bg-tgray05 flex items-center justify-center">
-                            <div className="flex flex-col items-center gap-4">
-                                <p className="text-lg text-gray-700 mb-2">
-                                    Kéo & thả hình ảnh muốn tải lên
-                                </p>
-                                <button
-                                    className="text-lg font-medium underline cursor-pointer text-gray-dark"
-                                    onClick={openFilePicker}
-                                >
-                                    hoặc từ máy tính của bạn
-                                </button>
-                                <button className="text-lg font-medium underline cursor-pointer text-gray-dark">
-                                    hoặc từ điện thoại của bạn
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <div className="relative group h-118.75 w-full mt-3">
+                        <Image
+                            src={previewSrc ?? "/placeholder-image.png"} alt="" fill 
+                            className="object-cover" unoptimized
+                            placeholder="blur" blurDataURL={"/assets/image/light-pink.png"}
+                        />
+                    </div>
                 </div>
             </div>
 
             <div>
-                <div className="flex items-center justify-between mb-5">
-                    <p>Thông tin sản phẩm</p>
-                    <div className="flex items-center gap-3">
-                        <button
-                            type="button"
-                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
-                            
-                        >
-                            Thêm ảnh từ máy tính
-                        </button>
-                        <button
-                            type="button"
-                            className="py-2 px-3 rounded-lg text-white bg-pink text-sm cursor-pointer"
-                        >
-                            Thêm ảnh từ điện thoại
-                        </button>
-                    </div>
-                </div>
+                <p className="mb-5">Thông tin sản phẩm</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
@@ -340,13 +256,23 @@ export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormPr
                         ))}
                     </div>
 
-                    <div className="flex justify-end mt-5 gap-x-5">
-                        <button
-                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
-                            onClick={() => dispatch(clearOwnerEditingProduct())}
-                        >
-                            {"Huỷ bỏ"}
-                        </button>
+                    <div className="flex justify-end mt-5 gap-x-6">
+                        {isHasCancelButton ? (
+                            <button
+                                className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
+                                onClick={() => dispatch(clearOwnerEditingProduct())}
+                            >
+                                {"Huỷ bỏ"}
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                className="py-2 px-4 rounded-lg border border-red-500 bg-red-500 text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer"
+                                onClick={() => setConfirmModalOpen(true)}
+                            >
+                                <p>Xoá sản phẩm</p>
+                            </button>
+                        )}
 
                         <button
                             className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
@@ -358,6 +284,13 @@ export function OwnerUpdateProductForm({ editProduct }: OwnerUpdateProductFormPr
                     </div>
                 </form>
             </div>
+
+            <LayoutModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setConfirmModalOpen(false)}
+            >
+                <DeleteProductModal productId={editProduct.id} onClose={() => setConfirmModalOpen(false)}/>
+            </LayoutModal>
         </div>
     )
 }

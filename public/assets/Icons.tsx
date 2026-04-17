@@ -81,11 +81,18 @@ export function SearchIcon({ width, height, className }: IconProps) {
     )
 }
 
-export function AddIcon({ width, height, className }: IconProps){
+export function AddIcon({ width, height, className }: IconProps) {
     return (
-        <svg width={width} height={height} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
+        <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} className={className} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11 11V5H13V11H19V13H13V19H11V13H5V11H11Z"></path>
+        </svg>
+    )
+}
+
+export function MinusIcon({ width, height, className }: IconProps) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} className={className} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M5 11V13H19V11H5Z"></path>
         </svg>
     )
 }

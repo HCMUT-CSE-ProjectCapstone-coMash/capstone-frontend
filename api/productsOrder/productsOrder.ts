@@ -10,6 +10,23 @@ export async function GetProductsOrderById(orderId: string) {
     return response.data;
 }
 
+export const ApproveProductsOrder = async (orderId: string) => {
+    const response = await axiosClient.patch(
+        `/products-orders/approve/${orderId}`,
+        {},
+        { withCredentials: true }
+    );
+    return response.data;
+};
+
+export const DeleteProductsOrder = async (orderId: string) => {
+    const response = await axiosClient.delete(
+        `/products-orders/${orderId}`,
+        { withCredentials: true }
+    );
+    return response.data;
+};
+
 // Nhân viên lấy đơn hàng hiện tại của mình, nếu chưa có thì tạo mới
 export async function FetchOrCreateOrder(userId: string) {
     const response = await axiosClient.post(
@@ -20,9 +37,16 @@ export async function FetchOrCreateOrder(userId: string) {
     return response.data;
 }
 
-export async function GetProductsOrdersExcludingPending() {
+export async function GetProductsOrdersExcludingPending(currentPage: number, pageSize: number, search?: string) {
+    const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    if (search) params.append("search", search);
+
     const response = await axiosClient.get(
-        "products-orders/fetch-excluding-pending", 
+        `products-orders/fetch-excluding-pending?${params}`, 
         { withCredentials: true }
     );
     return response.data;

@@ -9,7 +9,7 @@ import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, FetchAppro
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { CreateProduct, Product } from "@/types/product";
+import { CreateProduct, Product, ProductWithOrderStatus } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
@@ -145,7 +145,6 @@ export function ImportProductForm() {
         }
 
         const productData: CreateProduct = {
-            productId: form.productId,
             productName: form.productName,
             category: form.category,
             color: form.color,
@@ -306,17 +305,24 @@ export function ImportProductForm() {
                         onChange={(e) => setField("productId" , e.target.value)}
                     />
 
-                    <SearchInput<Product>
+                    <SearchInput<ProductWithOrderStatus>
                         label={"Tên sản phẩm"}
                         placeHolder=""
                         value={form.productName}
                         onChange={(e) => setField("productName", e.target.value)}
                         suggestions={suggestions}
+                        isItemDisabled={(item) => item.data.isInPendingOrder}
                         onSuggestionClick={(item) => { dispatch(setEditingProduct(item.data)) }}
                         renderItem={(item) => (
-                            <div className="flex items-center gap-3">
-                                <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
-                                <span>{item.label}</span>
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-8 h-8">
+                                        <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
+                                    </div>
+                                    <span>{item.label}</span>
+                                </div>
+
+                                {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
                     />

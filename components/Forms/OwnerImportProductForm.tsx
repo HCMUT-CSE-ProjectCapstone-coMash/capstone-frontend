@@ -149,6 +149,7 @@ export function OwnerImportProductForm() {
 
         onSuccess: () => {
             setForm(initialFormState);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
 
         onError: () => {
@@ -199,7 +200,6 @@ export function OwnerImportProductForm() {
         }
 
         const newProduct : CreateProduct = {
-            productId: form.productId,
             productName: form.productName,
             category: form.category,
             color: form.color,
@@ -308,7 +308,9 @@ export function OwnerImportProductForm() {
                         onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)) }}
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
-                                <Image src={item.data.imageURL} alt="" width={32} height={32} className="object-cover" unoptimized/>
+                                <div className="relative w-8 h-8">
+                                    <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                                </div>
                                 <span>{item.label}</span>
                             </div>
                         )}
@@ -320,7 +322,7 @@ export function OwnerImportProductForm() {
                             placeHolder="" 
                             value={formatThousands(form.importPrice)}
                             inputType="text"
-                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))} // store raw number
+                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
                         />
 
                         <TextInput
