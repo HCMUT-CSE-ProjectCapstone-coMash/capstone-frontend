@@ -32,5 +32,4 @@ export interface TableProps<T> {
     data: T[],
     isLoading?: boolean,
     pagination?: TablePagination; 
-    onRowClick?: (record: T) => void;
 };

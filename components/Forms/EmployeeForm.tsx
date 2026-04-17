@@ -1,24 +1,31 @@
 "use client";
 
 import { useState, useRef, useMemo, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { useDispatch } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import Image from "next/image";
-import { EmployeeFormState } from "@/types/employee";
-import { CreateEmployeeAsync, GetNewEmployeeId } from "@/api/employees/employees";
+
+interface EmployeeFormState {
+    employeeId: string;
+    employeeName: string;
+    employeeGender: string;
+    employeeBirthDate: string;
+    employeePhone: string;
+    employeeMail: string;
+    imageFile: File | null;
+    imagePreviewUrl: string | null;
+}
 
 const initialEmployeeFormState: EmployeeFormState = {
     employeeId: "",
-    fullName: "",
-    gender: "",
-    dateOfBirth: "",
-    phoneNumber: "",
-    email: "",
-    imageUrl: "",
+    employeeName: "",
+    employeeGender: "",
+    employeeBirthDate: "",
+    employeePhone: "",
+    employeeMail: "",
     imageFile: null,
     imagePreviewUrl: null,
 };
@@ -38,78 +45,49 @@ export function EmployeeForm() {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
-    const { data: idData} = useQuery({
-        queryKey: ["new-employee-id"],
-        queryFn: GetNewEmployeeId,
-        staleTime: Infinity, // Chỉ lấy 1 lần duy nhất khi mở form
-    });
-
-    
-    // --- Mutation xử lý gửi data lên Database ---
-    const mutation = useMutation({
-        mutationFn: (employeeData: EmployeeFormState) => CreateEmployeeAsync(employeeData),
-        onSuccess: () => {
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm nhân viên thành công!" }));
-        },
-        onError: (error: unknown) => {
-            const serverError = error as { response?: { data?: { message?: string } } };
-            dispatch(addAlert({ 
-                type: AlertType.ERROR, 
-                message: serverError.response?.data?.message || "Lỗi khi lưu nhân viên" 
-            }));
-        }
-    });
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!form.fullName.trim()) {
+        if (!form.employeeName.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên nhân viên" }));
             return;
         }
 
-        if (!form.gender.trim()) {
+        if (!form.employeeGender.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giới tính nhân viên" }));
             return;
         }
 
-        if (!form.dateOfBirth.trim()) {
+        if (!form.employeeBirthDate.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập ngày sinh nhân viên" }));
             return;
         }
 
-        if (!form.phoneNumber.trim()) {
+        if (!form.employeePhone.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số điện thoại nhân viên" }));
             return;
         }
 
-        if (!form.email.trim()) {
+        if (!form.employeeMail.trim()) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập email nhân viên" }));
             return;
         }
 
-        // Tạo FormData để đóng gói cả text và file ảnh
-        const formData = new FormData();
-        formData.append("FullName", form.fullName);
-        formData.append("Gender", form.gender);
-        formData.append("DateOfBirth", form.dateOfBirth);
-        formData.append("PhoneNumber", form.phoneNumber);
-        formData.append("Email", form.email);
-
-        if (form.imageFile) {
-            formData.append("Image", form.imageFile); // Tên field "Image" phải khớp với Backend
-        }
-
-        mutation.mutate({ ...form, employeeId: idData?.employeeId ?? "" });
+        const dataToSubmit = {
+            ...form,
+        };
+        console.log("Dữ liệu nhân viên chuẩn bị gửi:", dataToSubmit);
         
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm nhân viên thành công!" }));
     };
 
     const isFormComplete = 
-        form.fullName.trim() !== "" &&
-        form.gender.trim() !== "" &&
-        form.dateOfBirth.trim() !== "" &&
-        form.phoneNumber.trim() !== "" &&
-        form.email.trim() !== "";
+        form.employeeId.trim() !== "" &&
+        form.employeeName.trim() !== "" &&
+        form.employeeGender.trim() !== "" &&
+        form.employeeBirthDate.trim() !== "" &&
+        form.employeePhone.trim() !== "" &&
+        form.employeeMail.trim() !== "";
 
     const formatDateInput = (value: string) => {
         const onlyNumbers = value.replace(/\D/g, "");
@@ -123,6 +101,11 @@ export function EmployeeForm() {
     };
 
     // --- LOGIC XỬ LÝ ẢNH ---
+    const handleFiles = (files: FileList | null) => {
+        if (!files || files.length === 0) return;
+        setField("imageFile", files[0]);
+        setField("imagePreviewUrl", null);
+    };
 
     const openFilePicker = () => fileInputRef.current?.click();
 
@@ -131,17 +114,18 @@ export function EmployeeForm() {
         setField("imagePreviewUrl", null);
     };
 
-    // --- Logic xem trước hình ảnh ---
     const objectUrl = useMemo(() => {
         if (!form.imageFile) return null;
         return URL.createObjectURL(form.imageFile);
     }, [form.imageFile]);
-
+    
     useEffect(() => {
-        return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+        return () => {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
     }, [objectUrl]);
-
-    const previewSrc = objectUrl ?? form.imageUrl ?? null;
+    
+    const previewSrc = objectUrl ?? form.imagePreviewUrl ?? null;
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
@@ -153,7 +137,7 @@ export function EmployeeForm() {
                     className="hidden"
                     accept="image/*"
                     ref={fileInputRef}
-                    onChange={(e) => setField("imageFile", e.target.files?.[0] || null)}
+                    onChange={(e) => handleFiles(e.target.files)}
                 />
 
                 <div className="w-md">
@@ -199,17 +183,16 @@ export function EmployeeForm() {
             <div className="w-2/3">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
-                        disabled = {true}
                         label={"Mã số nhân viên"} 
                         placeHolder="" 
-                        value={idData?.employeeId ?? "" }
+                        value={form.employeeId}
                         onChange={(e) => setField("employeeId", e.target.value)} 
                     />
                     <TextInput
                         label={"Tên nhân viên"} 
                         placeHolder="Nhập tên" 
-                        value={form.fullName}
-                        onChange={(e) => setField("fullName", e.target.value)} 
+                        value={form.employeeName}
+                        onChange={(e) => setField("employeeName", e.target.value)} 
                     />
                     
                     <div className="flex items-center justify-between gap-5">
@@ -217,18 +200,18 @@ export function EmployeeForm() {
                             <SelectInput
                             label={"Giới tính"} 
                             options={genderOptions}     
-                            value={form.gender}
-                            onChange={(value) => setField("gender", value)}
+                            value={form.employeeGender}
+                            onChange={(value) => setField("employeeGender", value)}
                             />
                         </div>
                         <div className="w-1/2">
                             <TextInput
                             label={"Ngày sinh"} 
-                            placeHolder="DD/MM/YYYY" 
-                            value={form.dateOfBirth}
+                            placeHolder="dd/mm/yyyy" 
+                            value={form.employeeBirthDate}
                             onChange={(e) => {
                                 const formattedDate = formatDateInput(e.target.value);
-                                setField("dateOfBirth", formattedDate);
+                                setField("employeeBirthDate", formattedDate);
                             }}
                             />
                         </div>
@@ -238,14 +221,14 @@ export function EmployeeForm() {
                         <TextInput
                             label={"Số điện thoại"} 
                             placeHolder="Nhập số điện thoại"        
-                            value={form.phoneNumber}
-                            onChange={(e) => setField("phoneNumber", e.target.value)} 
+                            value={form.employeePhone}
+                            onChange={(e) => setField("employeePhone", e.target.value)} 
                         />
                         <TextInput
                             label={"Email"} 
                             placeHolder="Nhập email"        
-                            value={form.email}
-                            onChange={(e) => setField("email", e.target.value)} 
+                            value={form.employeeMail}
+                            onChange={(e) => setField("employeeMail", e.target.value)} 
                         />
                     </div>
                     

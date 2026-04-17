@@ -1,7 +1,7 @@
 import { TableProps } from "@/types/UIType";
 import { Pagination } from "antd";
 
-export function Table<T>({ columns, data, isLoading = false, pagination, onRowClick }: TableProps<T>) {
+export function Table<T>({ columns, data, isLoading = false, pagination }: TableProps<T>) {
 
     return (
         <div className="flex flex-col gap-8">
@@ -32,10 +32,7 @@ export function Table<T>({ columns, data, isLoading = false, pagination, onRowCl
                     ) : (
                         <>
                             {data.map((row, rowIndex) => (
-                                <tr key={rowIndex} onClick={() => onRowClick?.(row)} className={`
-                                        border-b border-gray-200 transition-colors
-                                        ${onRowClick ? "cursor-pointer hover:bg-purple/5" : ""}
-                                    `} >
+                                <tr key={rowIndex}>
                                     {columns.map((column, colIndex) => (
                                         <td key={colIndex} className="p-4 text-center border-b border-gray-500">
                                             {column.render ? column.render(row) : [column.key]}
