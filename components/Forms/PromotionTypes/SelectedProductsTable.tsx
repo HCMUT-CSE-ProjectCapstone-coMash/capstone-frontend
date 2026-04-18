@@ -79,7 +79,7 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
                         <th className="px-4 py-3 font-normal w-48">Loại giảm</th>
                         <th className="px-4 py-3 font-normal w-48">Giá trị giảm</th>
                         <th className="px-4 py-3 font-normal w-64">Giá sau giảm</th>
-                        <th className="px-4 py-3 w-20"></th>
+                        <th className="px-4 py-3 w-15"></th>
                     </tr>
                 </thead>
 
@@ -148,7 +148,7 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
                                     />
                                 </td>
 
-                                <td className="px-4 py-3 w-64">
+                                <td className="px-4 pt-4 w-64">
                                     {product && (
                                         hasDiscount ? (
                                             <div className="flex items-center gap-2 text-sm">
@@ -168,7 +168,7 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
                                     )}
                                 </td>
 
-                                <td className="px-4 pt-4 w-20 text-center">
+                                <td className="px-4 pt-4 w-15 text-center">
                                     <button
                                         type="button"
                                         onClick={() => onRemove(item.productId)}
