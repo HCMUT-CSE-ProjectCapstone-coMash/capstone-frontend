@@ -29,7 +29,6 @@ export function DetailEmployeeByIdForm({ employeeId }: Props) {
         enabled: !!employeeId,
     });
 
-    // 3. ĐỒNG BỘ: Giống đoạn useEffect trong ProductOrderTable
     useEffect(() => {
         // Kiểm tra nếu data có danh sách items
         if (data?.items) {
@@ -45,7 +44,7 @@ export function DetailEmployeeByIdForm({ employeeId }: Props) {
                     phoneNumber: foundEmployee.phoneNumber,
                     email: foundEmployee.email,
                     imageFile: null, 
-                    imagePreviewUrl: foundEmployee.imageUrl || foundEmployee.imageURL || null, 
+                    imageURL: foundEmployee.imageUrl || foundEmployee.imageURL || null, 
                 };
 
                 dispatch(setSelectedEmployee(formattedEmployee));
