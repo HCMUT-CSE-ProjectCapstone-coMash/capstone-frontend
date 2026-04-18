@@ -9,7 +9,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ emplo
     const { employeeId } = use(params);
 
     return (
-        <main className="px-20 py-5">
+        <main className="px-20 pt-10 pb-25">
             <div className="flex justify-between items-center mb-12.5">
                 <div className="text-purple text-3xl font-medium">Nhân viên</div>
                 <Link

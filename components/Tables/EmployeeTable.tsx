@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { OwnerEmployeeByIdPageRoute, OwnerEmployeeManagementPageRoute } from "@/const/routes";
+import { OwnerEmployeeByIdPageRoute, OwnerAddEmployeePageRoute } from "@/const/routes";
 import { Employee } from "@/types/employee";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -69,7 +69,7 @@ export function EmployeeTable() {
                 />
                 
                 <button
-                    onClick={() => router.push(`${OwnerEmployeeManagementPageRoute}/them-nhan-vien`)}
+                    onClick={() => router.push(`${OwnerAddEmployeePageRoute}`)}
                     className="py-2 px-4 rounded-lg bg-purple text-white text-sm font-semibold transition hover:bg-purple/90 cursor-pointer whitespace-nowrap"
                 >
                     Thêm nhân viên mới

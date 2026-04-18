@@ -50,12 +50,8 @@ export function EmployeeForm() {
         onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm nhân viên thành công!" }));
         },
-        onError: (error: unknown) => {
-            const serverError = error as { response?: { data?: { message?: string } } };
-            dispatch(addAlert({ 
-                type: AlertType.ERROR, 
-                message: serverError.response?.data?.message || "Lỗi khi lưu nhân viên" 
-            }));
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm nhân viên thất bại. Vui lòng thử lại." }));
         }
     });
 
