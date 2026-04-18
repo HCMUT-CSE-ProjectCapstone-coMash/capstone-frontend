@@ -86,6 +86,18 @@ export function DetailEmployeeByIdForm() {
 
             {/* --- CỘT PHẢI: THÔNG TIN FORM --- */}
             <div className="w-2/3">
+                <div className="mb-5 flex justify-end gap-5">
+                    <button
+                        className="border border-pink text-pink font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-pink-50"
+                    >
+                        Chỉnh sửa
+                    </button>
+                    <button
+                        className="border bg-red text-white font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red/70"
+                    >
+                        Xóa nhân viên
+                    </button>
+                </div>
                 <div className="flex flex-col gap-5">
                     <TextInput
                         disabled
