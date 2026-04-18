@@ -32,7 +32,9 @@ export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosit
 
     return (
         <div className={`w-full font-display ${isLeft ? "flex items-center gap-x-4" : "flex flex-col gap-y-2.5"}`}>
-            <label className={`text-sm font-normal text-tgray9 ${isLeft ? "w-25" : ""}`}>{label}</label>
+            {label && (
+                <label className={`text-sm font-normal text-tgray9 ${isLeft ? "w-25" : ""}`}>{label}</label>
+            )}
 
             <div className="relative w-full">
                 {isIcon && (
