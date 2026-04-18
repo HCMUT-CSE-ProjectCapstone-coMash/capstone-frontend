@@ -20,7 +20,6 @@ const initialEmployeeFormState: EmployeeFormState = {
     email: "",
     imageURL: "",
     imageFile: null,
-    imagePreviewUrl: null,
 };
 
 const genderOptions = [
@@ -128,7 +127,6 @@ export function EmployeeForm() {
 
     const removeImage = () => {
         setField("imageFile", null);
-        setField("imagePreviewUrl", null);
     };
 
     // --- Logic xem trước hình ảnh ---
