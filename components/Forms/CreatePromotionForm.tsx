@@ -1,25 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-    PromotionType,
-    DiscountType,
-    PromotionLevel,
-    CreatePromotion,
-} from "@/types/promotion";
+import { PromotionType, DiscountType, PromotionLevel, CreatePromotion } from "@/types/promotion";
 import { OwnerSalePageRoute } from "@/const/routes";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SelectOption } from "@/types/UIType";
 import { TrashIcon, AddIcon } from "@/public/assets/Icons";
 import { ProductPromotionPicker } from "@/components/Forms/CreatePromotionTypes/ProductPromotionForm";
+import { DatePickerInput } from "../FormInputs/DatePickerInput";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { FetchPromotionId } from "@/api/promotions/promotions";
 
 // ── Options ────────────────────────────────────────────────────────────────────
 
 const PROMOTION_TYPE_OPTIONS: SelectOption[] = [
     { label: "KM sản phẩm", value: "PRODUCT" },
-    { label: "KM combo",    value: "COMBO" },
+    { label: "KM combo", value: "COMBO" },
     { label: "KM đơn hàng", value: "ORDER" },
 ];
 
@@ -124,112 +122,112 @@ function LevelsTable({
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
+interface FormState {
+    promotionName: string,
+    promtionType: PromotionType,
+    startDate: string,
+    endDate: string,
+    description: string,
+    discountType: DiscountType,
+}
+
+const initialFormState: FormState = {
+    promotionName: "",
+    promtionType: "PRODUCT",
+    startDate: "",
+    endDate: "",
+    description: "",
+    discountType: "PERCENT",
+}
+
 export function CreatePromotionForm() {
     const router = useRouter();
 
     // Base fields
-    const [promotionName, setPromotionName] = useState("");
-    const [promotionType, setPromotionType] = useState<PromotionType>("PRODUCT");
-    const [startDate, setStartDate]         = useState("");
-    const [endDate, setEndDate]             = useState("");
-    const [description, setDescription]    = useState("");
-    const [discountType, setDiscountType]   = useState<DiscountType>("PERCENT");
-    const [discountValue, setDiscountValue] = useState<number>(0);
-
-    // PRODUCT-specific
-    const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-
-    // ORDER-specific
-    const [levels, setLevels] = useState<PromotionLevel[]>([emptyLevel()]);
-
-    // TODO: comboIds — handled by you
-    // const [selectedComboId, setSelectedComboId] = useState<string | null>(null);
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    // ── Build payload ──────────────────────────────────────────────────────────
-
-    const buildPayload = (): CreatePromotion | null => {
-        const base = { promotionName, startDate, endDate, description, discountType, discountValue };
-
-        if (promotionType === "PRODUCT")
-            return { ...base, promotionType: "PRODUCT", productIds: selectedProductId ? [selectedProductId] : [] };
-        if (promotionType === "COMBO")
-            return { ...base, promotionType: "COMBO", comboIds: [] }; // TODO: wire comboId
-        if (promotionType === "ORDER")
-            return { promotionName, startDate, endDate, description, promotionType: "ORDER", levels };
-
-        return null;
+    const [form, setForm] = useState<FormState>(initialFormState);
+    const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
     };
+
+    const { data } = useQuery({
+        queryKey: ["fetchPromotionId"],
+        queryFn: FetchPromotionId,
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+    });
+    
+    const promotionId = data?.promotionId ?? "";
 
     // ── Submit ─────────────────────────────────────────────────────────────────
 
-    const handleSubmit = async () => {
-        const payload = buildPayload();
-        if (!payload) return;
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
 
-        setIsSubmitting(true);
-        try {
-            // TODO: replace with your actual API call, e.g. CreatePromotion(payload)
-            console.log("Submitting:", payload);
-            router.push(OwnerSalePageRoute);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsSubmitting(false);
-        }
+        console.log(form);
     };
 
     // ── Render ─────────────────────────────────────────────────────────────────
 
     return (
-        <div className="py-10 flex flex-col gap-6">
+        <form 
+            className="py-10 flex flex-col gap-6"
+            onSubmit={handleSubmit}
+        >
+            {/* Tên khuyến mãi + Mã khuyến mãi */}
+            <div className="grid grid-cols-2 gap-6">
+                <TextInput
+                    label="Mã khuyến mãi"
+                    value={promotionId}
+                    placeHolder=""
+                    onChange={() => {}}
+                    disabled={true}
+                />
 
-            {/* Tên khuyến mãi */}
-            <TextInput
-                label="Tên khuyến mãi"
-                value={promotionName}
-                placeHolder="Nhập tên khuyến mãi"
-                onChange={(e) => setPromotionName(e.target.value)}
-            />
+                <TextInput
+                    label="Tên khuyến mãi"
+                    value={form.promotionName}
+                    placeHolder="Nhập tên khuyến mãi"
+                    onChange={(e) => setField("promotionName" ,e.target.value)}
+                />
+            </div>
 
             {/* Phân loại + Ngày bắt đầu + Ngày kết thúc */}
             <div className="grid grid-cols-3 gap-6">
                 <SelectInput
                     label="Phân loại"
-                    value={promotionType}
-                    onChange={(v) => setPromotionType(v as PromotionType)}
+                    value={form.promtionType}
+                    onChange={(value) => setField("promtionType", value as PromotionType)}
                     options={PROMOTION_TYPE_OPTIONS}
                 />
-                <TextInput
+
+                <DatePickerInput
                     label="Ngày bắt đầu"
-                    value={startDate}
-                    placeHolder="DD/MM/YYYY"
-                    inputType="text"
-                    onChange={(e) => setStartDate(e.target.value)}
+                    value={form.startDate}
+                    placeHolder="Chọn ngày bắt đầu"
+                    onChange={(date) => setField("startDate", date)}
                 />
-                <TextInput
+
+                <DatePickerInput
                     label="Ngày kết thúc"
-                    value={endDate}
-                    placeHolder="DD/MM/YYYY"
-                    inputType="text"
-                    onChange={(e) => setEndDate(e.target.value)}
+                    value={form.endDate}
+                    placeHolder="Chọn ngày kết thúc"
+                    onChange={(date) => setField("endDate", date)}
                 />
             </div>
 
             {/* Mô tả */}
             <TextInput
                 label="Mô tả"
-                value={description}
+                value={form.description}
                 placeHolder="Mô tả (nếu có)"
                 inputType="text"
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => setField("description" ,e.target.value)}
             />
 
             {/* ── Type-specific ──────────────────────────────────────────────── */}
 
             {/* PRODUCT */}
-            {promotionType === "PRODUCT" && (
+            {/* {promotionType === "PRODUCT" && (
                 <div className="flex flex-col gap-y-2.5">
                     <p className="text-sm font-normal text-tgray9">Sản phẩm áp dụng</p>
                     <ProductPromotionPicker
@@ -243,26 +241,25 @@ export function CreatePromotionForm() {
                         }}
                     />
                 </div>
-            )}
+            )} */}
 
             {/* COMBO */}
-            {promotionType === "COMBO" && (
+            {/* {promotionType === "COMBO" && (
                 <div className="flex flex-col gap-y-2.5">
                     <p className="text-sm font-normal text-tgray9">Combo áp dụng</p>
                     <div className="rounded-lg border-[0.5px] border-dashed border-tgray5 px-4 py-8 text-center text-sm text-gray-400">
-                        {/* TODO: your combo picker goes here */}
                         Chọn combo
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* ORDER */}
-            {promotionType === "ORDER" && (
+            {/* {promotionType === "ORDER" && (
                 <div className="flex flex-col gap-y-2.5">
                     <p className="text-sm font-normal text-tgray9">Các mức giảm giá</p>
                     <LevelsTable levels={levels} onChange={setLevels} />
                 </div>
-            )}
+            )} */}
 
             {/* ── Actions ───────────────────────────────────────────────────── */}
             <div className="flex justify-end gap-3 pt-2">
@@ -273,13 +270,11 @@ export function CreatePromotionForm() {
                     Huỷ
                 </button>
                 <button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="px-3 py-2 text-sm font-semibold rounded-lg bg-purple text-white hover:bg-light-purple transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm font-semibold rounded-lg bg-purple text-white hover:bg-purple/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isSubmitting ? "Đang tạo..." : "Tạo khuyến mãi"}
+                    {"Tạo khuyến mãi"}
                 </button>
             </div>
-        </div>
+        </form>
     );
 }
