@@ -59,3 +59,12 @@ export async function CreateEmployeeAsync(employeeData: EmployeeFormState) {
 
     return response.data;
 };
+
+export async function DeleteEmployee(employeeId: string) {
+    const response = await axiosClient.delete(
+        `/auth/delete/${employeeId}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
