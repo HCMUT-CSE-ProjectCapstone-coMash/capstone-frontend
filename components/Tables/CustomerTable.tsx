@@ -3,104 +3,137 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Table } from "./Table";
 import { Column } from "@/types/UIType";
+import { useDebounce } from "@/hooks/useDebounce";
 import { formatThousands } from "@/utilities/numberFormat";
-import { Customer } from "@/types/customer"
-
-const MOCK_CUSTOMERS: Customer[] = [
-    { id: "1", fullName: "Thanh Thuý", phoneNumber: "0901239056", debtAmount: 0, debtDays: 0 },
-    { id: "2", fullName: "Bích Phượng", phoneNumber: "0901249056", debtAmount: 100000, debtDays: 7 },
-    { id: "3", fullName: "Thanh Loan", phoneNumber: "09012434056", debtAmount: 200000, debtDays: 3 },
-    { id: "4", fullName: "Ngọc Anh", phoneNumber: "09014334056", debtAmount: 0, debtDays: 0 },
-    { id: "5", fullName: "Khánh Anh", phoneNumber: "09012434056", debtAmount: 200000, debtDays: 5 },
-    { id: "6", fullName: "Trần Minh Tú", phoneNumber: "0987654321", debtAmount: 500000, debtDays: 10 },
-    { id: "7", fullName: "Lê Hoàng Nam", phoneNumber: "0912345678", debtAmount: 0, debtDays: 0 },
-    { id: "8", fullName: "Nguyễn Diệu Nhi", phoneNumber: "0933445566", debtAmount: 150000, debtDays: 2 },
-    { id: "9", fullName: "Phạm Bảo Anh", phoneNumber: "0944556677", debtAmount: 300000, debtDays: 8 },
-    { id: "10", fullName: "Võ Tuấn Kiệt", phoneNumber: "0955667788", debtAmount: 0, debtDays: 0 },
-];
+import { Customer } from "@/types/customer";
+import { FetchCustomers } from "@/api/customer/customers";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 
 export default function CustomerTable() {
-
-    // --- 3. States ---
+    // --- 1. States ---
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState("");
     const pageSize = 10;
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
 
-    // --- 4. Logic Fetch & Filter Dữ liệu ---
-    const { data, isLoading } = useQuery({
-            queryKey: ["customers-figma", currentPage],
-            queryFn: async () => {
-                await new Promise((resolve) => setTimeout(resolve, 300));
-                const start = (currentPage - 1) * pageSize;
-                return {
-                    items: MOCK_CUSTOMERS.slice(start, start + pageSize),
-                    total: MOCK_CUSTOMERS.length,
-                };
-            },
-        });
+    // --- 2. Fetch Data ---
+    const { data, isLoading, isError } = useQuery({
+        // QueryKey bao gồm trang hiện tại và từ khóa tìm kiếm
+        queryKey: ["customers", currentPage, debouncedSearch],
+        queryFn: () => FetchCustomers(currentPage, pageSize, debouncedSearch),
+    });
 
-    // --- 5. Định nghĩa Cột (Theo Figma) ---
+    // --- 3. Columns Definition ---
     const columns: Column<Customer>[] = useMemo(() => [
         { 
             title: "Tên khách hàng", 
-            key: "fullName", 
-            render: (row) => <span>{row.fullName}</span> 
+            key: "customerName", 
+            render: (row) => <span>{row.customerName}</span> 
         },
         { 
             title: "Số điện thoại", 
-            key: "phoneNumber", 
-            render: (row) => <span>{row.phoneNumber}</span> 
+            key: "customerPhone", 
+            render: (row) => <span>{row.customerPhone}</span> 
         },
         { 
             title: "Số tiền nợ", 
-            key: "debtAmount", 
+            key: "debtMoney", 
             render: (row) => (
-                <span>{row.debtAmount && row.debtAmount > 0 ? `${formatThousands(row.debtAmount)} VND` : ""}</span>
+                <span>
+                    {row.debitMoney && row.debitMoney > 0 
+                        ? `${formatThousands(row.debitMoney)} VND` 
+                        : "0"}
+                </span>
             ) 
         },
         { 
             title: "Số ngày nợ", 
             key: "debtDays", 
             render: (row) => {
-                if (!row.debtDays || row.debtDays === 0) return null;
-                // Highlight đỏ nếu nợ trên 5 ngày
-                const isOverdue = row.debtDays > 5;
+                if (!row.debitDays || row.debitDays === 0) return <span className="text-gray-400">-</span>;
+                const isOverdue = row.debitDays > 5;
                 return (
-                    <span className={` text-black ${isOverdue ? "text-red-600 font-medium" : ""}`}>
-                        {row.debtDays} ngày
+                    <span className={isOverdue ? "text-red font-bold" : ""}>
+                        {row.debitDays} ngày
                     </span>
                 );
             } 
         }
     ], []);
 
+    // --- 4. Handlers ---
+    const handleSearch = (value: string) => {
+        setSearchQuery(value);
+        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    };
+
     return (
-        <div>
-            <div className="flex justify-between mb-10.25">
-                <div className="flex justify-between gap-3">
-                    <button className="border bg-pink text-white font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:opacity-90 transition-opacity">
+        <div className="space-y-6">
+            {/* Action Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                    <button 
+                        onClick={() => handleSearch("")} // Clear search để xem tất cả
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                            searchQuery === "" 
+                            ? "bg-pink text-white shadow-sm" 
+                            : "border border-pink text-pink hover:bg-pink/5"
+                        }`}
+                    >
                         Xem tất cả
                     </button>
-                    <button className="border border-pink text-pink font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-pink-50">
+                    <button 
+                        onClick={() => handleSearch("debt")} // Giả sử "debt" là keyword để BE lọc khách nợ
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                            searchQuery === "debt" 
+                            ? "bg-pink text-white shadow-sm" 
+                            : "border border-pink text-pink hover:bg-pink/5"
+                        }`}
+                    >
                         Khách hàng nợ
                     </button>
                 </div>
-                <div>Thanh search</div>
+
+                <div className="w-full sm:w-64">
+                    <NormalSearchInput 
+                        value={searchTerm} 
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1); // Reset về trang 1 khi tìm kiếm mới
+                        }}
+                        placeholder="Nhập tên khách hàng"
+                        className="w-65"
+                    />
+                </div>
             </div>
-            <div className="w-full">
-                <Table
-                    columns={columns}
-                    data={data?.items ?? []}
-                    isLoading={isLoading}
-                    pagination={{
-                        current: currentPage,
-                        pageSize,
-                        total: data?.total ?? 0,
-                        onChange: setCurrentPage,
-                    }}
-                />
+
+            {/* Table Container */}
+            <div className="border border-gray-100 overflow-hidden">
+                {isError ? (
+                    <div className="p-12 text-center">
+                        <p className="text-red-500 font-medium">Không thể tải dữ liệu khách hàng.</p>
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            className="mt-2 text-sm text-gray-500 underline"
+                        >
+                            Thử lại
+                        </button>
+                    </div>
+                ) : (
+                    <Table
+                        columns={columns}
+                        data={data?.items ?? []}
+                        isLoading={isLoading}
+                        pagination={{
+                            current: currentPage,
+                            pageSize,
+                            total: data?.total ?? 0,
+                            onChange: setCurrentPage,
+                        }}
+                    />
+                )}
             </div>
         </div>
-        
-
-    )
+    );
 }

@@ -1,7 +1,9 @@
 export interface Customer {
     id: string;
-    fullName: string;
-    phoneNumber: string;
-    debtAmount?: number; // Có thể không nợ
-    debtDays?: number;   // Số ngày nợ
+    customerName: string;
+    customerPhone: string;
+    customerStatus: "active" | "inactive";
+    createdAt: string;
+    debitMoney?: number; // Có thể không nợ
+    debitDays?: number;   // Số ngày nợ
 }
