@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
@@ -12,11 +13,9 @@ import { RootState } from "@/utilities/store";
 import { setSelectedEmployee } from "@/utilities/employeeStore"; 
 import { EmployeeFormState } from "@/types/employee";
 
-interface Props {
-    employeeId: string;
-}
 
-export function DetailEmployeeByIdForm({ employeeId }: Props) {
+export function DetailEmployeeByIdForm() {
+    const { employeeId } = useParams<{ employeeId: string }>();
     const dispatch = useDispatch();
     
     // 1. Lấy dữ liệu từ Store (Giống editProduct ở ví dụ của bạn)
@@ -78,7 +77,7 @@ export function DetailEmployeeByIdForm({ employeeId }: Props) {
                             />
                         </div>
                     ) : (
-                        <div className="h-75 w-75 bg-tgray05 flex items-center justify-center rounded-lg border border-dashed border-gray-300">
+                        <div className="h-75 w-75 bg-tgray05 flex items-center justify-center rounded-lg border-gray-300">
                             <p className="text-sm text-gray-400">Không có ảnh</p>
                         </div>
                     )}
