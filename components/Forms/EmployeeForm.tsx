@@ -18,7 +18,7 @@ const initialEmployeeFormState: EmployeeFormState = {
     dateOfBirth: "",
     phoneNumber: "",
     email: "",
-    imageUrl: "",
+    imageURL: "",
     imageFile: null,
     imagePreviewUrl: null,
 };
@@ -141,7 +141,7 @@ export function EmployeeForm() {
         return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
     }, [objectUrl]);
 
-    const previewSrc = objectUrl ?? form.imageUrl ?? null;
+    const previewSrc = objectUrl ?? form.imageURL ?? null;
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">

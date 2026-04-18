@@ -6,7 +6,7 @@ export type Employee = {
     dateOfBirth: string;
     phoneNumber: string;
     email: string;
-    imageUrl?: string; // Lưu URL ảnh từ server
+    imageURL?: string; // Lưu URL ảnh từ server
 };
 
 // Kiểu dữ liệu cho Form (Kế thừa từ Employee nhưng bỏ id và thêm các trường xử lý ảnh)

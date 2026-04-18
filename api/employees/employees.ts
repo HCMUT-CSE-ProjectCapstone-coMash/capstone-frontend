@@ -29,6 +29,7 @@ export async function GetNewEmployeeId() {
     return response.data; 
 }
 
+
 export async function CreateEmployeeAsync(employeeData: EmployeeFormState) {
     const formData = new FormData();
 
