@@ -65,7 +65,7 @@ export function DetailEmployeeByIdForm({ employeeId }: Props) {
         <div className="flex flex-column justify-between gap-[5vw]">
             {/* --- CỘT TRÁI: ẢNH NHÂN VIÊN --- */}
             <div className="w-1/3">
-                <p className="text-lg mb-2.5 font-medium text-purple">Thông tin nhân viên</p>
+                <p className="text-lg mb-2.5">Thông tin nhân viên</p>
                 <div className="w-md">
                     {employee?.imageURL ? (
                         <div className="relative group h-75 w-75">
