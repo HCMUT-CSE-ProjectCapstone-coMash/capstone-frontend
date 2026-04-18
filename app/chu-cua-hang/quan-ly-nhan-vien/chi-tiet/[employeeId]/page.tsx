@@ -1,9 +1,10 @@
 "use client";
 
-import { EmployeeForm } from "@/components/Forms/EmployeeForm";
 import { useRouter } from "next/navigation";
 import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
-export default function EmployeeAdd() {
+import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdForm";
+
+export default function EmployeeDetailPage() {
     const router = useRouter();
     return (
         <main className="px-20 pt-10 pb-25">
@@ -16,11 +17,7 @@ export default function EmployeeAdd() {
                     Danh sách nhân viên
                 </button>
             </div>
-
-            <div>
-                <EmployeeForm />
-            </div>
-        
+            <DetailEmployeeByIdForm />
         </main>
     );
 }

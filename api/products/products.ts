@@ -6,7 +6,6 @@ import { fileToBase64 } from "@/utilities/image";
 export async function CreateProductAsync(productData: CreateProduct, productsOrderId: string) {
     const formData = new FormData();
 
-    formData.append("ProductId", productData.productId);
     formData.append("ProductName", productData.productName);
     formData.append("Category", productData.category);
     formData.append("Color", productData.color);
@@ -83,7 +82,6 @@ export async function CreateProductIdByCategory(category: string) {
 export async function OwnerCreateProduct(productData: CreateProduct) {
     const formData = new FormData();
 
-    formData.append("ProductId", productData.productId);
     formData.append("ProductName", productData.productName);
     formData.append("Category", productData.category);
     formData.append("Color", productData.color);
@@ -221,6 +219,15 @@ export async function EmployeeUpdateProductInProductsOrder(productId: string, pr
                 "Content-Type": "multipart/form-data"
             }
         }
+    );
+
+    return response.data;
+}
+
+export async function OwnerDeleteProduct(productId: string) {
+    const response = await axiosClient.delete(
+        "/product/owner-delete/" + productId,
+        { withCredentials: true }
     );
 
     return response.data;
