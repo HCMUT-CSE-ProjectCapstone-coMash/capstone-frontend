@@ -68,3 +68,24 @@ export async function DeleteEmployee(employeeId: string) {
 
     return response.data;
 }
+
+export async function UpdateEmployee(id: string, data: EmployeeFormState) {
+    const formData = new FormData();
+
+    formData.append("FullName", data.fullName);
+    formData.append("Gender", data.gender);
+    formData.append("DateOfBirth", data.dateOfBirth);
+    formData.append("PhoneNumber", data.phoneNumber);
+    formData.append("Email", data.email);
+
+    const response = await axiosClient.patch(
+        `/auth/edit-employee/${id}`,
+        formData,
+        {
+            withCredentials: true,
+            headers: { "Content-Type": "multipart/form-data" }
+        }
+    );
+
+    return response.data;
+}
