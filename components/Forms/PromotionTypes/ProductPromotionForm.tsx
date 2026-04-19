@@ -8,7 +8,7 @@ import { FetchApprovedProductByName } from "@/api/products/products";
 import Image from "next/image";
 import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
-import { SelectedProductsTable } from "./SelectedProductsTable";
+import { SelectedProductsTable } from "../../Tables/Promotions/SelectedProductsTable";
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 

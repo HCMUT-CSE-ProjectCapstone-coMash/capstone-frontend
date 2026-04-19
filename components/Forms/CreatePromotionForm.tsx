@@ -10,6 +10,7 @@ import { ProductPromotionForm } from "@/components/Forms/PromotionTypes/ProductP
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
 import { useQuery } from "@tanstack/react-query";
 import { FetchPromotionId } from "@/api/promotions/promotions";
+import { OrderPromotionForm } from "./PromotionTypes/OrderPromotionForm";
 
 // ── Options ────────────────────────────────────────────────────────────────────
 
@@ -285,9 +286,7 @@ export function CreatePromotionForm() {
             {form.promtionType === "PRODUCT" && (  
                 <ProductPromotionForm 
                     productDiscounts={form.productDiscounts}
-                    onChange={(productDiscounts) =>
-                        setField("productDiscounts", productDiscounts)
-                    }
+                    onChange={(productDiscounts) => setField("productDiscounts", productDiscounts)}
                 />
             )}
 
@@ -302,12 +301,12 @@ export function CreatePromotionForm() {
             )} */}
 
             {/* ORDER */}
-            {/* {promotionType === "ORDER" && (
-                <div className="flex flex-col gap-y-2.5">
-                    <p className="text-sm font-normal text-tgray9">Các mức giảm giá</p>
-                    <LevelsTable levels={levels} onChange={setLevels} />
-                </div>
-            )} */}
+            {form.promtionType === "ORDER" && (
+                <OrderPromotionForm
+                    levels={form.levels}
+                    onChange={(levels) => setField("levels", levels)}
+                />
+            )}
 
             {/* ── Actions ───────────────────────────────────────────────────── */}
             <div className="flex justify-end gap-3 pt-2">
