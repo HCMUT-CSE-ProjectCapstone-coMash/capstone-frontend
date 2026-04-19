@@ -107,9 +107,9 @@ export default function CustomerTable() {
                         Xem tất cả
                     </button>
                     <button 
-                        onClick={() => handleSearch("debt")} // Giả sử "debt" là keyword để BE lọc khách nợ
+                        onClick={() => handleSearch("debitMoney")} 
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            searchQuery === "debt" 
+                            searchQuery === "debitMoney" 
                             ? "bg-pink text-white shadow-sm" 
                             : "border border-pink text-pink hover:bg-pink/5"
                         }`}
