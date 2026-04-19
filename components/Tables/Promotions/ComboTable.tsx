@@ -47,8 +47,13 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
         return sum + product.salePrice * item.quantity;
     }, 0);
 
-    const savings = Math.max(0, originalTotal - combo.comboPrice);
-    const hasDiscount = combo.comboPrice > 0 && combo.comboPrice < originalTotal;
+    const importTotal = combo.items.reduce((sum, item) => {
+        const product = productCache[item.productId];
+        if (!product) return sum;
+        return sum + product.importPrice * item.quantity;
+    }, 0);
+
+    const profit = combo.comboPrice - importTotal;
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
@@ -234,9 +239,16 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
 
             {/* Combo pricing */}
             {combo.items.length > 0 && (
-                <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-tgray5 bg-gray-50">
+                <div className="flex items-center justify-between gap-4 px-8 py-3 border-t border-tgray5 bg-gray-50">
                     <div>
-                        <p className="text-sm text-tgray9 mb-1">Tổng giá gốc</p>
+                        <p className="text-sm text-tgray9 mb-1">Tổng giá nhập</p>
+                        <div className="py-2 text-sm font-medium">
+                            {formatThousands(importTotal)} VNĐ
+                        </div>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-tgray9 mb-1">Tổng giá bán</p>
                         <div className="py-2 text-sm font-medium">
                             {formatThousands(originalTotal)} VNĐ
                         </div>
@@ -254,11 +266,11 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
                     </div>
 
                     <div>
-                        <p className="text-sm text-tgray9 mb-1">Tiết kiệm</p>
-                        {hasDiscount ? (
+                        <p className="text-sm text-tgray9 mb-1">Lợi nhuận</p>
+                        {combo.comboPrice > 0 ? (
                             <div className="py-2 text-sm">
-                                <span className="text-purple font-bold">
-                                    -{formatThousands(savings)} VNĐ
+                                <span className={`font-bold ${profit >= 0 ? "text-purple" : "text-red"}`}>
+                                    {profit >= 0 ? "+" : "-"}{formatThousands(profit)} VNĐ
                                 </span>
                             </div>
                         ) : (
