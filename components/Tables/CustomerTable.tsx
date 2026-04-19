@@ -8,6 +8,10 @@ import { formatThousands } from "@/utilities/numberFormat";
 import { Customer } from "@/types/customer";
 import { FetchCustomers } from "@/api/customer/customers";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { useRouter } from "next/navigation";
+import { OwnerCustomerByIdPageRoute } from "@/const/routes";
+import { useDispatch } from "react-redux";
+import { setCustomer } from "@/utilities/customerStore";
 
 export default function CustomerTable() {
     // --- 1. States ---
@@ -16,6 +20,8 @@ export default function CustomerTable() {
     const pageSize = 10;
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 500);
+    const router = useRouter();
+    const dispatch = useDispatch();
 
     // --- 2. Fetch Data ---
     const { data, isLoading, isError } = useQuery({
@@ -24,10 +30,10 @@ export default function CustomerTable() {
         queryFn: () => FetchCustomers(currentPage, pageSize, debouncedSearch),
     });
 
-    // const handleViewDetail = (customer: Customer) => {
-    //     dispatch(setEmployee(employee));
-    //     router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
-    // };
+    const handleViewDetail = (customer: Customer) => {
+        dispatch(setCustomer(customer));
+        router.push(OwnerCustomerByIdPageRoute(customer.id));
+    };
 
     // --- 3. Columns Definition ---
     const columns: Column<Customer>[] = [
@@ -70,7 +76,7 @@ export default function CustomerTable() {
             key: "action",
             render: (row) => (
                 <button
-                    // onClick={() => handleViewDetail(row)}
+                    onClick={() => handleViewDetail(row)}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
