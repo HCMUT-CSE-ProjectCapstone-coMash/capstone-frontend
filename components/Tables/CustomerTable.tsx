@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Table } from "./Table";
 import { Column } from "@/types/UIType";
@@ -24,8 +24,13 @@ export default function CustomerTable() {
         queryFn: () => FetchCustomers(currentPage, pageSize, debouncedSearch),
     });
 
+    // const handleViewDetail = (customer: Customer) => {
+    //     dispatch(setEmployee(employee));
+    //     router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
+    // };
+
     // --- 3. Columns Definition ---
-    const columns: Column<Customer>[] = useMemo(() => [
+    const columns: Column<Customer>[] = [
         { 
             title: "Tên khách hàng", 
             key: "customerName", 
@@ -59,8 +64,20 @@ export default function CustomerTable() {
                     </span>
                 );
             } 
+        },
+        {
+            title: "",
+            key: "action",
+            render: (row) => (
+                <button
+                    // onClick={() => handleViewDetail(row)}
+                    className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
+                >
+                    Xem
+                </button>
+            )
         }
-    ], []);
+    ];
 
     // --- 4. Handlers ---
     const handleSearch = (value: string) => {
