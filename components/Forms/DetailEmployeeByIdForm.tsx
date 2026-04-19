@@ -1,27 +1,31 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
-import { FetchEmployees} from "@/api/employees/employees";
+import { DeleteEmployee, FetchEmployees} from "@/api/employees/employees";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
 // Import action từ employeeStore bạn đã tạo ở bước trước
-import { setSelectedEmployee } from "@/utilities/employeeStore"; 
+import { removeEmployee, setSelectedEmployee } from "@/utilities/employeeStore"; 
 import { EmployeeFormState } from "@/types/employee";
+import { AlertType } from "@/types/alert";
+import { addAlert } from "@/utilities/alertStore";
 
 
 export function DetailEmployeeByIdForm() {
     const { employeeId } = useParams<{ employeeId: string }>();
     const dispatch = useDispatch();
+    const router = useRouter(); // Khởi tạo router để quay lại danh sách sau khi xóa
     
-    // 1. Lấy dữ liệu từ Store (Giống editProduct ở ví dụ của bạn)
     const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
 
-    // 2. Fetch dữ liệu từ API
+    // 1. Fetch dữ liệu nhân viên
     const { data, isLoading } = useQuery({
         queryKey: ["employee", employeeId],
         queryFn: () => FetchEmployees(1, 50),
@@ -29,13 +33,11 @@ export function DetailEmployeeByIdForm() {
     });
 
     useEffect(() => {
-        // Kiểm tra nếu data có danh sách items
         if (data?.items) {
-            // Tìm nhân viên có employeeId khớp với ID từ Props
-            const foundEmployee = data.items.find((item: EmployeeFormState) => item.employeeId === employeeId);
-
+            const foundEmployee = data.items.find((item: { employeeId: string }) => item.employeeId === employeeId);
             if (foundEmployee) {
                 const formattedEmployee: EmployeeFormState = {
+                    id: foundEmployee.id,
                     employeeId: foundEmployee.employeeId,
                     fullName: foundEmployee.fullName,
                     gender: foundEmployee.gender,
@@ -45,21 +47,36 @@ export function DetailEmployeeByIdForm() {
                     imageFile: null, 
                     imageURL: foundEmployee.imageUrl || foundEmployee.imageURL || null, 
                 };
-
                 dispatch(setSelectedEmployee(formattedEmployee));
             }
         }
-
-        // Cleanup: Xóa dữ liệu khi thoát khỏi trang để tránh "nháy" dữ liệu cũ
-        return () => {
-            dispatch(setSelectedEmployee(null));
-        };
+        return () => { dispatch(setSelectedEmployee(null)); };
     }, [data, employeeId, dispatch]);
 
-    // 4. Xử lý trạng thái Loading
-    // Lưu ý: Nếu Store đã có data (chuyển từ trang danh sách sang) thì không cần hiện Loading xoay vòng
-    if (isLoading && !employee) return <div className="p-5">Đang tải thông tin...</div>;
+    // 2. Định nghĩa Mutation để xóa nhân viên
+    const deleteMutation = useMutation({
+        mutationFn: ({ employeeId } : { employeeId: string }) => DeleteEmployee(employeeId),
+        onSuccess: () => {
+            // Cập nhật Store local
+            dispatch(removeEmployee(employeeId));
+            // Thông báo thành công
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xóa nhân viên thành công!" }));
+            // Điều hướng về trang danh sách nhân viên
+            router.push(OwnerEmployeeManagementPageRoute); // Thay đổi path này cho đúng với project của bạn
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Xóa nhân viên thất bại. Vui lòng thử lại!" }));
+        }
+    });
 
+    // 3. Hàm xử lý khi nhấn nút xóa
+    const handleDelete = () => {
+        if (window.confirm(`Bạn có chắc chắn muốn xóa nhân viên ${employee?.fullName}?`)) {
+             deleteMutation.mutate({ employeeId: employee?.id ?? employeeId });
+        }
+    };
+
+    if (isLoading && !employee) return <div className="p-5">Đang tải thông tin...</div>;
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
             {/* --- CỘT TRÁI: ẢNH NHÂN VIÊN --- */}
@@ -93,9 +110,12 @@ export function DetailEmployeeByIdForm() {
                         Chỉnh sửa
                     </button>
                     <button
-                        className="border bg-red text-white font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red/70"
+                    type="button"
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="border bg-red-500 text-white font-medium px-4 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red-600 disabled:bg-gray-400"
                     >
-                        Xóa nhân viên
+                    {deleteMutation.isPending ? "Đang xóa..." : "Xóa nhân viên"}
                     </button>
                 </div>
                 <div className="flex flex-col gap-5">

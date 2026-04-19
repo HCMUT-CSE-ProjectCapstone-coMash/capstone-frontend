@@ -12,6 +12,7 @@ import { EmployeeFormState } from "@/types/employee";
 import { CreateEmployeeAsync, GetNewEmployeeId } from "@/api/employees/employees";
 
 const initialEmployeeFormState: EmployeeFormState = {
+    id: "",
     employeeId: "",
     fullName: "",
     gender: "",
