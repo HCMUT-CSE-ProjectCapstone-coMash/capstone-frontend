@@ -13,6 +13,11 @@ import { UpdateEmployee } from "@/api/employees/employees";
 import { setEmployee } from "@/utilities/employeeStore";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { useParams, useRouter } from "next/navigation";
+import { OwnerEmployeeByIdPageRoute } from "@/const/routes";
+import { Employee } from "@/types/employee";
+import { useQuery } from "@tanstack/react-query";
+import { FetchEmployees } from "@/api/employees/employees";
 
 export function DetailEmployeeByIdForm() {
     const dispatch = useDispatch();
@@ -21,6 +26,8 @@ export function DetailEmployeeByIdForm() {
     const [isEditing, setIsEditing] = useState(false);
 
     const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
+    const { employeeId } = useParams<{ employeeId: string }>();
+    const router = useRouter();
 
     // State form khi edit — khởi tạo từ Redux
     const [formData, setFormData] = useState({
@@ -76,6 +83,28 @@ export function DetailEmployeeByIdForm() {
     const handleSave = () => {
         updateMutation.mutate();
     };
+    const { data } = useQuery({
+        queryKey: ["employees"],
+        queryFn: () => FetchEmployees(1, 50),
+    });
+
+    const employees: Employee[] = data?.items ?? [];
+    const currentIndex = employees.findIndex((e) => e.employeeId === employeeId);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < employees.length - 1;
+
+    const handlePrev = () => {
+        const prev = employees[currentIndex - 1];
+        dispatch(setEmployee(prev));
+        router.push(OwnerEmployeeByIdPageRoute(prev.employeeId));
+    };
+
+    const handleNext = () => {
+        const next = employees[currentIndex + 1];
+        dispatch(setEmployee(next));
+        router.push(OwnerEmployeeByIdPageRoute(next.employeeId));
+    };
+
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
@@ -194,6 +223,27 @@ export function DetailEmployeeByIdForm() {
                             />
                         </div>
                     </div>
+                </div>
+                <div className="flex items-center justify-between mt-2.5 w-1/6 ml-auto">
+                    <button
+                        onClick={handlePrev}
+                        disabled={!hasPrev}
+                        className={`text-purple text-sm font-medium transition
+                            ${hasPrev ? "hover:text-purple/70  cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                    >
+                        ← Trước
+                    </button>
+                    <span className="text-sm text-gray-500">
+                        {currentIndex + 1} / {employees.length}
+                    </span>
+                    <button
+                        onClick={handleNext}
+                        disabled={!hasNext}
+                        className={`text-purple text-sm font-medium transition
+                            ${hasNext ? "hover:text-purple/70 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                    >
+                        Sau →
+                    </button>
                 </div>
             </div>
 
