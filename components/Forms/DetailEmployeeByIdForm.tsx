@@ -1,51 +1,23 @@
 "use client";
 
 // import { useParams } from "next/navigation";
-import { useMutation} from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
-import { DeleteEmployee} from "@/api/employees/employees";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
-import { AlertType } from "@/types/alert";
-import { addAlert } from "@/utilities/alertStore";
-import { clearEmployee } from "@/utilities/employeeStore";
+import { useState } from "react";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { DeleteEmployeeModal } from "../Modal/DeleteEmployeeModal";
+
 
 
 export function DetailEmployeeByIdForm() {
     // const employeeId = useParams().employeeId as string;
-    const dispatch = useDispatch();
-    const router = useRouter(); // Khởi tạo router để quay lại danh sách sau khi xóa
+    // const dispatch = useDispatch();
+    const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
     
     const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
-
-    // 2. Định nghĩa Mutation để xóa nhân viên
-    const deleteMutation = useMutation({
-        mutationFn: DeleteEmployee,
-        onSuccess: () => {
-            // Cập nhật Store local
-            dispatch(clearEmployee());
-            // Thông báo thành công
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xóa nhân viên thành công!" }));
-            // Điều hướng về trang danh sách nhân viên
-            router.push(OwnerEmployeeManagementPageRoute); // Thay đổi path này cho đúng với project của bạn
-        },
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Xóa nhân viên thất bại. Vui lòng thử lại!" }));
-        }
-    });
-
-    // 3. Hàm xử lý khi nhấn nút xóa
-    const handleDelete = () => {
-        if (!employee?.id) return;
-
-        if (window.confirm(`Bạn có chắc chắn muốn xóa nhân viên ${employee?.fullName}?`)) {
-            deleteMutation.mutate(employee.id);
-        }
-    };
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
@@ -81,11 +53,10 @@ export function DetailEmployeeByIdForm() {
                     </button>
                     <button
                         type="button"
-                        onClick={handleDelete}
-                        disabled={deleteMutation.isPending}
-                        className="border bg-red-500 text-white font-medium px-4 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red-600 disabled:bg-gray-400"
+                        className="py-2 px-4 rounded-lg border border-red-500 bg-red-500 text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer"
+                        onClick={() => setConfirmModalOpen(true)}
                     >
-                        {deleteMutation.isPending ? "Đang xóa..." : "Xóa nhân viên"}
+                        <p>Xoá nhân viên</p>
                     </button>
                 </div>
                 <div className="flex flex-col gap-5">
@@ -151,6 +122,12 @@ export function DetailEmployeeByIdForm() {
                     </div>
                 </div>
             </div>
+            <LayoutModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setConfirmModalOpen(false)}
+            >
+                <DeleteEmployeeModal employeeId={employee?.id ?? ""} onClose={() => setConfirmModalOpen(false)}/>
+            </LayoutModal>
         </div>
     );
 }
