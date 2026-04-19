@@ -64,3 +64,8 @@ export interface OrderPromotion extends BasePromotion {
 // ───────────────────────────────────────────────────────────────────────────────
 
 export type Promotion = ProductPromotion | ComboPromotion | OrderPromotion
+
+export type CreatePromotionPayload =
+    | Omit<ProductPromotion, "id" | "isActive" | "createdAt">
+    | Omit<ComboPromotion, "id" | "isActive" | "createdAt">
+    | Omit<OrderPromotion, "id" | "isActive" | "createdAt">;

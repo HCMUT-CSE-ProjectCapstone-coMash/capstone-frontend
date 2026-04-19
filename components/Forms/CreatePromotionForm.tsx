@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PromotionType, DiscountType, ProductDiscountItem, ComboDeal, PromotionLevel, ProductPromotion, ComboPromotion, OrderPromotion } from "@/types/promotion";
+import { PromotionType, DiscountType, ProductDiscountItem, ComboDeal, PromotionLevel, ProductPromotion, ComboPromotion, OrderPromotion, CreatePromotionPayload } from "@/types/promotion";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SelectOption } from "@/types/UIType";
 import { ProductPromotionForm } from "@/components/Forms/PromotionTypes/ProductPromotionForm";
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
-import { useQuery } from "@tanstack/react-query";
-import { FetchPromotionId } from "@/api/promotions/promotions";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { CreatePromotion, FetchPromotionId } from "@/api/promotions/promotions";
 import { OrderPromotionForm } from "./PromotionTypes/OrderPromotionForm";
 import { ComboPromotionForm } from "./PromotionTypes/ComoboPromotionForm";
 
@@ -60,11 +60,6 @@ const initialFormState: FormState = {
 
 // ── Build payload (narrows FormState → Promotion) ─────────────────────────────
 
-type CreatePromotionPayload =
-    | Omit<ProductPromotion, "id" | "isActive" | "createdAt">
-    | Omit<ComboPromotion, "id" | "isActive" | "createdAt">
-    | Omit<OrderPromotion, "id" | "isActive" | "createdAt">;
-
 function buildPayload(form: FormState, promotionId: string): CreatePromotionPayload {
     const base = {
         promotionId,
@@ -77,20 +72,20 @@ function buildPayload(form: FormState, promotionId: string): CreatePromotionPayl
     switch (form.promtionType) {
         case "PRODUCT":
             return {
-                ...base,
                 promotionType: "PRODUCT",
+                ...base,
                 productDiscounts: form.productDiscounts,
             };
         case "COMBO":
             return {
-                ...base,
                 promotionType: "COMBO",
+                ...base,
                 combos: form.combos,
             };
         case "ORDER":
             return {
-                ...base,
                 promotionType: "ORDER",
+                ...base,
                 levels: form.levels,
             };
     }
@@ -128,12 +123,23 @@ export function CreatePromotionForm() {
 
     // ── Submit ─────────────────────────────────────────────────────────────────
 
+    const CreateMutation = useMutation({
+        mutationFn: CreatePromotion,
+        onSuccess: (data) => {
+            console.log(data);
+        },
+        onError: () => {
+
+        }
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         const payload = buildPayload(form, promotionId);
         console.log("Submitting:", payload);
 
+        CreateMutation.mutate(payload);
     };
 
     // ── Render ─────────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { CreatePromotionPayload } from "@/types/promotion";
 import { axiosClient } from "../axiosClient";
 
 export async function FetchPromotionId() {
@@ -7,4 +8,14 @@ export async function FetchPromotionId() {
     );
 
     return response.data;
-}
+};
+
+export async function CreatePromotion(payload: CreatePromotionPayload) {
+    const response = await axiosClient.post(
+        "/promotions/create",
+        payload,
+        { withCredentials: true }
+    );
+
+    return response.data;
+};
