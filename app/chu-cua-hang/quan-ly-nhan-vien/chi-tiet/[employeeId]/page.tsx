@@ -6,6 +6,7 @@ import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdFor
 
 export default function EmployeeDetailPage() {
     const router = useRouter();
+
     return (
         <main className="px-20 pt-10 pb-25">
             <div className="flex justify-between items-center mb-12.5">
@@ -17,6 +18,7 @@ export default function EmployeeDetailPage() {
                     Danh sách nhân viên
                 </button>
             </div>
+            
             <DetailEmployeeByIdForm />
         </main>
     );

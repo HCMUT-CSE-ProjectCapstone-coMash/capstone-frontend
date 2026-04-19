@@ -11,54 +11,24 @@ import { DeleteEmployee, FetchEmployees} from "@/api/employees/employees";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
-// Import action từ employeeStore bạn đã tạo ở bước trước
-import { removeEmployee, setSelectedEmployee } from "@/utilities/employeeStore"; 
 import { EmployeeFormState } from "@/types/employee";
 import { AlertType } from "@/types/alert";
 import { addAlert } from "@/utilities/alertStore";
+import { clearEmployee } from "@/utilities/employeeStore";
 
 
 export function DetailEmployeeByIdForm() {
-    const { employeeId } = useParams<{ employeeId: string }>();
     const dispatch = useDispatch();
     const router = useRouter(); // Khởi tạo router để quay lại danh sách sau khi xóa
     
     const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
 
-    // 1. Fetch dữ liệu nhân viên
-    const { data, isLoading } = useQuery({
-        queryKey: ["employee", employeeId],
-        queryFn: () => FetchEmployees(1, 50),
-        enabled: !!employeeId,
-    });
-
-    useEffect(() => {
-        if (data?.items) {
-            const foundEmployee = data.items.find((item: { employeeId: string }) => item.employeeId === employeeId);
-            if (foundEmployee) {
-                const formattedEmployee: EmployeeFormState = {
-                    id: foundEmployee.id,
-                    employeeId: foundEmployee.employeeId,
-                    fullName: foundEmployee.fullName,
-                    gender: foundEmployee.gender,
-                    dateOfBirth: foundEmployee.dateOfBirth,
-                    phoneNumber: foundEmployee.phoneNumber,
-                    email: foundEmployee.email,
-                    imageFile: null, 
-                    imageURL: foundEmployee.imageUrl || foundEmployee.imageURL || null, 
-                };
-                dispatch(setSelectedEmployee(formattedEmployee));
-            }
-        }
-        return () => { dispatch(setSelectedEmployee(null)); };
-    }, [data, employeeId, dispatch]);
-
     // 2. Định nghĩa Mutation để xóa nhân viên
     const deleteMutation = useMutation({
-        mutationFn: ({ employeeId } : { employeeId: string }) => DeleteEmployee(employeeId),
+        mutationFn: DeleteEmployee,
         onSuccess: () => {
             // Cập nhật Store local
-            dispatch(removeEmployee(employeeId));
+            dispatch(clearEmployee());
             // Thông báo thành công
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xóa nhân viên thành công!" }));
             // Điều hướng về trang danh sách nhân viên
@@ -71,12 +41,15 @@ export function DetailEmployeeByIdForm() {
 
     // 3. Hàm xử lý khi nhấn nút xóa
     const handleDelete = () => {
+        if (!employee?.id) return;
+
         if (window.confirm(`Bạn có chắc chắn muốn xóa nhân viên ${employee?.fullName}?`)) {
-             deleteMutation.mutate({ employeeId: employee?.id ?? employeeId });
+            deleteMutation.mutate(employee.id);
         }
     };
 
-    if (isLoading && !employee) return <div className="p-5">Đang tải thông tin...</div>;
+    // if (!employee) return <div className="p-5">Đang tải thông tin...</div>;
+
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
             {/* --- CỘT TRÁI: ẢNH NHÂN VIÊN --- */}
@@ -110,12 +83,12 @@ export function DetailEmployeeByIdForm() {
                         Chỉnh sửa
                     </button>
                     <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
-                    className="border bg-red-500 text-white font-medium px-4 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red-600 disabled:bg-gray-400"
+                        type="button"
+                        onClick={handleDelete}
+                        disabled={deleteMutation.isPending}
+                        className="border bg-red-500 text-white font-medium px-4 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red-600 disabled:bg-gray-400"
                     >
-                    {deleteMutation.isPending ? "Đang xóa..." : "Xóa nhân viên"}
+                        {deleteMutation.isPending ? "Đang xóa..." : "Xóa nhân viên"}
                     </button>
                 </div>
                 <div className="flex flex-col gap-5">
