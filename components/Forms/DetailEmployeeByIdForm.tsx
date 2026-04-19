@@ -123,7 +123,7 @@ export function DetailEmployeeByIdForm() {
                             />
                         </div>
                     ) : (
-                        <div className="h-75 w-75 bg-tgray05 flex items-center justify-center rounded-lg border-gray-300">
+                        <div className="h-75 w-75 bg-tgray05 flex items-center justify-center rounded-lg border-gray-500">
                             <p className="text-sm text-gray-400">Không có ảnh</p>
                         </div>
                     )}
