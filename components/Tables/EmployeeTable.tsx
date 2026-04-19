@@ -1,7 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
+import { OwnerEmployeeByIdPageRoute, OwnerAddEmployeePageRoute } from "@/const/routes";
+import { Employee } from "@/types/employee";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Table } from "./Table";
+import { Column } from "@/types/UIType";
+import { useDebounce } from "@/hooks/useDebounce";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { FetchEmployees } from "@/api/employees/employees";
 
 export type Employee = {
     id: string;
@@ -28,8 +36,8 @@ export function EmployeeTable({ employees }: EmployeeTableProps) {
             {/* --- Nút Thêm Nhân Viên --- */}
             <div className="flex justify-end mb-10.25">
                 <button
-                    onClick={() => router.push(`${OwnerEmployeeManagementPageRoute}/them-nhan-vien`)}
-                    className="py-2 px-3 rounded-lg text-white font-semibold bg-purple text-sm cursor-pointer inline-block text-center hover:opacity-90 transition-opacity"
+                    onClick={() => router.push(`${OwnerAddEmployeePageRoute}`)}
+                    className="py-2 px-4 rounded-lg bg-purple text-white text-sm font-semibold transition hover:bg-purple/90 cursor-pointer whitespace-nowrap"
                 >
                     Thêm nhân viên mới
                 </button>

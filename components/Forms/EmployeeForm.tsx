@@ -20,14 +20,15 @@ interface EmployeeFormState {
 }
 
 const initialEmployeeFormState: EmployeeFormState = {
+    id: "",
     employeeId: "",
-    employeeName: "",
-    employeeGender: "",
-    employeeBirthDate: "",
-    employeePhone: "",
-    employeeMail: "",
+    fullName: "",
+    gender: "",
+    dateOfBirth: "",
+    phoneNumber: "",
+    email: "",
+    imageURL: "",
     imageFile: null,
-    imagePreviewUrl: null,
 };
 
 const genderOptions = [
@@ -44,6 +45,24 @@ export function EmployeeForm() {
     const setField = <K extends keyof EmployeeFormState>(key: K, value: EmployeeFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
+
+    const { data: idData} = useQuery({
+        queryKey: ["new-employee-id"],
+        queryFn: GetNewEmployeeId,
+        staleTime: Infinity, // Chỉ lấy 1 lần duy nhất khi mở form
+    });
+
+    
+    // --- Mutation xử lý gửi data lên Database ---
+    const mutation = useMutation({
+        mutationFn: (employeeData: EmployeeFormState) => CreateEmployeeAsync(employeeData),
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm nhân viên thành công!" }));
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm nhân viên thất bại. Vui lòng thử lại." }));
+        }
+    });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -111,7 +130,6 @@ export function EmployeeForm() {
 
     const removeImage = () => {
         setField("imageFile", null);
-        setField("imagePreviewUrl", null);
     };
 
     const objectUrl = useMemo(() => {
@@ -124,8 +142,8 @@ export function EmployeeForm() {
             if (objectUrl) URL.revokeObjectURL(objectUrl);
         };
     }, [objectUrl]);
-    
-    const previewSrc = objectUrl ?? form.imagePreviewUrl ?? null;
+
+    const previewSrc = objectUrl ?? form.imageURL ?? null;
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
