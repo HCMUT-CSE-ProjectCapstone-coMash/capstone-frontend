@@ -13,7 +13,8 @@ export function UserProvider({ children } : { children : React.ReactNode }) {
     const { isLoading, isError, data } = useQuery({
         queryKey: ["profile"],
         queryFn: profile,
-        retry: false
+        retry: false,
+        refetchOnWindowFocus: false,
     });
 
     useEffect(() => {

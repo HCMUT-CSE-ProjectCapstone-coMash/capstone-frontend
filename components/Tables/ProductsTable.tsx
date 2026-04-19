@@ -90,9 +90,16 @@ export function ProductsTable() {
                 </div>
             )},
             { title: "Tên sản phẩm", key: "productName", render: (row) => (
-                isEmployee 
-                    ? <span>{row.productName}</span> 
-                    : <button onClick={() => dispatch(setOwnerEditingProduct(row))}>{row.productName}</button>
+                isEmployee ? ( 
+                    <span>{row.productName}</span> 
+                ) :( 
+                    <button 
+                        onClick={() => dispatch(setOwnerEditingProduct(row))}
+                        className="cursor-pointer"
+                    >
+                        {row.productName}
+                    </button>
+                )
             )},    
             { title: "Phân loại", key: "category", render: (row) => <span>{row.category}</span> },
             { title: "Màu sắc", key: "color", render: (row) => <span>{row.color}</span> },

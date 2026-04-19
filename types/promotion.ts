@@ -2,74 +2,70 @@ export type PromotionType = "PRODUCT" | "COMBO" | "ORDER"
 
 export type DiscountType = "PERCENT" | "FIXED"
 
-export interface PromotionLevel {
-    minValue: number
-    discountValue: number
-    discountType: DiscountType
-    maxDiscount?: number
-}
-
-export interface CreateBasePromotion {
-    promotionName: string
-    startDate: string
-    endDate: string
-    description: string
-}
-
-export interface CreateProductPromotion extends CreateBasePromotion {
-    promotionType: "PRODUCT"
-    productIds: string[]
-}
-
-export interface CreateComboPromotion extends CreateBasePromotion {
-    promotionType: "COMBO"
-    comboIds: string[]
-}
-
-export interface CreateOrderPromotion extends CreateBasePromotion {
-    promotionType: "ORDER"
-    levels: PromotionLevel[]
-}
-
-export type CreatePromotion =
-    | CreateProductPromotion
-    | CreateComboPromotion
-    | CreateOrderPromotion
-
-//Lấy từ backend
+// ── Shared fields across all promotion types ──────────────────────────────────
 
 interface BasePromotion {
     id: string
     promotionId: string
     promotionName: string
-    promotionType: PromotionType
-
     startDate: string
     endDate: string
-
     isActive: boolean
-
     createdAt: string
-
     description: string
 }
 
+// ── PRODUCT: each product has its own discount ────────────────────────────────
+
+export interface ProductDiscountItem {
+    productId: string
+    discountValue: number,
+    discountType: DiscountType
+}
+
 export interface ProductPromotion extends BasePromotion {
-    productIds?: string[]
+    promotionType: "PRODUCT",
+    productDiscounts: ProductDiscountItem[]
+}
+
+// ── COMBO: buy N products, pay a fixed combo price ────────────────────────────
+
+export interface ComboItem {
+    productId: string;
+    quantity: number;
+}
+
+export interface ComboDeal {
+    comboId?: string;           // if editing existing combo
+    name?: string;              // e.g. "1 áo + 1 váy"
+    items: ComboItem[];         // products + quantities in the combo
+    comboPrice: number;         // the fixed bundled price
 }
 
 export interface ComboPromotion extends BasePromotion {
-    comboIds?: string[]
+    promotionType: "COMBO"
+    combos: ComboDeal[];
+}
+
+// ── ORDER: tiered discount based on order total ───────────────────────────────
+
+export interface PromotionLevel {
+    minValue: number;
+    discountType: DiscountType;
+    discountValue: number;
+    maxDiscount?: number;
 }
 
 export interface OrderPromotion extends BasePromotion {
-    levels?: PromotionLevel[]
+    promotionType: "ORDER"
+    levels: PromotionLevel[]
 }
 
-export type Promotion =
-    | ProductPromotion
-    | ComboPromotion
-    | OrderPromotion
+// ───────────────────────────────────────────────────────────────────────────────
 
+export type Promotion = ProductPromotion | ComboPromotion | OrderPromotion
 
-
+export type CreatePromotionPayload =
+    | Omit<ProductPromotion, "id" | "isActive" | "createdAt">
+    | Omit<ComboPromotion, "id" | "isActive" | "createdAt">
+    | Omit<OrderPromotion, "id" | "isActive" | "createdAt">;

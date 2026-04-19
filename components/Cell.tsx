@@ -4,13 +4,17 @@ import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat"
 type CellProps = {
     value: number;
     onSave: (value: number) => void;
+    isPercentage?: boolean,
+    disabled?: boolean;
 };
 
-export function Cell({ value, onSave }: CellProps) {
+export function Cell({ value, onSave, isPercentage = false, disabled = false }: CellProps) {
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(0);
 
     const handleStart = () => {
+        if (disabled) return;
+
         setDraft(value);
         setEditing(true);
     };
@@ -34,14 +38,15 @@ export function Cell({ value, onSave }: CellProps) {
             onBlur={handleSave}
             onKeyDown={handleKeyDown}
             onFocus={(e) => e.target.select()}
-            className="border rounded px-2 py-1 w-28 text-center focus:outline-purple"
+            className="border rounded px-2 py-1 w-28 text-center focus:outline-purple disabled:cursor-not-allowed disabled:opacity-70"
+            disabled={disabled}
         />
     ) : (
-        <span
+        <span  
             onClick={handleStart}
-            className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
+            className={`px-2 py-1 rounded ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-gray-100"}`}
         >
-            {formatThousands(value)} VNĐ
+            {isPercentage ? `${value} %` : `${formatThousands(value)} VNĐ`}
         </span>
     );
 }

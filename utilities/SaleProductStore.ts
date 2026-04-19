@@ -1,25 +1,27 @@
+import { Customer } from "@/types/customer";
 import { Product } from "@/types/product";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface SellProduct extends Product {
+export interface SaleProduct extends Product {
     quantity: number;
     discount: number;
     selectedSize: string;
 };
 
-interface SellProductState {
-    products: SellProduct[];
+interface SaleProductState {
+    products: SaleProduct[];
+    customer?: Customer;
 };
 
-const initialState: SellProductState = {
+const initialState: SaleProductState = {
     products: []
 };
 
-const SellProductSlice = createSlice({
-    name: "sellProduct",
+const SaleProductSlice = createSlice({
+    name: "saleProduct",
     initialState,
     reducers: {
-        addProduct: (state, action: PayloadAction<SellProduct>) => {
+        addProduct: (state, action: PayloadAction<SaleProduct>) => {
             // VAY-6-M and VAY-6-L are treated as separate items
             const exists = state.products.find(
                 (p) => p.productId === action.payload.productId && p.selectedSize === action.payload.selectedSize
@@ -55,11 +57,16 @@ const SellProductSlice = createSlice({
             }
         },
 
-        clearProducts: (state) => {
+        clearSaleProducts: (state) => {
             state.products = [];
+            state.customer = undefined;
         },
+
+        setCustomer: (state, action: PayloadAction<Customer | undefined>) => {
+            state.customer = action.payload;
+        }
     }
 });
 
-export const { addProduct, removeProduct, updateQuantity, clearProducts } = SellProductSlice.actions;
-export default SellProductSlice.reducer;
+export const { addProduct, removeProduct, updateQuantity, updateDiscount, clearSaleProducts, setCustomer} = SaleProductSlice.actions;
+export default SaleProductSlice.reducer;

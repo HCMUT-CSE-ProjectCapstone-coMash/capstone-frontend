@@ -9,6 +9,7 @@ import { useState, useMemo } from "react";
 import { SearchIcon } from "@/public/assets/Icons";
 import { PromotionType, Promotion } from "@/types/promotion";
 import { useRouter } from "next/navigation";
+import { OwnerCreateSalePageRoute } from "@/const/routes";
 
 // ── Display label map ──────────────────────────────────────────────────────────
 
@@ -143,7 +144,7 @@ export function PromotionTable() {
 
                     {user.role === "owner" && (
                         <button
-                            onClick={() => router.push("/nhan-vien/khuyen-mai/tao-khuyen-mai")}
+                            onClick={() => router.push(OwnerCreateSalePageRoute)}
                             className="px-3 py-2 text-sm font-semibold rounded-lg shadow cursor-pointer bg-purple text-white hover:bg-light-purple transition-opacity duration-150 whitespace-nowrap"
                         >
                             Tạo khuyến mãi mới

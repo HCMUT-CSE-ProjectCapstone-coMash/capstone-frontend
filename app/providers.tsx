@@ -15,7 +15,19 @@ export function Providers({ children } : { children : React.ReactNode }) {
             theme={{
                 components: {
                     Alert: { withDescriptionIconSize: 20 },
-                    Switch: { colorPrimary: "#6420AA", colorPrimaryHover: "#6420AA"}
+                    Switch: { colorPrimary: "#6420AA", colorPrimaryHover: "#6420AA"},
+                    Pagination: {
+                        itemActiveColor: "#6420AA",
+                        itemActiveColorHover: "#6420AA",
+                        colorPrimary: "#6420AA",
+                        colorPrimaryHover: "#6420AA"
+                    },
+                    DatePicker: {
+                        paddingBlock: 14,
+                        colorPrimary: "#6420AA",
+                        colorPrimaryBorder: "#6420AA",
+                        colorPrimaryHover: "#6420AA",
+                    }
                 }
             }}
         >

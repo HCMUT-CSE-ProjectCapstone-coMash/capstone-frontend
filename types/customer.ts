@@ -2,8 +2,7 @@ export interface Customer {
     id: string;
     customerName: string;
     customerPhone: string;
-    customerStatus: "active" | "inactive";
+    customerStatus: "Active" | "Deleted";
     createdAt: string;
-    debitMoney?: number; // Có thể không nợ
-    debitDays?: number;   // Số ngày nợ
+    createdBy: string;
 }

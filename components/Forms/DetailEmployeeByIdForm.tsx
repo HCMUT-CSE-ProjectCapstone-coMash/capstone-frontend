@@ -1,64 +1,23 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "next/navigation";
+// import { useParams } from "next/navigation";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
-import { FetchEmployees} from "@/api/employees/employees";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
-// Import action từ employeeStore bạn đã tạo ở bước trước
-import { setSelectedEmployee } from "@/utilities/employeeStore"; 
-import { EmployeeFormState } from "@/types/employee";
+import { useState } from "react";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { DeleteEmployeeModal } from "../Modal/DeleteEmployeeModal";
+
 
 
 export function DetailEmployeeByIdForm() {
-    const { employeeId } = useParams<{ employeeId: string }>();
-    const dispatch = useDispatch();
+    // const employeeId = useParams().employeeId as string;
+    // const dispatch = useDispatch();
+    const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
     
-    // 1. Lấy dữ liệu từ Store (Giống editProduct ở ví dụ của bạn)
     const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
-
-    // 2. Fetch dữ liệu từ API
-    const { data, isLoading } = useQuery({
-        queryKey: ["employee", employeeId],
-        queryFn: () => FetchEmployees(1, 50),
-        enabled: !!employeeId,
-    });
-
-    useEffect(() => {
-        // Kiểm tra nếu data có danh sách items
-        if (data?.items) {
-            // Tìm nhân viên có employeeId khớp với ID từ Props
-            const foundEmployee = data.items.find((item: EmployeeFormState) => item.employeeId === employeeId);
-
-            if (foundEmployee) {
-                const formattedEmployee: EmployeeFormState = {
-                    employeeId: foundEmployee.employeeId,
-                    fullName: foundEmployee.fullName,
-                    gender: foundEmployee.gender,
-                    dateOfBirth: foundEmployee.dateOfBirth,
-                    phoneNumber: foundEmployee.phoneNumber,
-                    email: foundEmployee.email,
-                    imageFile: null, 
-                    imageURL: foundEmployee.imageUrl || foundEmployee.imageURL || null, 
-                };
-
-                dispatch(setSelectedEmployee(formattedEmployee));
-            }
-        }
-
-        // Cleanup: Xóa dữ liệu khi thoát khỏi trang để tránh "nháy" dữ liệu cũ
-        return () => {
-            dispatch(setSelectedEmployee(null));
-        };
-    }, [data, employeeId, dispatch]);
-
-    // 4. Xử lý trạng thái Loading
-    // Lưu ý: Nếu Store đã có data (chuyển từ trang danh sách sang) thì không cần hiện Loading xoay vòng
-    if (isLoading && !employee) return <div className="p-5">Đang tải thông tin...</div>;
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
@@ -93,9 +52,11 @@ export function DetailEmployeeByIdForm() {
                         Chỉnh sửa
                     </button>
                     <button
-                        className="border bg-red text-white font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red/70"
+                        type="button"
+                        className="py-2 px-4 rounded-lg border border-red-500 bg-red-500 text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer"
+                        onClick={() => setConfirmModalOpen(true)}
                     >
-                        Xóa nhân viên
+                        <p>Xoá nhân viên</p>
                     </button>
                 </div>
                 <div className="flex flex-col gap-5">
@@ -161,6 +122,12 @@ export function DetailEmployeeByIdForm() {
                     </div>
                 </div>
             </div>
+            <LayoutModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setConfirmModalOpen(false)}
+            >
+                <DeleteEmployeeModal employeeId={employee?.id ?? ""} onClose={() => setConfirmModalOpen(false)}/>
+            </LayoutModal>
         </div>
     );
 }

@@ -14,6 +14,8 @@ import { SwitchInput } from "../FormInputs/SwitchInput";
 import { TextInput } from "../FormInputs/TextInput";
 import Image from "next/image";
 import { OwnerUpdateProduct } from "@/api/products/products";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { DeleteProductModal } from "../Modal/DeleteProductModal";
 
 interface FormState {
     productId: string;
@@ -73,6 +75,7 @@ const mapProductToForm = (product: Product): FormState => {
 
 export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }: OwnerUpdateProductFormProps) {
     const dispatch = useDispatch();
+    const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
 
     const [form, setForm] = useState<FormState>(() => mapProductToForm(editProduct));
     const [initialForm, setInitialForm] = useState<FormState>(() => mapProductToForm(editProduct));
@@ -253,13 +256,21 @@ export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }
                         ))}
                     </div>
 
-                    <div className="flex justify-end mt-5 gap-x-5">
-                        {isHasCancelButton && (
+                    <div className="flex justify-end mt-5 gap-x-6">
+                        {isHasCancelButton ? (
                             <button
                                 className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
                                 onClick={() => dispatch(clearOwnerEditingProduct())}
                             >
                                 {"Huỷ bỏ"}
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                className="py-2 px-4 rounded-lg border border-red-500 bg-red-500 text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer"
+                                onClick={() => setConfirmModalOpen(true)}
+                            >
+                                <p>Xoá sản phẩm</p>
                             </button>
                         )}
 
@@ -273,6 +284,13 @@ export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }
                     </div>
                 </form>
             </div>
+
+            <LayoutModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setConfirmModalOpen(false)}
+            >
+                <DeleteProductModal productId={editProduct.id} onClose={() => setConfirmModalOpen(false)}/>
+            </LayoutModal>
         </div>
     )
 }

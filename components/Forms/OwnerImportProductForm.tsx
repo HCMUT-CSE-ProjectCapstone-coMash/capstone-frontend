@@ -149,6 +149,7 @@ export function OwnerImportProductForm() {
 
         onSuccess: () => {
             setForm(initialFormState);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
 
         onError: () => {
@@ -199,7 +200,6 @@ export function OwnerImportProductForm() {
         }
 
         const newProduct : CreateProduct = {
-            productId: form.productId,
             productName: form.productName,
             category: form.category,
             color: form.color,

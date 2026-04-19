@@ -5,7 +5,7 @@ export default function SalePage() {
        <main className="px-20 pt-10 pb-25">
            <p className="text-purple text-3xl font-medium">Danh sách khuyến mãi</p>
 
-           <PromotionTable></PromotionTable>
+           <PromotionTable/>
        </main>
    )
 }

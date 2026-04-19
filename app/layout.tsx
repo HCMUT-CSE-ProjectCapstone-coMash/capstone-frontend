@@ -7,7 +7,7 @@ import { AlertContainer } from "@/components/Alert/AlertContainer";
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
 	
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<body className="flex flex-col h-screen">
 				<Providers>
 					<Header/>

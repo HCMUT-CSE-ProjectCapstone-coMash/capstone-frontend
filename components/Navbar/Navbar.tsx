@@ -22,7 +22,7 @@ const ownerNavItems: NavItem[] = [
     { label: "Nhân viên", href: OwnerEmployeeManagementPageRoute, matchNested: true },
     { label: "Nhập hàng", href: OwnerImportPageRoute },
     { label: "Bán hàng", href: OwnerSellPageRoute },
-    { label: "Khuyến mãi", href: OwnerSalePageRoute },
+    { label: "Khuyến mãi", href: OwnerSalePageRoute, matchNested: true },
     { label: "Đơn hàng", href: OwnerOrderPageRoute },
     { label: "Khách hàng", href: OwnerCustomerPageRoute },
 ];

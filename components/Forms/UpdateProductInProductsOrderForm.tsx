@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
 import { useDispatch, useSelector } from "react-redux";
@@ -82,6 +82,7 @@ const getMinQuantities = (product: Product, sizes: string[]): Record<string, num
 
 export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductFormProps) {
     const dispatch = useDispatch();
+    const queryClient = useQueryClient();
     const user = useSelector((state: RootState) => state.user);
     const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
 
@@ -118,6 +119,10 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
             { productId: string, productsOrderId: string, ownerUpdateData : UpdateProduct }) => OwnerUpdateProductInProductsOrder(productId, productsOrderId, ownerUpdateData),
 
         onSuccess: () => {
+            if (productsOrder?.id) {
+                queryClient.invalidateQueries({ queryKey: ["productsOrderDetails", productsOrder.id] });
+            }
+
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật sản phẩm thành công" }));
             dispatch(clearEditingProduct());
         },

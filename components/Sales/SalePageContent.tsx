@@ -1,0 +1,141 @@
+"use client";
+import { FetchApprovedProductByName } from "@/api/products/products";
+import { useDebounce } from "@/hooks/useDebounce";
+import { AlertType } from "@/types/alert";
+import { ProductQuantity, ProductWithOrderStatus } from "@/types/product";
+import { SaleOrderResponse } from "@/types/saleOrder";
+import { addAlert } from "@/utilities/alertStore";
+import { addProduct } from "@/utilities/SaleProductStore";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import { SearchInput } from "../FormInputs/SearchInput";
+import Image from "next/image";
+import { SaleProductsTable } from "../Tables/SaleProductsTable";
+import { InvoiceForm } from "../Forms/InvoiceForm";
+
+export function SalePageContent() {
+    const dispatch = useDispatch();
+    const [searchTerm, setSearchTerm] = useState("");
+    const [completedOrder, setCompletedOrder] = useState<SaleOrderResponse | null>(null);
+
+    const isDisabled = completedOrder !== null;
+
+    const debouncedName = useDebounce(searchTerm, 500);
+
+    const { data: products = [] } = useQuery({
+        queryKey: ["products", debouncedName],
+        queryFn: () => FetchApprovedProductByName(debouncedName),
+        enabled: debouncedName.length > 2,
+        staleTime: 0,
+        gcTime: 0
+    });
+
+    const suggestions = products.map((p: ProductWithOrderStatus) => ({
+        label: p.productName,
+        value: p.productName,
+        data: p
+    }));
+
+    const handleAddProduct = useCallback((product: ProductWithOrderStatus, selectedSize: string) => {
+        dispatch(addProduct({
+            ...product,
+            selectedSize,
+            quantity: 1,
+            discount: 0,
+        }));
+
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }))
+    }, [dispatch]);
+    
+    // Lựa chọn sản phẩm để thêm vô danh sách bán hàng
+    const handleSuggestionOnClick = (product: ProductWithOrderStatus) => {
+        const lastDash = searchTerm.lastIndexOf("-");
+        const potentialSize = lastDash > 0 ? searchTerm.slice(lastDash + 1).toUpperCase() : "";
+    
+        const availableSizes = product.quantities.map((q) => q.size);
+        const selectedSize = availableSizes.includes(potentialSize) ? potentialSize : availableSizes[0];
+    
+        const sizeEntry = product.quantities.find((q) => q.size === selectedSize);
+        if (!sizeEntry || sizeEntry.quantities <= 0) {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm đã hết hàng" }));
+            setSearchTerm("");
+            return;
+        }
+
+        handleAddProduct(product, selectedSize);
+        setSearchTerm("");
+    };
+    
+    // Tự động lựa sản phẩm thêm vào danh sách bán hàng
+    useEffect(() => {
+        if (!debouncedName || products.length === 0) return;
+    
+        const lastDash = debouncedName.lastIndexOf("-");
+        if (lastDash <= 0) return;
+    
+        const potentialId = debouncedName.slice(0, lastDash).toUpperCase();
+        const potentialSize = debouncedName.slice(lastDash + 1).toUpperCase();
+    
+        const matched = products.find((p: ProductWithOrderStatus) =>
+            p.productId.toUpperCase() === potentialId &&
+            p.quantities.some((q) => q.size.toUpperCase() === potentialSize)
+        );
+    
+        if (!matched) return;
+
+        const sizeEntry = matched.quantities.find((q: ProductQuantity) => q.size.toUpperCase() === potentialSize);
+        if (!sizeEntry || sizeEntry.quantities <= 0) {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm đã hết hàng" }));
+            setTimeout(() => setSearchTerm(""), 0);
+            return;
+        }
+    
+        handleAddProduct(matched, potentialSize);
+        setTimeout(() => setSearchTerm(""), 0);
+    }, [debouncedName, products, handleAddProduct, dispatch]);
+
+    return (
+        <main className="px-10 pt-10 pb-25">
+            <div className="grid grid-cols-5 gap-x-10 gap-y-5">
+                {/* Row 1: title + search */}
+                <div className="col-span-3 flex items-center">
+                    <p className="text-purple text-3xl font-medium">Bán hàng</p>
+                </div>
+
+                <div className="col-span-2">
+                    <SearchInput<ProductWithOrderStatus>
+                        label=""
+                        placeHolder="Tìm kiếm sản phẩm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        suggestions={suggestions}
+                        isItemDisabled={(item) => item.data.isInPendingOrder}
+                        onSuggestionClick={(item) => handleSuggestionOnClick(item.data)}
+                        renderItem={(item) => (
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-8 h-8">
+                                        <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
+                                    </div>
+                                    <span>{item.label}</span>
+                                </div>
+                                {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
+                            </div>
+                        )}
+                        disabled={isDisabled}
+                    />
+                </div>
+
+                {/* Row 2: table + form */}
+                <div className="col-span-3">
+                    <SaleProductsTable disabled={isDisabled}/>
+                </div>
+
+                <div className="col-span-2">
+                    <InvoiceForm completedOrder={completedOrder} setCompletedOrder={setCompletedOrder}/>
+                </div>
+            </div>
+        </main>
+    );
+}

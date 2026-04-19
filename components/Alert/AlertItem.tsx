@@ -13,7 +13,7 @@ export function AlertItem({ alert } : { alert: Alert }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             dispatch(removeAlert(alert.id));
-        }, 2500);
+        }, 3500);
 
         return () => clearTimeout(timer);
     }, [dispatch, alert.id]);

@@ -10,8 +10,11 @@ import { Column } from "@/types/UIType";
 import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { FetchEmployees } from "@/api/employees/employees";
+import { useDispatch } from "react-redux";
+import { setEmployee } from "@/utilities/employeeStore";
 
 export function EmployeeTable() {
+    const dispatch = useDispatch();
     const router = useRouter();
     
     // --- 1. Quản lý State: Phân trang và Tìm kiếm ---
@@ -54,6 +57,7 @@ export function EmployeeTable() {
 
     const employees = data?.items || [];
     const total = data?.totalCount || 0;
+    
     return (
         <div className="flex flex-col gap-4 w-full mt-10.25">
             {/* --- Header Section: Search & Button sát phải --- */}
@@ -88,8 +92,10 @@ export function EmployeeTable() {
                         total,
                         onChange: setCurrentPage,
                     }}
-                    onRowClick={(employee) => router.push(OwnerEmployeeByIdPageRoute(employee.employeeId))}
-
+                    onRowClick={(employee) => {
+                        dispatch(setEmployee(employee));
+                        router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
+                    }}
                 />
             </div>
         </div>

@@ -145,7 +145,6 @@ export function ImportProductForm() {
         }
 
         const productData: CreateProduct = {
-            productId: form.productId,
             productName: form.productName,
             category: form.category,
             color: form.color,
