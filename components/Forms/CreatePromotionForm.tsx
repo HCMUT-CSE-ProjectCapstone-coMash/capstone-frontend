@@ -11,6 +11,7 @@ import { DatePickerInput } from "../FormInputs/DatePickerInput";
 import { useQuery } from "@tanstack/react-query";
 import { FetchPromotionId } from "@/api/promotions/promotions";
 import { OrderPromotionForm } from "./PromotionTypes/OrderPromotionForm";
+import { ComboPromotionForm } from "./PromotionTypes/ComoboPromotionForm";
 
 // ── Options ────────────────────────────────────────────────────────────────────
 
@@ -19,93 +20,6 @@ const PROMOTION_TYPE_OPTIONS: SelectOption[] = [
     { label: "KM combo", value: "COMBO" },
     { label: "KM đơn hàng", value: "ORDER" },
 ];
-
-// ── ORDER: Levels table ────────────────────────────────────────────────────────
-
-// function LevelsTable({
-//     levels,
-//     onChange,
-// }: {
-//     levels: PromotionLevel[];
-//     onChange: (levels: PromotionLevel[]) => void;
-// }) {
-//     const addRow    = () => onChange([...levels, emptyLevel()]);
-//     const removeRow = (i: number) => onChange(levels.filter((_, idx) => idx !== i));
-//     const updateRow = (i: number, patch: Partial<PromotionLevel>) =>
-//         onChange(levels.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
-
-//     return (
-//         <div>
-//             <div className="overflow-x-auto rounded-lg border-[0.5px] border-tgray5">
-//                 <table className="w-full text-sm">
-//                     <thead>
-//                         <tr className="bg-gray-50 text-tgray9 text-left">
-//                             <th className="px-4 py-3 font-normal">Giá trị tối thiểu</th>
-//                             <th className="px-4 py-3 font-normal">Giá trị giảm</th>
-//                             <th className="px-4 py-3 font-normal">Loại giảm</th>
-//                             <th className="px-4 py-3 font-normal">Giảm tối đa</th>
-//                             <th className="px-4 py-3 w-12"></th>
-//                         </tr>
-//                     </thead>
-//                     <tbody>
-//                         {levels.map((level, i) => (
-//                             <tr key={i} className="border-t border-tgray5">
-//                                 <td className="px-3 py-2">
-//                                     <input type="number" min={0} value={level.minValue}
-//                                         onChange={(e) => updateRow(i, { minValue: Number(e.target.value) })}
-//                                         placeholder="0"
-//                                         className="w-full h-10 px-2.5 rounded-lg border-[0.5px] border-tgray5 focus:outline-none focus:ring-1 focus:border-purple focus:ring-purple transition-colors caret-purple text-sm"
-//                                     />
-//                                 </td>
-//                                 <td className="px-3 py-2">
-//                                     <input type="number" min={0} value={level.discountValue}
-//                                         onChange={(e) => updateRow(i, { discountValue: Number(e.target.value) })}
-//                                         placeholder="0"
-//                                         className="w-full h-10 px-2.5 rounded-lg border-[0.5px] border-tgray5 focus:outline-none focus:ring-1 focus:border-purple focus:ring-purple transition-colors caret-purple text-sm"
-//                                     />
-//                                 </td>
-//                                 <td className="px-3 py-2">
-//                                     <SelectInput
-//                                         label=""
-//                                         value={level.discountType}
-//                                         onChange={(v) => updateRow(i, { discountType: v as DiscountType })}
-//                                         options={DISCOUNT_TYPE_OPTIONS}
-//                                     />
-//                                 </td>
-//                                 <td className="px-3 py-2">
-//                                     <input type="number" min={0} value={level.maxDiscount ?? ""}
-//                                         onChange={(e) => updateRow(i, {
-//                                             maxDiscount: e.target.value === "" ? undefined : Number(e.target.value),
-//                                         })}
-//                                         placeholder="Không giới hạn"
-//                                         className="w-full h-10 px-2.5 rounded-lg border-[0.5px] border-tgray5 focus:outline-none focus:ring-1 focus:border-purple focus:ring-purple transition-colors caret-purple text-sm"
-//                                     />
-//                                 </td>
-//                                 <td className="px-3 py-2 text-center">
-//                                     <button
-//                                         onClick={() => removeRow(i)}
-//                                         disabled={levels.length === 1}
-//                                         className="cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
-//                                     >
-//                                         <TrashIcon width={24} height={24} className="text-red" />
-//                                     </button>
-//                                 </td>
-//                             </tr>
-//                         ))}
-//                     </tbody>
-//                 </table>
-//             </div>
-
-//             <button
-//                 onClick={addRow}
-//                 className="mt-3 flex items-center gap-1 text-sm text-pink-500 font-medium hover:text-pink-600 cursor-pointer transition-colors"
-//             >
-//                 <AddIcon height={16} width={16} className="" />
-//                 Thêm mức
-//             </button>
-//         </div>
-//     );
-// }
 
 // ── Form state type ───────────────────────────────────────────────────────────
 // Holds shared fields + all branch-specific fields so users don't lose data
@@ -291,14 +205,12 @@ export function CreatePromotionForm() {
             )}
 
             {/* COMBO */}
-            {/* {promotionType === "COMBO" && (
-                <div className="flex flex-col gap-y-2.5">
-                    <p className="text-sm font-normal text-tgray9">Combo áp dụng</p>
-                    <div className="rounded-lg border-[0.5px] border-dashed border-tgray5 px-4 py-8 text-center text-sm text-gray-400">
-                        Chọn combo
-                    </div>
-                </div>
-            )} */}
+            {form.promtionType === "COMBO" && (
+                <ComboPromotionForm
+                    combos={form.combos}
+                    onChange={(combos) => setField("combos", combos)}
+                />
+            )}
 
             {/* ORDER */}
             {form.promtionType === "ORDER" && (
