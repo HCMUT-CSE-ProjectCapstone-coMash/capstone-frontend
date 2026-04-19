@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { OwnerEmployeeByIdPageRoute, OwnerAddEmployeePageRoute } from "@/const/routes";
 import { Employee } from "@/types/employee";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Table } from "./Table";
 import { Column } from "@/types/UIType";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -31,8 +31,13 @@ export function EmployeeTable() {
         queryFn: () => FetchEmployees(currentPage, pageSize, debouncedSearch),
     });
 
+    const handleViewDetail = (employee: Employee) => {
+        dispatch(setEmployee(employee));
+        router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
+    };
+
     // --- 3. Định nghĩa Cột ---
-    const columns: Column<Employee>[] = useMemo(() => [
+    const columns: Column<Employee>[] = [
         { 
             title: "Mã số nhân viên", 
             key: "employeeId", 
@@ -52,8 +57,20 @@ export function EmployeeTable() {
             title: "Số điện thoại", 
             key: "phoneNumber", 
             render: (row) => <span>{row.phoneNumber}</span> 
+        },
+        {
+            title: "",
+            key: "action",
+            render: (row) => (
+                <button
+                    onClick={() => handleViewDetail(row)}
+                    className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
+                >
+                    Xem
+                </button>
+            )
         }
-    ], []);
+    ];
 
     const employees = data?.items || [];
     const total = data?.totalCount || 0;
@@ -91,10 +108,6 @@ export function EmployeeTable() {
                         pageSize,
                         total,
                         onChange: setCurrentPage,
-                    }}
-                    onRowClick={(employee) => {
-                        dispatch(setEmployee(employee));
-                        router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
                     }}
                 />
             </div>
