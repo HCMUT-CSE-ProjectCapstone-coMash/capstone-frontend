@@ -10,6 +10,8 @@ import { AlertType } from "@/types/alert";
 import Image from "next/image";
 import { EmployeeFormState } from "@/types/employee";
 import { CreateEmployeeAsync, GetNewEmployeeId } from "@/api/employees/employees";
+import { useRouter } from "next/navigation";
+import {OwnerEmployeeManagementPageRoute} from "@/const/routes";
 
 const initialEmployeeFormState: EmployeeFormState = {
     id: "",
@@ -33,6 +35,7 @@ export function EmployeeForm() {
     const [form, setForm] = useState<EmployeeFormState>(initialEmployeeFormState);
     const dispatch = useDispatch();
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const router = useRouter();
 
     const setField = <K extends keyof EmployeeFormState>(key: K, value: EmployeeFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
@@ -50,6 +53,7 @@ export function EmployeeForm() {
         mutationFn: (employeeData: EmployeeFormState) => CreateEmployeeAsync(employeeData),
         onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm nhân viên thành công!" }));
+            router.push(OwnerEmployeeManagementPageRoute); 
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm nhân viên thất bại. Vui lòng thử lại." }));
