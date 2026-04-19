@@ -1,23 +1,22 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+// import { useParams } from "next/navigation";
+import { useMutation} from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
-import { DeleteEmployee, FetchEmployees} from "@/api/employees/employees";
-import { useEffect } from "react";
+import { DeleteEmployee} from "@/api/employees/employees";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
-import { EmployeeFormState } from "@/types/employee";
 import { AlertType } from "@/types/alert";
 import { addAlert } from "@/utilities/alertStore";
 import { clearEmployee } from "@/utilities/employeeStore";
 
 
 export function DetailEmployeeByIdForm() {
+    // const employeeId = useParams().employeeId as string;
     const dispatch = useDispatch();
     const router = useRouter(); // Khởi tạo router để quay lại danh sách sau khi xóa
     
@@ -47,8 +46,6 @@ export function DetailEmployeeByIdForm() {
             deleteMutation.mutate(employee.id);
         }
     };
-
-    // if (!employee) return <div className="p-5">Đang tải thông tin...</div>;
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
