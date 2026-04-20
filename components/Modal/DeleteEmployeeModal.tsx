@@ -1,6 +1,5 @@
 import { DeleteEmployee } from "@/api/employees/employees";
 import { AlertType } from "@/types/alert";
-import { clearEmployee } from "@/utilities/employeeStore";
 import { addAlert } from "@/utilities/alertStore";
 import { useMutation } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
@@ -20,8 +19,6 @@ export function DeleteEmployeeModal({ employeeId, onClose } : DeleteEmployeeModa
         mutationFn: DeleteEmployee,
 
         onSuccess: () => {
-            // Cập nhật Store local
-            dispatch(clearEmployee());
             // Thông báo thành công
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xóa nhân viên thành công!" }));
             // Điều hướng về trang danh sách nhân viên

@@ -1,12 +1,6 @@
 import { axiosClient } from "../axiosClient";
 import { CreateEmployeePayload, UpdateEmployeePayload } from "@/types/employee";
 
-/**
- * Lấy danh sách nhân viên kết hợp tìm kiếm và phân trang
- * @param currentPage Trang hiện tại
- * @param pageSize Số lượng bản ghi mỗi trang
- * @param search Từ khóa tìm kiếm (tên hoặc SĐT)
- */
 export async function FetchEmployees(currentPage: number, pageSize: number, search?: string) {
     const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -26,9 +20,18 @@ export async function GetNewEmployeeId() {
     const response = await axiosClient.get("/auth/create-employee-id", {
         withCredentials: true
     });
+
     return response.data; 
 }
 
+export async function FetchEmployeeById(employeeId: string) {
+    const response = await axiosClient.get(
+        `/auth/employee/${employeeId}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
 
 export async function CreateEmployeeAsync(employeeData: CreateEmployeePayload, employeeId: string) {
     const formData = new FormData();

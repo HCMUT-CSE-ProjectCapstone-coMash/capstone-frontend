@@ -1,21 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdForm";
-import { useSelector } from "react-redux";
-import { RootState } from "@/utilities/store";
-import { useEffect } from "react";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
+import { useQuery } from "@tanstack/react-query";
+import { FetchEmployeeById } from "@/api/employees/employees";
 
 export default function EmployeeDetailPage() {
     const router = useRouter();
-    const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
+    const { employeeId } = useParams<{ employeeId: string }>();
 
-    useEffect(() => {
-        if (!employee) {
-            router.replace(OwnerEmployeeManagementPageRoute);
-        }
-    }, [employee, router]);
+    const { data: employee, isLoading, isError } = useQuery({
+        queryKey: ["employee-detail", employeeId],
+        queryFn: () => FetchEmployeeById(employeeId),
+        enabled: !!employeeId,
+    });
 
     return (
         <main className="px-20 pt-10 pb-25">
@@ -28,7 +26,17 @@ export default function EmployeeDetailPage() {
                     Danh sách nhân viên
                 </button>
             </div>
-            
+
+            {isLoading && (
+                <div className="text-center text-gray-500 py-10">Đang tải...</div>
+            )}
+
+            {isError && (
+                <div className="text-center text-red-500 py-10">
+                    Không thể tải thông tin nhân viên. Vui lòng thử lại.
+                </div>
+            )}
+
             {employee && <DetailEmployeeByIdForm employee={employee} />}
         </main>
     );

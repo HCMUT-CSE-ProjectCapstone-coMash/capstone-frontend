@@ -10,7 +10,6 @@ import { DeleteEmployeeModal } from "../Modal/DeleteEmployeeModal";
 import { useMutation } from "@tanstack/react-query";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { useParams } from "next/navigation";
 import { Employee, UpdateEmployeePayload } from "@/types/employee";
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
 import { UpdateEmployee } from "@/api/employees/employees";
@@ -45,8 +44,6 @@ interface DetailEmployeeByIdFormProps {
 }
 
 export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProps) {
-    const { employeeId } = useParams<{ employeeId: string }>();
-    
     const dispatch = useDispatch();
 
     const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -108,11 +105,10 @@ export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProp
                     {employee?.imageURL ? (
                         <div className="relative group h-75 w-75">
                             <Image
-                                src={previewSrc}
-                                alt="Employee Avatar"
-                                fill
-                                className="object-cover rounded-lg"
-                                unoptimized
+                                src={previewSrc} 
+                                placeholder="blur" 
+                                blurDataURL={"/assets/image/light-pink.png"} 
+                                alt="" fill className="object-cover" unoptimized
                             />
                         </div>
                     ) : (

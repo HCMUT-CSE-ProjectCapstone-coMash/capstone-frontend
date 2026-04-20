@@ -10,11 +10,8 @@ import { Column } from "@/types/UIType";
 import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { FetchEmployees } from "@/api/employees/employees";
-import { useDispatch } from "react-redux";
-import { setEmployee } from "@/utilities/employeeStore";
 
 export function EmployeeTable() {
-    const dispatch = useDispatch();
     const router = useRouter();
     
     // --- 1. Quản lý State: Phân trang và Tìm kiếm ---
@@ -31,11 +28,6 @@ export function EmployeeTable() {
         queryFn: () => FetchEmployees(currentPage, pageSize, debouncedSearch),
         refetchOnWindowFocus: false,
     });
-
-    const handleViewDetail = (employee: Employee) => {
-        dispatch(setEmployee(employee));
-        router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
-    };
 
     // --- 3. Định nghĩa Cột ---
     const columns: Column<Employee>[] = [
@@ -64,7 +56,7 @@ export function EmployeeTable() {
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => handleViewDetail(row)}
+                    onClick={() => router.push(OwnerEmployeeByIdPageRoute(row.id))}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
