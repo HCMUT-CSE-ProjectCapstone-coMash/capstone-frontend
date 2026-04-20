@@ -273,12 +273,14 @@ export function CreatePromotionForm() {
             {/* ── Actions ───────────────────────────────────────────────────── */}
             <div className="flex justify-end gap-3 pt-2">
                 <button
+                    type="button"
                     onClick={() => router.back()}
                     className="px-3 py-2 text-sm font-semibold rounded-lg border border-purple text-purple hover:bg-gray-50 transition-colors cursor-pointer"
                 >
                     Huỷ
                 </button>
                 <button
+                    type="submit"
                     className="px-3 py-2 text-sm font-semibold rounded-lg bg-purple text-white hover:bg-purple/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={CreateMutation.isPending}
                 >
