@@ -14,18 +14,18 @@ import { OwnerCreateSalePageRoute } from "@/const/routes";
 // ── Display label map ──────────────────────────────────────────────────────────
 
 const PROMOTION_TYPE_LABEL: Record<PromotionType, string> = {
-    PRODUCT: "KM sản phẩm",
-    COMBO:   "KM combo",
-    ORDER:   "KM đơn hàng",
+    Product: "KM sản phẩm",
+    Combo:   "KM combo",
+    Order:   "KM đơn hàng",
 };
 
 // ── Filter tabs ────────────────────────────────────────────────────────────────
 
 const FILTER_TABS: { label: string; value: PromotionType | "all" }[] = [
     { label: "Tất cả",      value: "all" },
-    { label: "KM sản phẩm", value: "PRODUCT" },
-    { label: "KM combo",    value: "COMBO" },
-    { label: "KM đơn hàng", value: "ORDER" },
+    { label: "KM sản phẩm", value: "Product" },
+    { label: "KM combo",    value: "Combo" },
+    { label: "KM đơn hàng", value: "Order" },
 ];
 
 // ── Fetch helper (replace with your real API call) ─────────────────────────────

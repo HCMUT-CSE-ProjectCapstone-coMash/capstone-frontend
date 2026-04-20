@@ -1,6 +1,6 @@
-export type PromotionType = "PRODUCT" | "COMBO" | "ORDER"
+export type PromotionType = "Product" | "Combo" | "Order"
 
-export type DiscountType = "PERCENT" | "FIXED"
+export type DiscountType = "Percent" | "Fixed"
 
 // ── Shared fields across all promotion types ──────────────────────────────────
 
@@ -15,7 +15,7 @@ interface BasePromotion {
     description: string
 }
 
-// ── PRODUCT: each product has its own discount ────────────────────────────────
+// ── Product: each product has its own discount ────────────────────────────────
 
 export interface ProductDiscountItem {
     productId: string
@@ -24,11 +24,11 @@ export interface ProductDiscountItem {
 }
 
 export interface ProductPromotion extends BasePromotion {
-    promotionType: "PRODUCT",
+    promotionType: "Product",
     productDiscounts: ProductDiscountItem[]
 }
 
-// ── COMBO: buy N products, pay a fixed combo price ────────────────────────────
+// ── Combo: buy N products, pay a fixed combo price ────────────────────────────
 
 export interface ComboItem {
     productId: string;
@@ -37,17 +37,17 @@ export interface ComboItem {
 
 export interface ComboDeal {
     comboId?: string;           // if editing existing combo
-    name?: string;              // e.g. "1 áo + 1 váy"
+    name: string;               // e.g. "1 áo + 1 váy"
     items: ComboItem[];         // products + quantities in the combo
     comboPrice: number;         // the fixed bundled price
 }
 
 export interface ComboPromotion extends BasePromotion {
-    promotionType: "COMBO"
+    promotionType: "Combo"
     combos: ComboDeal[];
 }
 
-// ── ORDER: tiered discount based on order total ───────────────────────────────
+// ── Order: tiered discount based on order total ───────────────────────────────
 
 export interface PromotionLevel {
     minValue: number;
@@ -57,7 +57,7 @@ export interface PromotionLevel {
 }
 
 export interface OrderPromotion extends BasePromotion {
-    promotionType: "ORDER"
+    promotionType: "Order"
     levels: PromotionLevel[]
 }
 
@@ -66,6 +66,6 @@ export interface OrderPromotion extends BasePromotion {
 export type Promotion = ProductPromotion | ComboPromotion | OrderPromotion
 
 export type CreatePromotionPayload =
-    | Omit<ProductPromotion, "id" | "isActive" | "createdAt">
-    | Omit<ComboPromotion, "id" | "isActive" | "createdAt">
-    | Omit<OrderPromotion, "id" | "isActive" | "createdAt">;
+    | Omit<ProductPromotion, "id" | "promotionId" | "isActive" | "createdAt">
+    | Omit<ComboPromotion, "id" | "promotionId" | "isActive" | "createdAt">
+    | Omit<OrderPromotion, "id" | "promotionId" | "isActive" | "createdAt">;

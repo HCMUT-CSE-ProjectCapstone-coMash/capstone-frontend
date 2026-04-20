@@ -11,14 +11,14 @@ import Image from "next/image";
 import { useDispatch } from "react-redux";
 
 const DISCOUNT_TYPE_OPTIONS: SelectOption[] = [
-    { label: "Phần trăm (%)",   value: "PERCENT" },
-    { label: "Số tiền cố định", value: "FIXED" },
+    { label: "Phần trăm (%)",   value: "Percent" },
+    { label: "Số tiền cố định", value: "Fixed" },
 ];
 
 function calculateDiscountedPrice(salePrice: number, discountType: DiscountType, discountValue: number): number {
     if (!discountValue || discountValue <= 0) return salePrice;
 
-    if (discountType === "PERCENT") {
+    if (discountType === "Percent") {
         const capped = Math.min(Math.max(discountValue, 0), 100);
         return Math.max(0, Math.round(salePrice * (1 - capped / 100)));
     }
@@ -40,13 +40,13 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
         const product = productCache[item.productId];
         const parsed = parseFormattedNumber(rawValue);
 
-        if (item.discountType === "PERCENT" && parsed > 100) {
+        if (item.discountType === "Percent" && parsed > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Phần trăm giảm không được vượt quá 100%." }));
             onUpdate(item.productId, { discountValue: 100 });
             return;
         }
 
-        if (item.discountType === "FIXED" && product && parsed > product.salePrice) {
+        if (item.discountType === "Fixed" && product && parsed > product.salePrice) {
             dispatch(addAlert({ type: AlertType.WARNING, message: `Số tiền giảm không được vượt quá giá bán (${formatThousands(product.salePrice)} VNĐ).` }));
             onUpdate(item.productId, { discountValue: product.salePrice });
             return;
@@ -59,10 +59,10 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
         const product = productCache[item.productId];
         const patch: Partial<ProductDiscountItem> = { discountType: newType };
 
-        if (newType === "PERCENT" && item.discountValue > 100) {
+        if (newType === "Percent" && item.discountValue > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Giá trị giảm đã được điều chỉnh về 100% cho phù hợp với loại giảm mới." }));
             patch.discountValue = 100;
-        } else if (newType === "FIXED" && product && item.discountValue > product.salePrice) {
+        } else if (newType === "Fixed" && product && item.discountValue > product.salePrice) {
             dispatch(addAlert({ type: AlertType.WARNING, message: `Giá trị giảm đã được điều chỉnh về ${formatThousands(product.salePrice)} VNĐ cho phù hợp với giá bán.` }));
             patch.discountValue = product.salePrice;
         }

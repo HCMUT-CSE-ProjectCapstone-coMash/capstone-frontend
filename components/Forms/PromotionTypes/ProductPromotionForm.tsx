@@ -47,7 +47,7 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
 
         const newDiscountItem: ProductDiscountItem = {
             productId: product.id,
-            discountType: "PERCENT",
+            discountType: "Percent",
             discountValue: 0,
         };
 

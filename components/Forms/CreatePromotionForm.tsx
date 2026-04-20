@@ -2,23 +2,27 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PromotionType, DiscountType, ProductDiscountItem, ComboDeal, PromotionLevel, ProductPromotion, ComboPromotion, OrderPromotion, CreatePromotionPayload } from "@/types/promotion";
+import { PromotionType, DiscountType, ProductDiscountItem, ComboDeal, PromotionLevel, CreatePromotionPayload } from "@/types/promotion";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SelectOption } from "@/types/UIType";
 import { ProductPromotionForm } from "@/components/Forms/PromotionTypes/ProductPromotionForm";
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CreatePromotion, FetchPromotionId } from "@/api/promotions/promotions";
 import { OrderPromotionForm } from "./PromotionTypes/OrderPromotionForm";
 import { ComboPromotionForm } from "./PromotionTypes/ComoboPromotionForm";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
+import { AlertType } from "@/types/alert";
+import { addAlert } from "@/utilities/alertStore";
 
 // ── Options ────────────────────────────────────────────────────────────────────
 
 const PROMOTION_TYPE_OPTIONS: SelectOption[] = [
-    { label: "KM sản phẩm", value: "PRODUCT" },
-    { label: "KM combo", value: "COMBO" },
-    { label: "KM đơn hàng", value: "ORDER" },
+    { label: "KM sản phẩm", value: "Product" },
+    { label: "KM combo", value: "Combo" },
+    { label: "KM đơn hàng", value: "Order" },
 ];
 
 // ── Form state type ───────────────────────────────────────────────────────────
@@ -40,18 +44,18 @@ interface FormState {
 
 const emptyLevel = (): PromotionLevel => ({
     minValue: 0,
-    discountType: "PERCENT",
+    discountType: "Percent",
     discountValue: 0,
     maxDiscount: undefined,
 });
 
 const initialFormState: FormState = {
     promotionName: "",
-    promtionType: "PRODUCT",
+    promtionType: "Product",
     startDate: "",
     endDate: "",
     description: "",
-    discountType: "PERCENT",
+    discountType: "Percent",
 
     productDiscounts: [],
     combos: [],
@@ -60,9 +64,8 @@ const initialFormState: FormState = {
 
 // ── Build payload (narrows FormState → Promotion) ─────────────────────────────
 
-function buildPayload(form: FormState, promotionId: string): CreatePromotionPayload {
+function buildPayload(form: FormState): CreatePromotionPayload {
     const base = {
-        promotionId,
         promotionName: form.promotionName,
         startDate: form.startDate,
         endDate: form.endDate,
@@ -70,21 +73,21 @@ function buildPayload(form: FormState, promotionId: string): CreatePromotionPayl
     };
 
     switch (form.promtionType) {
-        case "PRODUCT":
+        case "Product":
             return {
-                promotionType: "PRODUCT",
+                promotionType: "Product",
                 ...base,
                 productDiscounts: form.productDiscounts,
             };
-        case "COMBO":
+        case "Combo":
             return {
-                promotionType: "COMBO",
+                promotionType: "Combo",
                 ...base,
                 combos: form.combos,
             };
-        case "ORDER":
+        case "Order":
             return {
-                promotionType: "ORDER",
+                promotionType: "Order",
                 ...base,
                 levels: form.levels,
             };
@@ -95,6 +98,9 @@ function buildPayload(form: FormState, promotionId: string): CreatePromotionPayl
 
 export function CreatePromotionForm() {
     const router = useRouter();
+    const dispatch = useDispatch();
+    const user = useSelector((state: RootState) => state.user);
+    const queryClient = useQueryClient();
 
     // Base fields
     const [form, setForm] = useState<FormState>(initialFormState);
@@ -124,22 +130,60 @@ export function CreatePromotionForm() {
     // ── Submit ─────────────────────────────────────────────────────────────────
 
     const CreateMutation = useMutation({
-        mutationFn: CreatePromotion,
+        mutationFn: ({ payload, userId} : { payload: CreatePromotionPayload, userId: string }) => CreatePromotion(payload, userId),
         onSuccess: (data) => {
-            console.log(data);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Tạo khuyến mãi ${data.promotionName} thành công` }));
+            setForm(initialFormState);
+            queryClient.invalidateQueries({ queryKey: ["fetchPromotionId"] });
         },
         onError: () => {
-
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Tạo khuyến mãi thất bại, vui lòng thử lại" }));
         }
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const payload = buildPayload(form, promotionId);
-        console.log("Submitting:", payload);
+        if (!user.id) return;
 
-        CreateMutation.mutate(payload);
+        if (!form.promotionName) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên khuyến mãi" }));
+            return;
+        }
+
+        if (!form.startDate) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn ngày bắt đầu" }));
+            return;
+        }
+
+        if (!form.endDate) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn ngày kết thúc" }));
+            return;
+        }
+
+        if (new Date(form.startDate) >= new Date(form.endDate)) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Ngày kết thúc phải sau ngày bắt đầu" }));
+            return;
+        }
+
+        if (form.promtionType === "Product" && form.productDiscounts.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một sản phẩm áp dụng" }));
+            return;
+        }
+
+        if (form.promtionType === "Combo" && form.combos.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một combo áp dụng" }));
+            return;
+        }
+
+        if (form.promtionType === "Order" && form.levels.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một mức khuyến mãi" }));
+            return;
+        }
+
+        const payload = buildPayload(form);
+
+        CreateMutation.mutate({ payload, userId: user.id });
     };
 
     // ── Render ─────────────────────────────────────────────────────────────────
@@ -202,24 +246,24 @@ export function CreatePromotionForm() {
 
             {/* ── Type-specific ──────────────────────────────────────────────── */}
 
-            {/* PRODUCT */}
-            {form.promtionType === "PRODUCT" && (  
+            {/* Product */}
+            {form.promtionType === "Product" && (  
                 <ProductPromotionForm 
                     productDiscounts={form.productDiscounts}
                     onChange={(productDiscounts) => setField("productDiscounts", productDiscounts)}
                 />
             )}
 
-            {/* COMBO */}
-            {form.promtionType === "COMBO" && (
+            {/* Combo */}
+            {form.promtionType === "Combo" && (
                 <ComboPromotionForm
                     combos={form.combos}
                     onChange={(combos) => setField("combos", combos)}
                 />
             )}
 
-            {/* ORDER */}
-            {form.promtionType === "ORDER" && (
+            {/* Order */}
+            {form.promtionType === "Order" && (
                 <OrderPromotionForm
                     levels={form.levels}
                     onChange={(levels) => setField("levels", levels)}
@@ -236,8 +280,9 @@ export function CreatePromotionForm() {
                 </button>
                 <button
                     className="px-3 py-2 text-sm font-semibold rounded-lg bg-purple text-white hover:bg-purple/50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={CreateMutation.isPending}
                 >
-                    {"Tạo khuyến mãi"}
+                    {CreateMutation.isPending ? "Đang tạo..." : "Tạo khuyến mãi"}
                 </button>
             </div>
         </form>
