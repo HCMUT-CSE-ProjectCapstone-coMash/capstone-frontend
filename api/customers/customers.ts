@@ -28,3 +28,19 @@ export async function FetchCustomerByPhone(customerPhone: string) {
     });
     return response.data;
 }
+
+export async function FetchCustomers(currentPage: number, pageSize: number, search?: string) {
+    const params = new URLSearchParams({
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
+    });
+
+    if (search) params.append("search", search);
+
+    const response = await axiosClient.get(
+        `/customers/fetch-all?${params}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
