@@ -1,25 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdForm";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
+import { useEffect } from "react";
+import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 
 export default function EmployeeDetailPage() {
     const router = useRouter();
+    const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
+
+    useEffect(() => {
+        if (!employee) {
+            router.replace(OwnerEmployeeManagementPageRoute);
+        }
+    }, [employee, router]);
 
     return (
         <main className="px-20 pt-10 pb-25">
             <div className="flex justify-between items-center mb-12.5">
                 <div className="text-purple text-3xl font-medium">Nhân viên</div>
                 <button
-                    onClick={() => router.push(`${OwnerEmployeeManagementPageRoute}`)}
+                    onClick={() => router.back()}
                     className="border border-purple text-purple font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-purple-50"
                 >
                     Danh sách nhân viên
                 </button>
             </div>
             
-            <DetailEmployeeByIdForm />
+            {employee && <DetailEmployeeByIdForm employee={employee} />}
         </main>
     );
 }

@@ -1,5 +1,5 @@
 import { axiosClient } from "../axiosClient";
-import { EmployeeFormState } from "@/types/employee";
+import { CreateEmployeePayload, UpdateEmployeePayload } from "@/types/employee";
 
 /**
  * Lấy danh sách nhân viên kết hợp tìm kiếm và phân trang
@@ -30,11 +30,11 @@ export async function GetNewEmployeeId() {
 }
 
 
-export async function CreateEmployeeAsync(employeeData: EmployeeFormState) {
+export async function CreateEmployeeAsync(employeeData: CreateEmployeePayload, employeeId: string) {
     const formData = new FormData();
 
     // Map các trường từ State sang Key mà Backend mong đợi (PascalCase)
-    formData.append("EmployeeId", employeeData.employeeId);
+    formData.append("EmployeeId", employeeId);
     formData.append("FullName", employeeData.fullName);
     formData.append("Gender", employeeData.gender);
     formData.append("DateOfBirth", employeeData.dateOfBirth);
@@ -42,8 +42,8 @@ export async function CreateEmployeeAsync(employeeData: EmployeeFormState) {
     formData.append("Email", employeeData.email);
 
     // Xử lý hình ảnh nếu có
-    if (employeeData.imageFile) {
-        formData.append("Image", employeeData.imageFile);
+    if (employeeData.image) {
+        formData.append("Image", employeeData.image);
     }
 
     const response = await axiosClient.post(
@@ -69,14 +69,14 @@ export async function DeleteEmployee(employeeId: string) {
     return response.data;
 }
 
-export async function UpdateEmployee(id: string, data: EmployeeFormState) {
+export async function UpdateEmployee(id: string, data: UpdateEmployeePayload) {
     const formData = new FormData();
 
-    formData.append("FullName", data.fullName);
-    formData.append("Gender", data.gender);
-    formData.append("DateOfBirth", data.dateOfBirth);
-    formData.append("PhoneNumber", data.phoneNumber);
-    formData.append("Email", data.email);
+    if (data.fullName) formData.append("FullName", data.fullName);
+    if (data.gender) formData.append("Gender", data.gender);
+    if (data.dateOfBirth) formData.append("DateOfBirth", data.dateOfBirth);
+    if (data.phoneNumber) formData.append("PhoneNumber", data.phoneNumber);
+    if (data.email) formData.append("Email", data.email);
 
     const response = await axiosClient.patch(
         `/auth/edit-employee/${id}`,

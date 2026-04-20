@@ -3,108 +3,101 @@
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "@/utilities/store";
-import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useEffect, useMemo, useState } from "react";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { DeleteEmployeeModal } from "../Modal/DeleteEmployeeModal";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { UpdateEmployee } from "@/api/employees/employees";
-import { setEmployee } from "@/utilities/employeeStore";
+import { useMutation } from "@tanstack/react-query";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { useParams, useRouter } from "next/navigation";
-import { OwnerEmployeeByIdPageRoute } from "@/const/routes";
-import { Employee } from "@/types/employee";
-import { useQuery } from "@tanstack/react-query";
-import { FetchEmployees } from "@/api/employees/employees";
+import { useParams } from "next/navigation";
+import { Employee, UpdateEmployeePayload } from "@/types/employee";
+import { DatePickerInput } from "../FormInputs/DatePickerInput";
+import { UpdateEmployee } from "@/api/employees/employees";
+import { toIsoDate } from "@/utilities/timeFormat";
 
-export function DetailEmployeeByIdForm() {
+interface FormState {
+    employeeId: string,
+    fullName: string,
+    gender: string,
+    dateOfBirth: string,
+    phoneNumber: string,
+    email: string,
+    imageUrl: string,
+    imageFile: File | null,
+}
+
+function mapEmployeeToForm(employee: Employee): FormState {
+    return {
+        employeeId: employee.employeeId,
+        fullName: employee.fullName,
+        gender: employee.gender,
+        dateOfBirth: employee.dateOfBirth,
+        phoneNumber: employee.phoneNumber,
+        email: employee.email,
+        imageUrl: employee.imageURL ?? "",
+        imageFile: null,
+    };
+}
+
+interface DetailEmployeeByIdFormProps {
+    employee: Employee;
+}
+
+export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProps) {
+    const { employeeId } = useParams<{ employeeId: string }>();
+    
     const dispatch = useDispatch();
-    const queryClient = useQueryClient();
+
     const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
-    const { employeeId } = useParams<{ employeeId: string }>();
-    const router = useRouter();
-
-    // State form khi edit — khởi tạo từ Redux
-    const [formData, setFormData] = useState({
-        fullName: employee?.fullName ?? "",
-        gender: employee?.gender ?? "",
-        dateOfBirth: employee?.dateOfBirth ?? "",
-        phoneNumber: employee?.phoneNumber ?? "",
-        email: employee?.email ?? "",
-    });
-
-    // Khi bắt đầu edit, sync formData từ Redux (đề phòng data đã load sau)
-    const handleStartEdit = () => {
-        setFormData({
-            fullName: employee?.fullName ?? "",
-            gender: employee?.gender ?? "",
-            dateOfBirth: employee?.dateOfBirth ?? "",
-            phoneNumber: employee?.phoneNumber ?? "",
-            email: employee?.email ?? "",
-        });
-        setIsEditing(true);
+    const [form, setForm] = useState<FormState>(() => mapEmployeeToForm(employee));
+    const [initialForm, setInitialForm] = useState<FormState>(() => mapEmployeeToForm(employee));
+    const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
     };
 
-    // Mutation gọi API update
+    const isUnchanged = JSON.stringify(form) === JSON.stringify(initialForm);
+
+    // Sử dụng useMemo để tạo URL preview từ file ảnh, và useEffect để giải phóng URL khi component unmount hoặc file thay đổi
+    const objectUrl = useMemo(() => {
+        if (!form.imageFile) return null;
+        const url = URL.createObjectURL(form.imageFile);
+        return url;
+    }, [form.imageFile]);
+    
+    useEffect(() => {
+        return () => {
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [objectUrl]);
+    
+    const previewSrc = objectUrl ?? form.imageUrl ?? null;
+
     const updateMutation = useMutation({
-            mutationFn: () => UpdateEmployee(
-        employee?.id ?? "", 
-        {
-            ...formData,
-            id: "",           // thêm id
-            employeeId: "", // thêm employeeId
-            fullName: formData.fullName,
-            gender: formData.gender,
-            dateOfBirth: formData.dateOfBirth,
-            phoneNumber: formData.phoneNumber,
-            email: formData.email,
-            imageFile: null,                  // không đổi ảnh thì để null
-            imageURL:"",
-        }
-    ),
+        mutationFn: ({ employeeId, updatedData } : { employeeId: string, updatedData: UpdateEmployeePayload }) => UpdateEmployee(employeeId, updatedData),
         onSuccess: () => {
-            // Cập nhật Redux
-            dispatch(setEmployee({ ...employee!, ...formData }));
-            // Invalidate query để refetch danh sách
-            queryClient.invalidateQueries({ queryKey: ["employee"] });
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật nhân viên thành công!" }));
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật thông tin nhân viên thành công!" }));
+            setInitialForm(form);
             setIsEditing(false);
         },
         onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại. Vui lòng thử lại!" }));
-        },
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thông tin nhân viên thất bại. Vui lòng thử lại." }));
+        }
     });
 
     const handleSave = () => {
-        updateMutation.mutate();
-    };
-    const { data } = useQuery({
-        queryKey: ["employees"],
-        queryFn: () => FetchEmployees(1, 50),
-    });
+        const updatedData: UpdateEmployeePayload = {
+            fullName: form.fullName,
+            gender: form.gender,
+            dateOfBirth: form.dateOfBirth,
+            phoneNumber: form.phoneNumber,
+            email: form.email,
+        };
 
-    const employees: Employee[] = data?.items ?? [];
-    const currentIndex = employees.findIndex((e) => e.employeeId === employeeId);
-    const hasPrev = currentIndex > 0;
-    const hasNext = currentIndex < employees.length - 1;
-
-    const handlePrev = () => {
-        const prev = employees[currentIndex - 1];
-        dispatch(setEmployee(prev));
-        router.push(OwnerEmployeeByIdPageRoute(prev.employeeId));
-    };
-
-    const handleNext = () => {
-        const next = employees[currentIndex + 1];
-        dispatch(setEmployee(next));
-        router.push(OwnerEmployeeByIdPageRoute(next.employeeId));
-    };
-
+        updateMutation.mutate({ employeeId: employee.id, updatedData });
+    }
 
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
@@ -115,7 +108,7 @@ export function DetailEmployeeByIdForm() {
                     {employee?.imageURL ? (
                         <div className="relative group h-75 w-75">
                             <Image
-                                src={employee.imageURL}
+                                src={previewSrc}
                                 alt="Employee Avatar"
                                 fill
                                 className="object-cover rounded-lg"
@@ -135,26 +128,40 @@ export function DetailEmployeeByIdForm() {
                 {/* Nút hành động */}
                 <div className="mb-5 flex justify-end gap-5">
                     {isEditing ? (
-                        <button
-                            type="button"
-                            onClick={handleSave}
-                            disabled={updateMutation.isPending}
-                            className="border bg-pink text-white font-medium px-6 py-2 rounded-lg text-sm cursor-pointer hover:opacity-90 disabled:bg-gray-400 transition-all shadow-sm"
-                        >
-                            {updateMutation.isPending ? "Đang lưu..." : "Lưu"}
-                        </button>
+                        isUnchanged ? (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setForm(initialForm);
+                                    setIsEditing(false);
+                                }}
+                                className="border border-gray-400 text-gray-600 font-medium px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-gray-100 transition-all"
+                            >
+                                Huỷ bỏ
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleSave}
+                                disabled={updateMutation.isPending}
+                                className="border bg-pink text-white font-medium px-6 py-2 rounded-lg text-sm cursor-pointer hover:opacity-90 disabled:bg-gray-400 transition-all shadow-sm"
+                            >
+                                {updateMutation.isPending ? "Đang lưu..." : "Lưu"}
+                            </button>
+                        )
                     ) : (
                         <button
                             type="button"
-                            onClick={handleStartEdit}
+                            onClick={() => setIsEditing(true)}
                             className="border border-pink text-pink font-medium px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-pink-50 transition-all"
                         >
                             Chỉnh sửa
                         </button>
                     )}
+
                     <button
                         type="button"
-                        className="py-2 px-4 rounded-lg border border-red-500 bg-red-500 text-white text-sm font-medium hover:bg-red-600 cursor-pointer transition-all"
+                        className="py-2 px-4 rounded-lg border border-red bg-red text-white text-sm font-medium hover:bg-red-500 cursor-pointer transition-all"
                         onClick={() => setConfirmModalOpen(true)}
                     >
                         Xoá nhân viên
@@ -164,18 +171,19 @@ export function DetailEmployeeByIdForm() {
                 {/* Fields */}
                 <div className="flex flex-col gap-5">
                     <TextInput
-                        disabled
+                        disabled={true}
                         label="Mã số nhân viên"
                         placeHolder=""
-                        value={employee?.employeeId ?? ""}
+                        value={form.employeeId}
                         onChange={() => {}}
                     />
+
                     <TextInput
                         disabled={!isEditing}
                         label="Tên nhân viên"
                         placeHolder="Nhập tên nhân viên"
-                        value={isEditing ? formData.fullName : (employee?.fullName ?? "")}
-                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                        value={form.fullName}
+                        onChange={(e) => setField("fullName", e.target.value)}
                     />
 
                     <div className="flex items-center justify-between gap-5">
@@ -187,18 +195,18 @@ export function DetailEmployeeByIdForm() {
                                     { label: "Nam", value: "Nam" },
                                     { label: "Khác", value: "Khác" },
                                 ]}
-                                value={isEditing ? formData.gender : (employee?.gender ?? "")}
-                                onChange={(value) => setFormData({ ...formData, gender: value })} 
+                                value={form.gender}
+                                onChange={(value) => setField("gender", value)}
                                 disabled={!isEditing}
                             />
                         </div>
                         <div className="w-1/2">
-                            <TextInput
-                                disabled={!isEditing}
+                            <DatePickerInput
                                 label="Ngày sinh"
-                                placeHolder="DD/MM/YYYY"
-                                value={isEditing ? formData.dateOfBirth : (employee?.dateOfBirth ?? "")}
-                                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                                placeHolder=""
+                                value={toIsoDate(form.dateOfBirth)}
+                                onChange={(value) => setField("dateOfBirth", value)}
+                                disabled={!isEditing}
                             />
                         </div>
                     </div>
@@ -206,44 +214,23 @@ export function DetailEmployeeByIdForm() {
                     <div className="flex items-center justify-between gap-5">
                         <div className="w-1/2">
                             <TextInput
-                                disabled={!isEditing}
                                 label="Số điện thoại"
                                 placeHolder="Nhập số điện thoại"
-                                value={isEditing ? formData.phoneNumber : (employee?.phoneNumber ?? "")}
-                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                                value={form.phoneNumber}
+                                onChange={(e) => setField("phoneNumber", e.target.value)}
+                                disabled={!isEditing}
                             />
                         </div>
                         <div className="w-1/2">
                             <TextInput
-                                disabled={!isEditing}
                                 label="Email"
                                 placeHolder="Nhập email"
-                                value={isEditing ? formData.email : (employee?.email ?? "")}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                value={form.email}
+                                onChange={(e) => setField("email", e.target.value)}
+                                disabled={!isEditing}
                             />
                         </div>
                     </div>
-                </div>
-                <div className="flex items-center justify-between mt-2.5 w-1/6 ml-auto">
-                    <button
-                        onClick={handlePrev}
-                        disabled={!hasPrev}
-                        className={`text-purple text-sm font-medium transition
-                            ${hasPrev ? "hover:text-purple/70  cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
-                    >
-                        ← Trước
-                    </button>
-                    <span className="text-sm text-gray-500">
-                        {currentIndex + 1} / {employees.length}
-                    </span>
-                    <button
-                        onClick={handleNext}
-                        disabled={!hasNext}
-                        className={`text-purple text-sm font-medium transition
-                            ${hasNext ? "hover:text-purple/70 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
-                    >
-                        Sau →
-                    </button>
                 </div>
             </div>
 
@@ -252,7 +239,7 @@ export function DetailEmployeeByIdForm() {
                 onClose={() => setConfirmModalOpen(false)}
             >
                 <DeleteEmployeeModal
-                    employeeId={employee?.id ?? ""}
+                    employeeId={employee.id}
                     onClose={() => setConfirmModalOpen(false)}
                 />
             </LayoutModal>

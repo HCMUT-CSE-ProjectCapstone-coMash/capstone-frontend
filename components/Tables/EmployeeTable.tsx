@@ -29,6 +29,7 @@ export function EmployeeTable() {
         // QueryKey bao gồm cả page và search để tự động refetch khi chúng thay đổi
         queryKey: ["employees", currentPage, debouncedSearch],
         queryFn: () => FetchEmployees(currentPage, pageSize, debouncedSearch),
+        refetchOnWindowFocus: false,
     });
 
     const handleViewDetail = (employee: Employee) => {
