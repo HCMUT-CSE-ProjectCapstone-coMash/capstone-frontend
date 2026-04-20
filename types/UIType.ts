@@ -31,5 +31,5 @@ export interface TableProps<T> {
     columns: Column<T>[],
     data: T[],
     isLoading?: boolean,
-    pagination?: TablePagination; 
+    pagination?: TablePagination;
 };

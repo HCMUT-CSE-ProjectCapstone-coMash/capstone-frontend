@@ -4,37 +4,91 @@ import { useRouter } from "next/navigation";
 import { OwnerEmployeeByIdPageRoute, OwnerAddEmployeePageRoute } from "@/const/routes";
 import { Employee } from "@/types/employee";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Table } from "./Table";
 import { Column } from "@/types/UIType";
 import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { FetchEmployees } from "@/api/employees/employees";
+import { useDispatch } from "react-redux";
+import { setEmployee } from "@/utilities/employeeStore";
 
-export type Employee = {
-    id: string;
-    name: string;
-    dob: string;
-    phone: string;
-};
-
-interface EmployeeTableProps {
-    employees?: Employee[]; 
-}
-
-export function EmployeeTable({ employees }: EmployeeTableProps) {
+export function EmployeeTable() {
+    const dispatch = useDispatch();
     const router = useRouter();
+    
+    // --- 1. Quản lý State: Phân trang và Tìm kiếm ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+    
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const data: Employee[] = employees || [
-        { id: "NV123", name: "Phó N Song Khuê", dob: "04/06/2004", phone: "0901234567" },
-        { id: "NV124", name: "Đoàn Lê Vy", dob: "28/06/2004", phone: "0987654321" },
-        { id: "NV125", name: "Huỳnh Ngọc Nhơn", dob: "13/06/2004", phone: "0912345678" },
+    // --- 2. Fetch Dữ liệu thật từ Database qua TanStack Query ---
+    const { data, isLoading } = useQuery({
+        // QueryKey bao gồm cả page và search để tự động refetch khi chúng thay đổi
+        queryKey: ["employees", currentPage, debouncedSearch],
+        queryFn: () => FetchEmployees(currentPage, pageSize, debouncedSearch),
+    });
+
+    const handleViewDetail = (employee: Employee) => {
+        dispatch(setEmployee(employee));
+        router.push(OwnerEmployeeByIdPageRoute(employee.employeeId));
+    };
+
+    // --- 3. Định nghĩa Cột ---
+    const columns: Column<Employee>[] = [
+        { 
+            title: "Mã số nhân viên", 
+            key: "employeeId", 
+            render: (row) => <span>{row.employeeId}</span> 
+        },
+        { 
+            title: "Tên nhân viên", 
+            key: "fullName", 
+            render: (row) => <span>{row.fullName}</span> 
+        },
+        { 
+            title: "Ngày sinh", 
+            key: "dateOfBirth", 
+            render: (row) => <span>{row.dateOfBirth}</span> 
+        },
+        { 
+            title: "Số điện thoại", 
+            key: "phoneNumber", 
+            render: (row) => <span>{row.phoneNumber}</span> 
+        },
+        {
+            title: "",
+            key: "action",
+            render: (row) => (
+                <button
+                    onClick={() => handleViewDetail(row)}
+                    className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
+                >
+                    Xem
+                </button>
+            )
+        }
     ];
 
+    const employees = data?.items || [];
+    const total = data?.totalCount || 0;
+    
     return (
-        <div className="w-full">
-            {/* --- Nút Thêm Nhân Viên --- */}
-            <div className="flex justify-end mb-10.25">
+        <div className="flex flex-col gap-4 w-full mt-10.25">
+            {/* --- Header Section: Search & Button sát phải --- */}
+            <div className="flex items-center justify-end gap-4">
+                <NormalSearchInput 
+                    value={searchTerm} 
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm mới
+                    }}
+                    placeholder="Nhập tên nhân viên"
+                    className="w-80"
+                />
+                
                 <button
                     onClick={() => router.push(`${OwnerAddEmployeePageRoute}`)}
                     className="py-2 px-4 rounded-lg bg-purple text-white text-sm font-semibold transition hover:bg-purple/90 cursor-pointer whitespace-nowrap"
@@ -43,28 +97,20 @@ export function EmployeeTable({ employees }: EmployeeTableProps) {
                 </button>
             </div>
 
-            {/* --- Bảng Dữ Liệu --- */}
-            <table className="w-full text-sm text-black">
-                <thead>
-                    <tr className="border-b border-tgray5">
-                        <th className="pb-5 font-semibold text-center">Mã số nhân viên</th>
-                        <th className="pb-5 font-semibold text-center">Tên nhân viên</th>
-                        <th className="pb-5 font-semibold text-center">Ngày sinh</th>
-                        <th className="pb-5 font-semibold text-center">Số điện thoại</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {/* Nên dùng employee.id làm key thay vì index để React tối ưu render tốt hơn */}
-                    {data.map((employee) => (
-                        <tr key={employee.id} className="border-b border-tgray5 hover:bg-gray-50 transition-colors">
-                            <td className="py-5 text-center">{employee.id}</td>
-                            <td className="py-5 text-center">{employee.name}</td>
-                            <td className="py-5 text-center">{employee.dob}</td>
-                            <td className="py-5 text-center">{employee.phone}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            {/* --- Table Section --- */}
+            <div className="mt-6">
+                <Table
+                    columns={columns}
+                    data={employees}
+                    isLoading={isLoading}
+                    pagination={{
+                        current: currentPage,
+                        pageSize,
+                        total,
+                        onChange: setCurrentPage,
+                    }}
+                />
+            </div>
         </div>
     );
 }

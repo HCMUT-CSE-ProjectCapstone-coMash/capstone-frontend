@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 export default function EmployeeAdd() {
     const router = useRouter();
+    
     return (
         <main className="px-20 pt-10 pb-25">
             <div className="flex justify-between items-center mb-12.5">

@@ -1,85 +1,114 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { OwnerEmployeeManagementPageRoute } from "@/const/routes";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import Image from "next/image";
-import { DeleteEmployee, FetchEmployees} from "@/api/employees/employees";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/utilities/store";
-// Import action từ employeeStore bạn đã tạo ở bước trước
-import { removeEmployee, setSelectedEmployee } from "@/utilities/employeeStore"; 
-import { EmployeeFormState } from "@/types/employee";
-import { AlertType } from "@/types/alert";
+import { useState } from "react";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { DeleteEmployeeModal } from "../Modal/DeleteEmployeeModal";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { UpdateEmployee } from "@/api/employees/employees";
+import { setEmployee } from "@/utilities/employeeStore";
 import { addAlert } from "@/utilities/alertStore";
-
+import { AlertType } from "@/types/alert";
+import { useParams, useRouter } from "next/navigation";
+import { OwnerEmployeeByIdPageRoute } from "@/const/routes";
+import { Employee } from "@/types/employee";
+import { useQuery } from "@tanstack/react-query";
+import { FetchEmployees } from "@/api/employees/employees";
 
 export function DetailEmployeeByIdForm() {
-    const { employeeId } = useParams<{ employeeId: string }>();
     const dispatch = useDispatch();
-    const router = useRouter(); // Khởi tạo router để quay lại danh sách sau khi xóa
-    
+    const queryClient = useQueryClient();
+    const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+
     const employee = useSelector((state: RootState) => state.employee.selectedEmployee);
+    const { employeeId } = useParams<{ employeeId: string }>();
+    const router = useRouter();
 
-    // 1. Fetch dữ liệu nhân viên
-    const { data, isLoading } = useQuery({
-        queryKey: ["employee", employeeId],
-        queryFn: () => FetchEmployees(1, 50),
-        enabled: !!employeeId,
+    // State form khi edit — khởi tạo từ Redux
+    const [formData, setFormData] = useState({
+        fullName: employee?.fullName ?? "",
+        gender: employee?.gender ?? "",
+        dateOfBirth: employee?.dateOfBirth ?? "",
+        phoneNumber: employee?.phoneNumber ?? "",
+        email: employee?.email ?? "",
     });
 
-    useEffect(() => {
-        if (data?.items) {
-            const foundEmployee = data.items.find((item: { employeeId: string }) => item.employeeId === employeeId);
-            if (foundEmployee) {
-                const formattedEmployee: EmployeeFormState = {
-                    id: foundEmployee.id,
-                    employeeId: foundEmployee.employeeId,
-                    fullName: foundEmployee.fullName,
-                    gender: foundEmployee.gender,
-                    dateOfBirth: foundEmployee.dateOfBirth,
-                    phoneNumber: foundEmployee.phoneNumber,
-                    email: foundEmployee.email,
-                    imageFile: null, 
-                    imageURL: foundEmployee.imageUrl || foundEmployee.imageURL || null, 
-                };
-                dispatch(setSelectedEmployee(formattedEmployee));
-            }
-        }
-        return () => { dispatch(setSelectedEmployee(null)); };
-    }, [data, employeeId, dispatch]);
-
-    // 2. Định nghĩa Mutation để xóa nhân viên
-    const deleteMutation = useMutation({
-        mutationFn: ({ employeeId } : { employeeId: string }) => DeleteEmployee(employeeId),
-        onSuccess: () => {
-            // Cập nhật Store local
-            dispatch(removeEmployee(employeeId));
-            // Thông báo thành công
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xóa nhân viên thành công!" }));
-            // Điều hướng về trang danh sách nhân viên
-            router.push(OwnerEmployeeManagementPageRoute); // Thay đổi path này cho đúng với project của bạn
-        },
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Xóa nhân viên thất bại. Vui lòng thử lại!" }));
-        }
-    });
-
-    // 3. Hàm xử lý khi nhấn nút xóa
-    const handleDelete = () => {
-        if (window.confirm(`Bạn có chắc chắn muốn xóa nhân viên ${employee?.fullName}?`)) {
-             deleteMutation.mutate({ employeeId: employee?.id ?? employeeId });
-        }
+    // Khi bắt đầu edit, sync formData từ Redux (đề phòng data đã load sau)
+    const handleStartEdit = () => {
+        setFormData({
+            fullName: employee?.fullName ?? "",
+            gender: employee?.gender ?? "",
+            dateOfBirth: employee?.dateOfBirth ?? "",
+            phoneNumber: employee?.phoneNumber ?? "",
+            email: employee?.email ?? "",
+        });
+        setIsEditing(true);
     };
 
-    if (isLoading && !employee) return <div className="p-5">Đang tải thông tin...</div>;
+    // Mutation gọi API update
+    const updateMutation = useMutation({
+            mutationFn: () => UpdateEmployee(
+        employee?.id ?? "", 
+        {
+            ...formData,
+            id: "",           // thêm id
+            employeeId: "", // thêm employeeId
+            fullName: formData.fullName,
+            gender: formData.gender,
+            dateOfBirth: formData.dateOfBirth,
+            phoneNumber: formData.phoneNumber,
+            email: formData.email,
+            imageFile: null,                  // không đổi ảnh thì để null
+            imageURL:"",
+        }
+    ),
+        onSuccess: () => {
+            // Cập nhật Redux
+            dispatch(setEmployee({ ...employee!, ...formData }));
+            // Invalidate query để refetch danh sách
+            queryClient.invalidateQueries({ queryKey: ["employee"] });
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật nhân viên thành công!" }));
+            setIsEditing(false);
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại. Vui lòng thử lại!" }));
+        },
+    });
+
+    const handleSave = () => {
+        updateMutation.mutate();
+    };
+    const { data } = useQuery({
+        queryKey: ["employees"],
+        queryFn: () => FetchEmployees(1, 50),
+    });
+
+    const employees: Employee[] = data?.items ?? [];
+    const currentIndex = employees.findIndex((e) => e.employeeId === employeeId);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex < employees.length - 1;
+
+    const handlePrev = () => {
+        const prev = employees[currentIndex - 1];
+        dispatch(setEmployee(prev));
+        router.push(OwnerEmployeeByIdPageRoute(prev.employeeId));
+    };
+
+    const handleNext = () => {
+        const next = employees[currentIndex + 1];
+        dispatch(setEmployee(next));
+        router.push(OwnerEmployeeByIdPageRoute(next.employeeId));
+    };
+
+
     return (
         <div className="flex flex-column justify-between gap-[5vw]">
-            {/* --- CỘT TRÁI: ẢNH NHÂN VIÊN --- */}
+            {/* --- CỘT TRÁI: ẢNH --- */}
             <div className="w-1/3">
                 <p className="text-lg mb-2.5">Thông tin nhân viên</p>
                 <div className="w-md">
@@ -94,30 +123,45 @@ export function DetailEmployeeByIdForm() {
                             />
                         </div>
                     ) : (
-                        <div className="h-75 w-75 bg-tgray05 flex items-center justify-center rounded-lg border-gray-300">
+                        <div className="h-75 w-75 bg-tgray05 flex items-center justify-center rounded-lg border-gray-500">
                             <p className="text-sm text-gray-400">Không có ảnh</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* --- CỘT PHẢI: THÔNG TIN FORM --- */}
+            {/* --- CỘT PHẢI: FORM --- */}
             <div className="w-2/3">
+                {/* Nút hành động */}
                 <div className="mb-5 flex justify-end gap-5">
+                    {isEditing ? (
+                        <button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={updateMutation.isPending}
+                            className="border bg-pink text-white font-medium px-6 py-2 rounded-lg text-sm cursor-pointer hover:opacity-90 disabled:bg-gray-400 transition-all shadow-sm"
+                        >
+                            {updateMutation.isPending ? "Đang lưu..." : "Lưu"}
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={handleStartEdit}
+                            className="border border-pink text-pink font-medium px-3 py-2 rounded-lg text-sm cursor-pointer hover:bg-pink-50 transition-all"
+                        >
+                            Chỉnh sửa
+                        </button>
+                    )}
                     <button
-                        className="border border-pink text-pink font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-pink-50"
+                        type="button"
+                        className="py-2 px-4 rounded-lg border border-red-500 bg-red-500 text-white text-sm font-medium hover:bg-red-600 cursor-pointer transition-all"
+                        onClick={() => setConfirmModalOpen(true)}
                     >
-                        Chỉnh sửa
-                    </button>
-                    <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={deleteMutation.isPending}
-                    className="border bg-red-500 text-white font-medium px-4 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-red-600 disabled:bg-gray-400"
-                    >
-                    {deleteMutation.isPending ? "Đang xóa..." : "Xóa nhân viên"}
+                        Xoá nhân viên
                     </button>
                 </div>
+
+                {/* Fields */}
                 <div className="flex flex-col gap-5">
                     <TextInput
                         disabled
@@ -127,13 +171,13 @@ export function DetailEmployeeByIdForm() {
                         onChange={() => {}}
                     />
                     <TextInput
-                        disabled
+                        disabled={!isEditing}
                         label="Tên nhân viên"
-                        placeHolder=""
-                        value={employee?.fullName ?? ""}
-                        onChange={() => {}}
+                        placeHolder="Nhập tên nhân viên"
+                        value={isEditing ? formData.fullName : (employee?.fullName ?? "")}
+                        onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     />
-                    
+
                     <div className="flex items-center justify-between gap-5">
                         <div className="w-1/2">
                             <SelectInput
@@ -143,18 +187,18 @@ export function DetailEmployeeByIdForm() {
                                     { label: "Nam", value: "Nam" },
                                     { label: "Khác", value: "Khác" },
                                 ]}
-                                value={employee?.gender ?? ""}
-                                onChange={() => {}}
-                                disabled
+                                value={isEditing ? formData.gender : (employee?.gender ?? "")}
+                                onChange={(value) => setFormData({ ...formData, gender: value })} 
+                                disabled={!isEditing}
                             />
                         </div>
                         <div className="w-1/2">
                             <TextInput
-                                disabled
+                                disabled={!isEditing}
                                 label="Ngày sinh"
-                                placeHolder=""
-                                value={employee?.dateOfBirth ?? ""}
-                                onChange={() => {}}
+                                placeHolder="DD/MM/YYYY"
+                                value={isEditing ? formData.dateOfBirth : (employee?.dateOfBirth ?? "")}
+                                onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
                             />
                         </div>
                     </div>
@@ -162,25 +206,56 @@ export function DetailEmployeeByIdForm() {
                     <div className="flex items-center justify-between gap-5">
                         <div className="w-1/2">
                             <TextInput
-                                disabled
+                                disabled={!isEditing}
                                 label="Số điện thoại"
-                                placeHolder=""
-                                value={employee?.phoneNumber ?? ""}
-                                onChange={() => {}}
+                                placeHolder="Nhập số điện thoại"
+                                value={isEditing ? formData.phoneNumber : (employee?.phoneNumber ?? "")}
+                                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                             />
                         </div>
                         <div className="w-1/2">
                             <TextInput
-                                disabled
+                                disabled={!isEditing}
                                 label="Email"
-                                placeHolder=""
-                                value={employee?.email ?? ""}
-                                onChange={() => {}}
+                                placeHolder="Nhập email"
+                                value={isEditing ? formData.email : (employee?.email ?? "")}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             />
                         </div>
                     </div>
                 </div>
+                <div className="flex items-center justify-between mt-2.5 w-1/6 ml-auto">
+                    <button
+                        onClick={handlePrev}
+                        disabled={!hasPrev}
+                        className={`text-purple text-sm font-medium transition
+                            ${hasPrev ? "hover:text-purple/70  cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                    >
+                        ← Trước
+                    </button>
+                    <span className="text-sm text-gray-500">
+                        {currentIndex + 1} / {employees.length}
+                    </span>
+                    <button
+                        onClick={handleNext}
+                        disabled={!hasNext}
+                        className={`text-purple text-sm font-medium transition
+                            ${hasNext ? "hover:text-purple/70 cursor-pointer" : "opacity-40 cursor-not-allowed"}`}
+                    >
+                        Sau →
+                    </button>
+                </div>
             </div>
+
+            <LayoutModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setConfirmModalOpen(false)}
+            >
+                <DeleteEmployeeModal
+                    employeeId={employee?.id ?? ""}
+                    onClose={() => setConfirmModalOpen(false)}
+                />
+            </LayoutModal>
         </div>
     );
 }
