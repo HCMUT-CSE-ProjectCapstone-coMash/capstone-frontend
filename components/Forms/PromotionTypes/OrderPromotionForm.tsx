@@ -14,7 +14,7 @@ export function OrderPromotionForm({ levels, onChange} : OrderPromotionFormProps
     const addLevel = () => {
         const newLevel: PromotionLevel = {
             minValue: 0,
-            discountType: "PERCENT",
+            discountType: "Percent",
             discountValue: 0,
         };
 

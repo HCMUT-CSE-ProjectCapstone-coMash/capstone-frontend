@@ -10,8 +10,8 @@ import { TrashIcon } from "@/public/assets/Icons";
 
 
 const DISCOUNT_TYPE_OPTIONS: SelectOption[] = [
-    { label: "Phần trăm (%)",   value: "PERCENT" },
-    { label: "Số tiền cố định", value: "FIXED" },
+    { label: "Phần trăm (%)",   value: "Percent" },
+    { label: "Số tiền cố định", value: "Fixed" },
 ];
 
 // ── Sub-component ──────────────────────────────────────────────────────────────
@@ -23,14 +23,14 @@ function computeDiscountedPrice(level: PromotionLevel): { original: number; fina
         return { original, final: original };
     }
 
-    let discountAmount = level.discountType === "PERCENT" ? (original * level.discountValue) / 100 : level.discountValue;
+    let discountAmount = level.discountType === "Percent" ? (original * level.discountValue) / 100 : level.discountValue;
 
     // Cap by maxDiscount if provided
     if (level.maxDiscount && level.maxDiscount > 0) {
         discountAmount = Math.min(discountAmount, level.maxDiscount);
     }
 
-    // Final price can't be negative (happens if FIXED discount > minValue)
+    // Final price can't be negative (happens if Fixed discount > minValue)
     const final = Math.max(0, original - discountAmount);
 
     return { original, final };
@@ -82,14 +82,14 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
         const currentType = levels[index].discountType;
 
         // Percent discounts cannot exceed 100%
-        if (currentType === "PERCENT" && parsed > 100) {
+        if (currentType === "Percent" && parsed > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Phần trăm giảm không được vượt quá 100%." }));
             onUpdateLevel(index, { discountValue: 100 });
             return;
         }
 
         // Fixed discounts cannot exceed the minValue for that level
-        if (currentType === "FIXED" && parsed > levels[index].minValue) {
+        if (currentType === "Fixed" && parsed > levels[index].minValue) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Số tiền giảm không được vượt quá giá trị tối thiểu." }));
             onUpdateLevel(index, { discountValue: levels[index].minValue });
             return;
@@ -99,15 +99,15 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
     }
 
     const handleDiscountTypeChange = (index: number, newType: DiscountType) => {
-        const patch: Partial<PromotionLevel> = { discountType: newType as "PERCENT" | "FIXED" };
+        const patch: Partial<PromotionLevel> = { discountType: newType as "Percent" | "Fixed" };
 
-        // If changing to PERCENT, cap existing discountValue at 100
-        if (newType === "PERCENT" && levels[index].discountValue > 100) {
+        // If changing to Percent, cap existing discountValue at 100
+        if (newType === "Percent" && levels[index].discountValue > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Phần trăm giảm không được vượt quá 100%." }));
             patch.discountValue = 100;
         }
 
-        if (newType === "FIXED") {
+        if (newType === "Fixed") {
             patch.maxDiscount = undefined;
         }
 
@@ -174,7 +174,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
                                         placeHolder="Nhập giảm tối đa (nếu có)"
                                         value={level.maxDiscount ? formatThousands(level.maxDiscount) : ""}
                                         onChange={(e) => handleMaxDiscountChange(index, e.target.value)} 
-                                        disabled={level.discountType === "FIXED"}
+                                        disabled={level.discountType === "Fixed"}
                                     />
                                 </td>
 

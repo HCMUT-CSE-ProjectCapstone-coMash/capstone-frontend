@@ -10,9 +10,9 @@ export async function FetchPromotionId() {
     return response.data;
 };
 
-export async function CreatePromotion(payload: CreatePromotionPayload) {
+export async function CreatePromotion(payload: CreatePromotionPayload, userId: string) {
     const response = await axiosClient.post(
-        "/promotions/create",
+        "/promotions/create/" + userId,
         payload,
         { withCredentials: true }
     );
