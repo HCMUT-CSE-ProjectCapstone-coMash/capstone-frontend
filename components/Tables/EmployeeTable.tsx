@@ -66,7 +66,7 @@ export function EmployeeTable() {
     ];
 
     const employees = data?.items || [];
-    const total = data?.totalCount || 0;
+    const total = data?.total || 0;
     
     return (
         <div className="flex flex-col gap-4 w-full mt-10.25">
