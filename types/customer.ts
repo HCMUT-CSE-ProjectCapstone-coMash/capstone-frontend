@@ -5,6 +5,4 @@ export interface Customer {
     customerStatus: "Active" | "Deleted";
     createdAt: string;
     createdBy: string;
-    debitMoney: number;
-    debitDays: number;
 }
