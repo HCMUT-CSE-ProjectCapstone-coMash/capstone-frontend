@@ -1,4 +1,3 @@
-"use client";
 import { ProductOrderHistoryTable } from "@/components/Tables/ProductOrderHistoryTable";
 
 export default function ProductOrderHistoryPage() {
