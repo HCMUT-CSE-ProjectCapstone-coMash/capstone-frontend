@@ -10,6 +10,7 @@ import { Column } from "@/types/UIType";
 import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { FetchEmployees } from "@/api/employees/employees";
+import { formatDate } from "@/utilities/timeFormat";
 
 export function EmployeeTable() {
     const router = useRouter();
@@ -44,7 +45,7 @@ export function EmployeeTable() {
         { 
             title: "Ngày sinh", 
             key: "dateOfBirth", 
-            render: (row) => <span>{row.dateOfBirth}</span> 
+            render: (row) => <span>{formatDate(row.dateOfBirth)}</span> 
         },
         { 
             title: "Số điện thoại", 

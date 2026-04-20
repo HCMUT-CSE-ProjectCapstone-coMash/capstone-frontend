@@ -5,11 +5,14 @@ import { Table } from "./Table";
 import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
-import { useState, useMemo } from "react";
-import { SearchIcon } from "@/public/assets/Icons";
+import { useState } from "react";
 import { PromotionType, Promotion } from "@/types/promotion";
 import { useRouter } from "next/navigation";
-import { OwnerCreateSalePageRoute } from "@/const/routes";
+import { OwnerCreateSalePageRoute, OwnerSaleByIdPageRoute } from "@/const/routes";
+import { useDebounce } from "@/hooks/useDebounce";
+import { FetchPromotions } from "@/api/promotions/promotions";
+import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
+import { formatDate } from "@/utilities/timeFormat";
 
 // ── Display label map ──────────────────────────────────────────────────────────
 
@@ -21,55 +24,61 @@ const PROMOTION_TYPE_LABEL: Record<PromotionType, string> = {
 
 // ── Filter tabs ────────────────────────────────────────────────────────────────
 
-const FILTER_TABS: { label: string; value: PromotionType | "all" }[] = [
-    { label: "Tất cả",      value: "all" },
+const FILTER_TABS: { label: string; value: PromotionType | "" }[] = [
+    { label: "Tất cả",      value: "" },
     { label: "KM sản phẩm", value: "Product" },
     { label: "KM combo",    value: "Combo" },
     { label: "KM đơn hàng", value: "Order" },
 ];
 
-// ── Fetch helper (replace with your real API call) ─────────────────────────────
+// ── Component ──────────────────────────────────────────────────────────────────
+type PromotionStatusBadgeProps = {
+    startDate: string;
+    endDate: string;
+};
 
-async function fetchPromotions(): Promise<Promotion[]> {
-    // TODO: replace with your actual API function, e.g. FetchPromotions()
-    const res = await fetch("/api/promotions");
-    if (!res.ok) throw new Error("Failed to fetch promotions");
-    return res.json();
+function PromotionStatusBadge({ startDate, endDate }: PromotionStatusBadgeProps) {
+    const now = new Date();
+
+    const start = new Date(startDate);
+    start.setHours(0, 0, 0, 0); 
+
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    let status = "";
+    let color = "";
+
+    if (now < start) {
+        status = "Sắp diễn ra";
+        color = "bg-blue-100 text-blue-800";
+    } else if (now > end) {
+        status = "Đã kết thúc";
+        color = "bg-gray-100 text-gray-800";
+    } else {
+        status = "Đang diễn ra";
+        color = "bg-green-100 text-green-800";
+    }
+
+    return (
+        <span className={`px-2 py-1 rounded ${color} text-sm font-medium`}>
+            {status}
+        </span>
+    );
 }
 
-// ── Component ──────────────────────────────────────────────────────────────────
+// -- Main component ----──────────────────────────────────────────────────────────────────
 
 export function PromotionTable() {
     const router = useRouter();
-
     const user = useSelector((state: RootState) => state.user);
 
-    const [activeFilter, setActiveFilter] = useState<PromotionType | "all">("all");
-    const [searchQuery, setSearchQuery]   = useState<string>("");
-
-    // ── Data fetching ──────────────────────────────────────────────────────────
-
-    const { data: promotions = [], isLoading } = useQuery<Promotion[]>({
-        queryKey: ["promotions"],
-        queryFn: fetchPromotions,
-        enabled: !!user.id,
-    });
-
-    // ── Derived / filtered data ────────────────────────────────────────────────
-
-    const filteredPromotions = useMemo(() => {
-        return promotions.filter((promo) => {
-            const matchesType =
-                activeFilter === "all" || promo.promotionType === activeFilter;
-            const matchesSearch =
-                promo.promotionName.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesType && matchesSearch;
-        });
-    }, [promotions, activeFilter, searchQuery]);
-
-    // ── Table columns ──────────────────────────────────────────────────────────
-
     const columns: Column<Promotion>[] = [
+        {
+            title: "Mã khuyến mãi",
+            key: "code",
+            render: (row) => <span>{row.promotionId}</span>,
+        },
         {
             title: "Tên khuyến mãi",
             key: "name",
@@ -83,14 +92,51 @@ export function PromotionTable() {
         {
             title: "Ngày bắt đầu",
             key: "startDate",
-            render: (row) => <span>{row.startDate}</span>,
+            render: (row) => <span>{formatDate(row.startDate)}</span>,
         },
         {
             title: "Ngày kết thúc",
             key: "endDate",
-            render: (row) => <span>{row.endDate}</span>,
+            render: (row) => <span>{formatDate(row.endDate)}</span>,
         },
+        {
+            title: "Trạng thái",
+            key: "status",
+            render: (row) => <PromotionStatusBadge startDate={row.startDate} endDate={row.endDate} />,
+        },
+        {
+            title: "",
+            key: "action",
+            render: (row) => (
+                <button
+                    onClick={() => router.push(OwnerSaleByIdPageRoute(row.id))}
+                    className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
+                >
+                    Xem
+                </button>
+            ),
+        }
     ];
+
+    // ── State & Data Fetching ─────────────────────────────────────────────────────
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+
+    const [searchTerm, setSearchTerm] = useState("");
+    const debouncedSearch = useDebounce(searchTerm, 500);
+
+    const [activeFilter, setActiveFilter] = useState<PromotionType | "">("");
+
+    const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
+
+    const { data, isLoading } = useQuery({
+        queryKey: ["promotions", currentPage, activeFilter, effectiveSearch],
+        queryFn: () => FetchPromotions(currentPage, pageSize, activeFilter, effectiveSearch),
+        refetchOnWindowFocus: false,
+    });
+
+    const promotions = data?.items || [];
+    const totalPages = data?.total ?? 0;
 
     // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -101,47 +147,34 @@ export function PromotionTable() {
 
                 {/* Filter buttons */}
                 <div className="flex items-center gap-4 flex-wrap">
-                    {FILTER_TABS.map((tab) => {
-                        const isActive = activeFilter === tab.value;
-                        return (
-                            <button
-                                key={tab.value}
-                                onClick={() => setActiveFilter(tab.value)}
-                                className={`
-                                    px-3 py-2 text-sm font-semibold rounded-lg shadow border cursor-pointer
-                                    transition-colors duration-150
-                                    ${isActive
-                                        ? "bg-pink-500 text-white border-pink-500"
-                                        : "bg-white text-pink-500 border-pink-400 hover:bg-pink-50"
-                                    }
-                                `}
-                            >
-                                {tab.label}
-                            </button>
-                        );
-                    })}
+                    {FILTER_TABS.map((tab) => (
+                        <button
+                            key={tab.value}
+                            onClick={() => setActiveFilter(tab.value)}
+                            className={`
+                                px-3 py-2 text-sm font-semibold rounded-lg shadow border cursor-pointer
+                                transition-colors duration-150
+                                ${activeFilter === tab.value
+                                    ? "bg-pink-500 text-white border-pink-500"
+                                    : "bg-white text-pink-500 border-pink-400 hover:bg-pink-50"
+                                }
+                            `}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
                 
                 <div className="flex items-center gap-3">
                     {/* Search input */}
-                    <div className="relative">
-                        <span className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                            <SearchIcon width={24} height={24} className={""} />
-                        </span>
-                        <input
-                            type="text"
-                            placeholder="Nhập tên khuyến mãi"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="
-                                pl-12 pr-4 py-2 rounded-lg border border-gray-400
-                                text-sm text-gray-700 placeholder-gray-400
-                                focus:outline-none focus:border-pink-500 w-70
-                            "
-                        />
-                    </div>
-                    {/* Create button */}
+                    <NormalSearchInput
+                        value={searchTerm} 
+                        onChange={(e) => setSearchTerm(e.target.value)} 
+                        placeholder={"Tìm theo mã hoặc tên khuyến mãi..."}
+                        className="w-2xs"
+                    />
 
+                    {/* Create button */}
                     {user.role === "owner" && (
                         <button
                             onClick={() => router.push(OwnerCreateSalePageRoute)}
@@ -156,8 +189,14 @@ export function PromotionTable() {
             {/* Table */}
             <Table
                 columns={columns}
-                data={filteredPromotions}
+                data={promotions}
                 isLoading={isLoading}
+                pagination={{
+                    current: currentPage,
+                    pageSize,
+                    total: totalPages,
+                    onChange: setCurrentPage,
+                }}
             />
         </div>
     );

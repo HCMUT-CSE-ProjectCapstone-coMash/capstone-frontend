@@ -13,7 +13,6 @@ import { AlertType } from "@/types/alert";
 import { Employee, UpdateEmployeePayload } from "@/types/employee";
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
 import { UpdateEmployee } from "@/api/employees/employees";
-import { toIsoDate } from "@/utilities/timeFormat";
 
 interface FormState {
     employeeId: string,
@@ -200,7 +199,7 @@ export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProp
                             <DatePickerInput
                                 label="Ngày sinh"
                                 placeHolder=""
-                                value={toIsoDate(form.dateOfBirth)}
+                                value={form.dateOfBirth}
                                 onChange={(value) => setField("dateOfBirth", value)}
                                 disabled={!isEditing}
                             />
