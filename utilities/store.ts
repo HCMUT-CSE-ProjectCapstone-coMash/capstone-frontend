@@ -6,6 +6,7 @@ import productsOrderReducer from "./productsOrderStore";
 import ownerProductEditReducer from "./ownerProductEditStore";
 import barcodeReducer from "./barcodeSlice";
 import SaleProductReducer from "./SaleProductStore";
+import customerReducer from "./customerStore";
 
 export const store = configureStore({
     reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
         ownerProductEdit: ownerProductEditReducer,
         barcode: barcodeReducer,
         saleProduct: SaleProductReducer,
+        customer: customerReducer,
     },
 });
 
