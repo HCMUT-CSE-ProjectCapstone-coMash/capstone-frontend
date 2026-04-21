@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { ComboDeal } from "@/types/promotion";
-import { Product } from "@/types/product";
 import { ComboTable } from "../../Tables/Promotions/ComboTable";
 
 interface ComboPromotionFormProps {
@@ -11,17 +9,11 @@ interface ComboPromotionFormProps {
 }
 
 export function ComboPromotionForm({ combos, onChange }: ComboPromotionFormProps) {
-    // Shared cache across combos so we don't refetch the same product
-    const [productCache, setProductCache] = useState<Record<string, Product>>({});
-
-    const cacheProduct = (product: Product) => {
-        setProductCache((prev) => ({ ...prev, [product.id]: product }));
-    };
 
     const addCombo = () => {
         const newCombo: ComboDeal = {
-            name: "",
-            items: [],
+            comboName: "",
+            comboItems: [],
             comboPrice: 0,
         };
         onChange([...combos, newCombo]);
@@ -53,11 +45,9 @@ export function ComboPromotionForm({ combos, onChange }: ComboPromotionFormProps
                 <div className="flex flex-col gap-4">
                     {combos.map((combo, index) => (
                         <ComboTable
-                            key={combo.comboId ?? index}
+                            key={index}
                             combo={combo}
                             index={index}
-                            productCache={productCache}
-                            cacheProduct={cacheProduct}
                             onUpdate={(patch) => updateCombo(index, patch)}
                             onRemove={() => removeCombo(index)}
                         />

@@ -46,7 +46,7 @@ const emptyLevel = (): PromotionLevel => ({
     minValue: 0,
     discountType: "Percent",
     discountValue: 0,
-    maxDiscount: undefined,
+    maxDiscount: 0,
 });
 
 const initialFormState: FormState = {
@@ -71,19 +71,30 @@ function buildPayload(form: FormState): CreatePromotionPayload {
         endDate: form.endDate,
         description: form.description,
     };
-
+ 
     switch (form.promtionType) {
         case "Product":
             return {
                 promotionType: "Product",
                 ...base,
-                productDiscounts: form.productDiscounts,
+                productDiscounts: form.productDiscounts.map((item) => ({
+                    productId: item.product.id,
+                    discountType: item.discountType,
+                    discountValue: item.discountValue,
+                })),
             };
         case "Combo":
             return {
                 promotionType: "Combo",
                 ...base,
-                combos: form.combos,
+                combos: form.combos.map((combo) => ({
+                    comboName: combo.comboName,
+                    comboPrice: combo.comboPrice,
+                    comboItems: combo.comboItems.map((item) => ({
+                        productId: item.product.id,
+                        quantity: item.quantity,
+                    })),
+                })),
             };
         case "Order":
             return {

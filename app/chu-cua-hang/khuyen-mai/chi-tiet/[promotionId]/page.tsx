@@ -1,11 +1,20 @@
 "use client";
 
+import { FetchPromotionById } from "@/api/promotions/promotions";
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 
 export default function PromotionDetailPage() {
     const { promotionId } = useParams();
     const router = useRouter();
     
+    const { data, isLoading } = useQuery({
+        queryKey: ["promotion", promotionId],
+        queryFn: () => FetchPromotionById(promotionId as string),
+        enabled: !!promotionId,
+        refetchOnWindowFocus: false,
+    });
+
     return (
         <main className="px-20 pt-10 pb-25">
             <div className="flex items-center justify-between mb-5">

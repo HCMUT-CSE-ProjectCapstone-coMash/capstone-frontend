@@ -2,7 +2,6 @@ import { SelectInput } from "@/components/FormInputs/SelectInput";
 import { TextInput } from "@/components/FormInputs/TextInput";
 import { TrashIcon } from "@/public/assets/Icons";
 import { AlertType } from "@/types/alert";
-import { Product } from "@/types/product";
 import { DiscountType, ProductDiscountItem } from "@/types/promotion";
 import { SelectOption } from "@/types/UIType";
 import { addAlert } from "@/utilities/alertStore";
@@ -28,46 +27,43 @@ function calculateDiscountedPrice(salePrice: number, discountType: DiscountType,
 
 interface SelectedProductsTableProps {
     productDiscounts: ProductDiscountItem[];
-    productCache: Record<string, Product>;
     onUpdate: (productId: string, patch: Partial<ProductDiscountItem>) => void;
     onRemove: (productId: string) => void;
 }
 
-export function SelectedProductsTable({ productDiscounts, productCache, onUpdate, onRemove } : SelectedProductsTableProps) {
+export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove } : SelectedProductsTableProps) {
     const dispatch = useDispatch();
 
     const handleDiscountValueChange = (item: ProductDiscountItem, rawValue: string) => {
-        const product = productCache[item.productId];
         const parsed = parseFormattedNumber(rawValue);
 
         if (item.discountType === "Percent" && parsed > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Phần trăm giảm không được vượt quá 100%." }));
-            onUpdate(item.productId, { discountValue: 100 });
+            onUpdate(item.product.id, { discountValue: 100 });
             return;
         }
 
-        if (item.discountType === "Fixed" && product && parsed > product.salePrice) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: `Số tiền giảm không được vượt quá giá bán (${formatThousands(product.salePrice)} VNĐ).` }));
-            onUpdate(item.productId, { discountValue: product.salePrice });
+        if (item.discountType === "Fixed" &&  parsed > item.product.salePrice) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: `Số tiền giảm không được vượt quá giá bán (${formatThousands(item.product.salePrice)} VNĐ).` }));
+            onUpdate(item.product.id, { discountValue: item.product.salePrice });
             return;
         }
 
-        onUpdate(item.productId, { discountValue: Math.max(0, parsed) });
+        onUpdate(item.product.id, { discountValue: Math.max(0, parsed) });
     };
 
     const handleDiscountTypeChange = (item: ProductDiscountItem, newType: DiscountType) => {
-        const product = productCache[item.productId];
         const patch: Partial<ProductDiscountItem> = { discountType: newType };
 
         if (newType === "Percent" && item.discountValue > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Giá trị giảm đã được điều chỉnh về 100% cho phù hợp với loại giảm mới." }));
             patch.discountValue = 100;
-        } else if (newType === "Fixed" && product && item.discountValue > product.salePrice) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: `Giá trị giảm đã được điều chỉnh về ${formatThousands(product.salePrice)} VNĐ cho phù hợp với giá bán.` }));
-            patch.discountValue = product.salePrice;
+        } else if (newType === "Fixed" && item.discountValue > item.product.salePrice) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: `Giá trị giảm đã được điều chỉnh về ${formatThousands(item.product.salePrice)} VNĐ cho phù hợp với giá bán.` }));
+            patch.discountValue = item.product.salePrice;
         }
 
-        onUpdate(item.productId, patch);
+        onUpdate(item.product.id, patch);
     };
 
     return (
@@ -85,14 +81,18 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
 
                 <tbody>
                     {productDiscounts.map((item) => {
-                        const product = productCache[item.productId];
+                        const { product } = item;
+ 
+                        const discountedPrice = calculateDiscountedPrice(
+                            product.salePrice,
+                            item.discountType,
+                            item.discountValue
+                        );
 
-                        const discountedPrice = product ? calculateDiscountedPrice(product.salePrice, item.discountType, item.discountValue) : 0;
-
-                        const hasDiscount = product && item.discountValue > 0 && discountedPrice !== product.salePrice;
+                        const hasDiscount = item.discountValue > 0 && discountedPrice !== product.salePrice;
 
                         return (
-                            <tr key={item.productId} className="border-t border-tgray5 align-middle">
+                            <tr key={item.product.id} className="border-t border-tgray5 align-middle">
                                 <td className="px-4 py-3">
                                     {product && (
                                         <div className="flex items-center gap-3">
@@ -171,7 +171,7 @@ export function SelectedProductsTable({ productDiscounts, productCache, onUpdate
                                 <td className="px-4 pt-4 w-15 text-center">
                                     <button
                                         type="button"
-                                        onClick={() => onRemove(item.productId)}
+                                        onClick={() => onRemove(item.product.id)}
                                         className="cursor-pointer"
                                     >
                                         <TrashIcon width={24} height={24} className="text-red"/>

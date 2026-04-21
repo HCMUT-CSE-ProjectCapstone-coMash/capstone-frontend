@@ -36,3 +36,12 @@ export async function FetchPromotions(currentPage: number, pageSize: number, cat
 
     return response.data;
 }
+
+export async function FetchPromotionById(promotionId: string) {
+    const response = await axiosClient.get(
+        "/promotions/" + promotionId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

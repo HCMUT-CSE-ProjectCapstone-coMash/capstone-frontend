@@ -16,6 +16,7 @@ export function OrderPromotionForm({ levels, onChange} : OrderPromotionFormProps
             minValue: 0,
             discountType: "Percent",
             discountValue: 0,
+            maxDiscount: 0,
         };
 
         onChange([...levels, newLevel]);

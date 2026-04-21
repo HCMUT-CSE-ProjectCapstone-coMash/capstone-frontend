@@ -18,10 +18,7 @@ interface ProductPromotionFormProps {
 }
 
 export function ProductPromotionForm({ productDiscounts, onChange } : ProductPromotionFormProps) {
-    const [productCache, setProductCache] = useState<Record<string, Product>>({});
-
     const [search, setSearch] = useState("");
-
     const debouncedSearch = useDebounce(search, 500);
 
     const { data: products = [] } = useQuery({
@@ -41,12 +38,10 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     const addProduct = (product: Product) => {
-        if (productDiscounts.some((p) => p.productId === product.id)) return;
-
-        setProductCache((prev) => ({ ...prev, [product.id]: product }));
+        if (productDiscounts.some((p) => p.product.id === product.id)) return;
 
         const newDiscountItem: ProductDiscountItem = {
-            productId: product.id,
+            product,
             discountType: "Percent",
             discountValue: 0,
         };
@@ -55,11 +50,11 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
     };
 
     const updateProduct = (productId: string, patch: Partial<ProductDiscountItem>) => {
-        onChange(productDiscounts.map((item) => item.productId === productId ? { ...item, ...patch } : item));
+        onChange(productDiscounts.map((item) => item.product.id === productId ? { ...item, ...patch } : item));
     };
 
     const removeProduct = (productId: string) => {
-        onChange(productDiscounts.filter((item) => item.productId !== productId));
+        onChange(productDiscounts.filter((item) => item.product.id !== productId));
     }
 
     // --- Render ───────────────────────────────────────────────────────────────────
@@ -96,8 +91,7 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
 
             {productDiscounts.length > 0 ? (
                 <SelectedProductsTable 
-                    productDiscounts={productDiscounts} 
-                    productCache={productCache}
+                    productDiscounts={productDiscounts}
                     onUpdate={updateProduct}
                     onRemove={removeProduct}
                 />

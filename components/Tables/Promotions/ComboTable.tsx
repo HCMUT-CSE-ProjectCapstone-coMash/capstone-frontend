@@ -15,13 +15,11 @@ import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat"
 interface ComboTableProps {
     combo: ComboDeal;
     index: number;
-    productCache: Record<string, Product>;
-    cacheProduct: (product: Product) => void;
     onUpdate: (patch: Partial<ComboDeal>) => void;
     onRemove: () => void;
 }
 
-export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate, onRemove }: ComboTableProps) {
+export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps) {
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
@@ -41,42 +39,44 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
 
     // ── Derived totals ─────────────────────────────────────────────────────────
 
-    const originalTotal = combo.items.reduce((sum, item) => {
-        const product = productCache[item.productId];
-        if (!product) return sum;
-        return sum + product.salePrice * item.quantity;
-    }, 0);
-
-    const importTotal = combo.items.reduce((sum, item) => {
-        const product = productCache[item.productId];
-        if (!product) return sum;
-        return sum + product.importPrice * item.quantity;
-    }, 0);
-
+    const originalTotal = combo.comboItems.reduce(
+        (sum, item) => sum + item.product.salePrice * item.quantity,
+        0
+    );
+ 
+    const importTotal = combo.comboItems.reduce(
+        (sum, item) => sum + item.product.importPrice * item.quantity,
+        0
+    );
+ 
     const profit = combo.comboPrice - importTotal;
 
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     const addProductToCombo = (product: Product) => {
-        if (combo.items.some((p) => p.productId === product.id)) return;
-        cacheProduct(product);
+        if (combo.comboItems.some((item) => item.product.id === product.id)) return;
+ 
         onUpdate({
-            items: [...combo.items, { productId: product.id, quantity: 1 }],
+            comboItems: [...combo.comboItems, { product, quantity: 1 }],
         });
     };
-
+ 
     const updateItemQuantity = (productId: string, quantity: number) => {
         onUpdate({
-            items: combo.items.map((p) =>
-                p.productId === productId ? { ...p, quantity: Math.max(1, quantity) } : p
+            comboItems: combo.comboItems.map((item) =>
+                item.product.id === productId
+                    ? { ...item, quantity: Math.max(1, quantity) }
+                    : item
             ),
         });
     };
-
+ 
     const removeItem = (productId: string) => {
-        onUpdate({ items: combo.items.filter((p) => p.productId !== productId) });
+        onUpdate({
+            comboItems: combo.comboItems.filter((item) => item.product.id !== productId),
+        });
     };
-
+ 
     const handleComboPriceChange = (rawValue: string) => {
         const parsed = parseFormattedNumber(rawValue);
         onUpdate({ comboPrice: Math.max(0, parsed) });
@@ -95,9 +95,9 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
                     <div className="flex-1 max-w-sm">
                         <TextInput
                             label=""
-                            value={combo.name ?? ""}
+                            value={combo.comboName}
                             placeHolder="VD: 1 áo + 1 váy"
-                            onChange={(e) => onUpdate({ name: e.target.value })}
+                            onChange={(e) => onUpdate({ comboName: e.target.value })}
                         />
                     </div>
                 </div>
@@ -147,7 +147,7 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
             </div>
 
             {/* Items table */}
-            {combo.items.length > 0 ? (
+            {combo.comboItems.length > 0 ? (
                 <table className="w-full text-sm border-collapse">
                     <thead>
                         <tr className="bg-gray-50 text-tgray9 text-left border-t border-tgray5">
@@ -159,12 +159,12 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
                     </thead>
 
                     <tbody>
-                        {combo.items.map((item) => {
-                            const product = productCache[item.productId];
+                        {combo.comboItems.map((item) => {
+                            const { product } = item;
                             const subtotal = product ? product.salePrice * item.quantity : 0;
 
                             return (
-                                <tr key={item.productId} className="border-t border-tgray5 align-middle">
+                                <tr key={product.id} className="border-t border-tgray5 align-middle">
                                     <td className="px-4 py-3">
                                         {product && (
                                             <div className="flex items-center gap-3">
@@ -208,7 +208,7 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
                                             placeHolder="1"
                                             inputType="text"
                                             onChange={(e) =>
-                                                updateItemQuantity(item.productId, parseFormattedNumber(e.target.value) || 1)
+                                                updateItemQuantity(product.id, parseFormattedNumber(e.target.value) || 1)
                                             }
                                         />
                                     </td>
@@ -220,7 +220,7 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
                                     <td className="px-4 pt-4 w-15 text-center">
                                         <button
                                             type="button"
-                                            onClick={() => removeItem(item.productId)}
+                                            onClick={() => removeItem(product.id)}
                                             className="cursor-pointer"
                                         >
                                             <TrashIcon width={24} height={24} className="text-red" />
@@ -238,7 +238,7 @@ export function ComboTable({ combo, index, productCache, cacheProduct, onUpdate,
             )}
 
             {/* Combo pricing */}
-            {combo.items.length > 0 && (
+            {combo.comboItems.length > 0 && (
                 <div className="flex items-center justify-between gap-4 px-8 py-3 border-t border-tgray5 bg-gray-50">
                     <div>
                         <p className="text-sm text-tgray9 mb-1">Tổng giá nhập</p>
