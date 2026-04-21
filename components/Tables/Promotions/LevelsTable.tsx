@@ -67,9 +67,10 @@ interface LevelsTableProps {
     levels: PromotionLevel[];
     onUpdateLevel: (index: number, patch: Partial<PromotionLevel>) => void;
     onRemoveLevel: (index: number) => void;
+    isEditable: boolean;
 }
 
-export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTableProps) {
+export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel, isEditable }: LevelsTableProps) {
     const dispatch = useDispatch();
 
     const handleMinValueChange = (index: number, rawValue: string) => {
@@ -120,7 +121,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
     }
 
     return (
-        <div className="rounded-lg border-[0.5px] border-tgray5 overflow-hidden">
+        <div className="rounded-lg border-[0.5px] border-tgray5">
             <table className="w-full text-sm border-collapse">
                 <thead>
                     <tr className="bg-gray-50 text-tgray9 text-left">
@@ -145,6 +146,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
                                         placeHolder="Nhập giá trị tối thiểu"
                                         value={formatThousands(level.minValue)}
                                         onChange={(e) => handleMinValueChange(index, e.target.value)} 
+                                        disabled={!isEditable}
                                     />
                                 </td>
 
@@ -154,6 +156,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
                                         value={level.discountType}
                                         onChange={(v) => handleDiscountTypeChange(index, v as DiscountType)}
                                         options={DISCOUNT_TYPE_OPTIONS}
+                                        disabled={!isEditable}
                                     />
                                 </td>
 
@@ -164,6 +167,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
                                         placeHolder="Nhập giá trị giảm"
                                         value={formatThousands(level.discountValue)}
                                         onChange={(e) => handleDiscountValueChange(index, e.target.value)} 
+                                        disabled={!isEditable}
                                     />
                                 </td>
 
@@ -174,7 +178,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
                                         placeHolder="Nhập giảm tối đa (nếu có)"
                                         value={level.maxDiscount ? formatThousands(level.maxDiscount) : ""}
                                         onChange={(e) => handleMaxDiscountChange(index, e.target.value)} 
-                                        disabled={level.discountType === "Fixed"}
+                                        disabled={level.discountType === "Fixed" || !isEditable}
                                     />
                                 </td>
 
@@ -183,13 +187,15 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel }: LevelsTabl
                                 </td>
 
                                 <td className="px-4 pt-4 w-12 text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => onRemoveLevel(index)}
-                                        className="cursor-pointer"
-                                    >
-                                        <TrashIcon width={24} height={24} className="text-red"/>
-                                    </button>
+                                    {isEditable && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onRemoveLevel(index)}
+                                            className="cursor-pointer"
+                                        >
+                                            <TrashIcon width={24} height={24} className="text-red"/>
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         )

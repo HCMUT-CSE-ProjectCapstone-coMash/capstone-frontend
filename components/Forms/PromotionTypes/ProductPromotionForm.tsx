@@ -15,9 +15,10 @@ import { SelectedProductsTable } from "../../Tables/Promotions/SelectedProductsT
 interface ProductPromotionFormProps {
     productDiscounts: ProductDiscountItem[];
     onChange: (productDiscounts: ProductDiscountItem[]) => void;
+    isEditable: boolean;
 }
 
-export function ProductPromotionForm({ productDiscounts, onChange } : ProductPromotionFormProps) {
+export function ProductPromotionForm({ productDiscounts, onChange, isEditable } : ProductPromotionFormProps) {
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
@@ -85,6 +86,7 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
+                        disabled={!isEditable}
                     />
                 </div>
             </div>
@@ -94,6 +96,7 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
                     productDiscounts={productDiscounts}
                     onUpdate={updateProduct}
                     onRemove={removeProduct}
+                    isEditable={isEditable}
                 />
             ) : (
                 <div className="rounded-lg border-[0.5px] border-dashed border-tgray5 px-4 py-8 text-center text-sm text-gray-400">

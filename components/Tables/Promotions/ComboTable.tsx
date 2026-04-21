@@ -17,9 +17,10 @@ interface ComboTableProps {
     index: number;
     onUpdate: (patch: Partial<ComboDeal>) => void;
     onRemove: () => void;
+    isEditable: boolean;
 }
 
-export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps) {
+export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: ComboTableProps) {
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
@@ -98,13 +99,16 @@ export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps
                             value={combo.comboName}
                             placeHolder="VD: 1 áo + 1 váy"
                             onChange={(e) => onUpdate({ comboName: e.target.value })}
+                            disabled={!isEditable}
                         />
                     </div>
                 </div>
 
-                <button type="button" onClick={onRemove} className="cursor-pointer">
-                    <TrashIcon width={24} height={24} className="text-red" />
-                </button>
+                {isEditable && (
+                    <button type="button" onClick={onRemove} className="cursor-pointer">
+                        <TrashIcon width={24} height={24} className="text-red" />
+                    </button>
+                )}
             </div>
 
             {/* Search input for this combo */}
@@ -142,6 +146,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
+                        disabled={!isEditable}
                     />
                 </div>
             </div>
@@ -210,6 +215,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps
                                             onChange={(e) =>
                                                 updateItemQuantity(product.id, parseFormattedNumber(e.target.value) || 1)
                                             }
+                                            disabled={!isEditable}
                                         />
                                     </td>
 
@@ -218,13 +224,15 @@ export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps
                                     </td>
 
                                     <td className="px-4 pt-4 w-15 text-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => removeItem(product.id)}
-                                            className="cursor-pointer"
-                                        >
-                                            <TrashIcon width={24} height={24} className="text-red" />
-                                        </button>
+                                        {isEditable && (
+                                            <button
+                                                type="button"
+                                                onClick={() => removeItem(product.id)}
+                                                className="cursor-pointer"
+                                            >
+                                                <TrashIcon width={24} height={24} className="text-red" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             );
@@ -262,6 +270,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove }: ComboTableProps
                             placeHolder="0"
                             inputType="text"
                             onChange={(e) => handleComboPriceChange(e.target.value)}
+                            disabled={!isEditable}
                         />
                     </div>
 

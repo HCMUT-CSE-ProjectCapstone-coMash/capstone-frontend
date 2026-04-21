@@ -29,9 +29,10 @@ interface SelectedProductsTableProps {
     productDiscounts: ProductDiscountItem[];
     onUpdate: (productId: string, patch: Partial<ProductDiscountItem>) => void;
     onRemove: (productId: string) => void;
+    isEditable: boolean;
 }
 
-export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove } : SelectedProductsTableProps) {
+export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove, isEditable } : SelectedProductsTableProps) {
     const dispatch = useDispatch();
 
     const handleDiscountValueChange = (item: ProductDiscountItem, rawValue: string) => {
@@ -67,7 +68,7 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove } :
     };
 
     return (
-        <div className="rounded-lg border-[0.5px] border-tgray5 overflow-hidden">
+        <div className="rounded-lg border-[0.5px] border-tgray5">
             <table className="w-full text-sm border-collapse">
                 <thead>
                     <tr className="bg-gray-50 text-tgray9 text-left">
@@ -135,6 +136,7 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove } :
                                         value={item.discountType}
                                         onChange={(v) => handleDiscountTypeChange(item, v as DiscountType)}
                                         options={DISCOUNT_TYPE_OPTIONS}
+                                        disabled={!isEditable}
                                     />
                                 </td>
 
@@ -145,6 +147,7 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove } :
                                         placeHolder="0"
                                         inputType="text"
                                         onChange={(e) => handleDiscountValueChange(item, e.target.value)}
+                                        disabled={!isEditable}
                                     />
                                 </td>
 
@@ -169,13 +172,15 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove } :
                                 </td>
 
                                 <td className="px-4 pt-4 w-15 text-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => onRemove(item.product.id)}
-                                        className="cursor-pointer"
-                                    >
-                                        <TrashIcon width={24} height={24} className="text-red"/>
-                                    </button>
+                                    {isEditable && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onRemove(item.product.id)}
+                                            className="cursor-pointer"
+                                        >
+                                            <TrashIcon width={24} height={24} className="text-red"/>
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         )

@@ -260,6 +260,7 @@ export function CreatePromotionForm() {
                 <ProductPromotionForm 
                     productDiscounts={form.productDiscounts}
                     onChange={(productDiscounts) => setField("productDiscounts", productDiscounts)}
+                    isEditable={true}
                 />
             )}
 
@@ -268,6 +269,7 @@ export function CreatePromotionForm() {
                 <ComboPromotionForm
                     combos={form.combos}
                     onChange={(combos) => setField("combos", combos)}
+                    isEditable={true}
                 />
             )}
 
@@ -276,6 +278,7 @@ export function CreatePromotionForm() {
                 <OrderPromotionForm
                     levels={form.levels}
                     onChange={(levels) => setField("levels", levels)}
+                    isEditable={true}
                 />
             )}
 

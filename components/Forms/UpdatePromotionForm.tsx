@@ -54,8 +54,6 @@ function promotionToFormState(promotion: Promotion): FormState {
         description: promotion.description,
     };
 
-    console.log(promotion)
-
     switch (promotion.promotionType) {
         case "Product":
             return {
@@ -125,6 +123,7 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                     value={promotion.promotionName}
                     placeHolder="Nhập tên khuyến mãi"
                     onChange={(e) => setField("promotionName" ,e.target.value)}
+                    disabled={promotion.promotionPhase !== "Upcoming"}
                 />
             </div>
 
@@ -143,6 +142,7 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                     value={form.startDate}
                     placeHolder="Chọn ngày bắt đầu"
                     onChange={(date) => setField("startDate", date)}
+                    disabled={promotion.promotionPhase !== "Upcoming"}
                 />
  
                 <DatePickerInput
@@ -150,6 +150,7 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                     value={form.endDate}
                     placeHolder="Chọn ngày kết thúc"
                     onChange={(date) => setField("endDate", date)}
+                    disabled={promotion.promotionPhase !== "Upcoming"}
                 />
             </div>
  
@@ -160,12 +161,14 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                 placeHolder="Mô tả (nếu có)"
                 inputType="text"
                 onChange={(e) => setField("description", e.target.value)}
+                disabled={promotion.promotionPhase !== "Upcoming"}
             />
 
             {form.promotionType === "Product" && (  
                 <ProductPromotionForm 
                     productDiscounts={form.productDiscounts}
                     onChange={(productDiscounts) => setField("productDiscounts", productDiscounts)}
+                    isEditable={promotion.promotionPhase === "Upcoming"}
                 />
             )}
 
@@ -174,6 +177,7 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                 <ComboPromotionForm
                     combos={form.combos}
                     onChange={(combos) => setField("combos", combos)}
+                    isEditable={promotion.promotionPhase === "Upcoming"}
                 />
             )}
 
@@ -182,6 +186,7 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                 <OrderPromotionForm
                     levels={form.levels}
                     onChange={(levels) => setField("levels", levels)}
+                    isEditable={promotion.promotionPhase === "Upcoming"}
                 />
             )}
         </form>

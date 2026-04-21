@@ -5,9 +5,10 @@ import { AddIcon } from "@/public/assets/Icons";
 interface OrderPromotionFormProps {
     levels: PromotionLevel[];
     onChange: (levels: PromotionLevel[]) => void;
+    isEditable: boolean;
 }
 
-export function OrderPromotionForm({ levels, onChange} : OrderPromotionFormProps) {
+export function OrderPromotionForm({ levels, onChange, isEditable } : OrderPromotionFormProps) {
 
     // -- Handlers ----------------------------------------------------------------
 
@@ -34,17 +35,19 @@ export function OrderPromotionForm({ levels, onChange} : OrderPromotionFormProps
 
     return (
         <div className="flex flex-col gap-4">
-            <LevelsTable levels={levels} onUpdateLevel={updateLevel} onRemoveLevel={removeLevel}/>
+            <LevelsTable levels={levels} onUpdateLevel={updateLevel} onRemoveLevel={removeLevel} isEditable={isEditable}/>
 
             <div className="flex justify-end mt-3">
-                <button 
-                    type="button"
-                    className="flex items-center gap-1 text-sm text-pink-500 font-medium hover:text-pink-600 cursor-pointer transition-colors"
-                    onClick={addLevel}
-                >
-                    <AddIcon width={24} height={24} className=""/>
-                    <span className="material-icons-outlined text-sm">Thêm mức giảm giá</span>
-                </button>
+                {isEditable && (
+                    <button 
+                        type="button"
+                        className="flex items-center gap-1 text-sm text-pink-500 font-medium hover:text-pink-600 cursor-pointer transition-colors"
+                        onClick={addLevel}
+                    >
+                        <AddIcon width={24} height={24} className=""/>
+                        <span className="material-icons-outlined text-sm">Thêm mức giảm giá</span>
+                    </button>
+                )}
             </div>
         </div>
     );
