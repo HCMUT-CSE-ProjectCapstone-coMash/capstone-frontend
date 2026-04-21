@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PromotionType, DiscountType, ProductDiscountItem, ComboDeal, PromotionLevel, CreatePromotionPayload } from "@/types/promotion";
+import { PromotionType, ProductDiscountItem, ComboDeal, PromotionLevel, CreatePromotionPayload } from "@/types/promotion";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SelectOption } from "@/types/UIType";
@@ -31,11 +31,10 @@ const PROMOTION_TYPE_OPTIONS: SelectOption[] = [
 
 interface FormState {
     promotionName: string,
-    promtionType: PromotionType,
+    promotionType: PromotionType,
     startDate: string,
     endDate: string,
     description: string,
-    discountType: DiscountType,
 
     productDiscounts: ProductDiscountItem[],
     combos: ComboDeal[],
@@ -51,11 +50,10 @@ const emptyLevel = (): PromotionLevel => ({
 
 const initialFormState: FormState = {
     promotionName: "",
-    promtionType: "Product",
+    promotionType: "Product",
     startDate: "",
     endDate: "",
     description: "",
-    discountType: "Percent",
 
     productDiscounts: [],
     combos: [],
@@ -72,7 +70,7 @@ function buildPayload(form: FormState): CreatePromotionPayload {
         description: form.description,
     };
  
-    switch (form.promtionType) {
+    switch (form.promotionType) {
         case "Product":
             return {
                 promotionType: "Product",
@@ -131,7 +129,7 @@ export function CreatePromotionForm() {
     const handlePromotionTypeChange = (newType: PromotionType) => {
         setForm((prev) => ({
             ...prev,
-            promtionType: newType,
+            promotionType: newType,
             productDiscounts: [],
             combos: [],
             levels: [emptyLevel()],
@@ -177,17 +175,17 @@ export function CreatePromotionForm() {
             return;
         }
 
-        if (form.promtionType === "Product" && form.productDiscounts.length === 0) {
+        if (form.promotionType === "Product" && form.productDiscounts.length === 0) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một sản phẩm áp dụng" }));
             return;
         }
 
-        if (form.promtionType === "Combo" && form.combos.length === 0) {
+        if (form.promotionType === "Combo" && form.combos.length === 0) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một combo áp dụng" }));
             return;
         }
 
-        if (form.promtionType === "Order" && form.levels.length === 0) {
+        if (form.promotionType === "Order" && form.levels.length === 0) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một mức khuyến mãi" }));
             return;
         }
@@ -226,7 +224,7 @@ export function CreatePromotionForm() {
             <div className="grid grid-cols-3 gap-6">
                 <SelectInput
                     label="Phân loại"
-                    value={form.promtionType}
+                    value={form.promotionType}
                     onChange={(value) => handlePromotionTypeChange(value as PromotionType)}
                     options={PROMOTION_TYPE_OPTIONS}
                 />
@@ -258,7 +256,7 @@ export function CreatePromotionForm() {
             {/* ── Type-specific ──────────────────────────────────────────────── */}
 
             {/* Product */}
-            {form.promtionType === "Product" && (  
+            {form.promotionType === "Product" && (  
                 <ProductPromotionForm 
                     productDiscounts={form.productDiscounts}
                     onChange={(productDiscounts) => setField("productDiscounts", productDiscounts)}
@@ -266,7 +264,7 @@ export function CreatePromotionForm() {
             )}
 
             {/* Combo */}
-            {form.promtionType === "Combo" && (
+            {form.promotionType === "Combo" && (
                 <ComboPromotionForm
                     combos={form.combos}
                     onChange={(combos) => setField("combos", combos)}
@@ -274,7 +272,7 @@ export function CreatePromotionForm() {
             )}
 
             {/* Order */}
-            {form.promtionType === "Order" && (
+            {form.promotionType === "Order" && (
                 <OrderPromotionForm
                     levels={form.levels}
                     onChange={(levels) => setField("levels", levels)}

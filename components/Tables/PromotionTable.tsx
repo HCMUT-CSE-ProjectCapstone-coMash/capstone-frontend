@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
 import { useState } from "react";
-import { PromotionType, Promotion } from "@/types/promotion";
+import { PromotionType, Promotion, PromotionPhase } from "@/types/promotion";
 import { useRouter } from "next/navigation";
 import { OwnerCreateSalePageRoute, OwnerSaleByIdPageRoute } from "@/const/routes";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -22,6 +22,12 @@ const PROMOTION_TYPE_LABEL: Record<PromotionType, string> = {
     Order:   "KM đơn hàng",
 };
 
+const PHASE_DISPLAY: Record<PromotionPhase, { label: string; color: string }> = {
+    Upcoming: { label: "Sắp diễn ra",  color: "bg-blue-100 text-blue-800" },
+    Ongoing:  { label: "Đang diễn ra", color: "bg-green-100 text-green-800" },
+    Expired:  { label: "Đã kết thúc",  color: "bg-gray-100 text-gray-800" },
+};
+
 // ── Filter tabs ────────────────────────────────────────────────────────────────
 
 const FILTER_TABS: { label: string; value: PromotionType | "" }[] = [
@@ -33,36 +39,15 @@ const FILTER_TABS: { label: string; value: PromotionType | "" }[] = [
 
 // ── Component ──────────────────────────────────────────────────────────────────
 type PromotionStatusBadgeProps = {
-    startDate: string;
-    endDate: string;
+    phase: PromotionPhase;
 };
 
-function PromotionStatusBadge({ startDate, endDate }: PromotionStatusBadgeProps) {
-    const now = new Date();
-
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0); 
-
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
-
-    let status = "";
-    let color = "";
-
-    if (now < start) {
-        status = "Sắp diễn ra";
-        color = "bg-blue-100 text-blue-800";
-    } else if (now > end) {
-        status = "Đã kết thúc";
-        color = "bg-gray-100 text-gray-800";
-    } else {
-        status = "Đang diễn ra";
-        color = "bg-green-100 text-green-800";
-    }
+function PromotionStatusBadge({ phase }: PromotionStatusBadgeProps) {
+    const { label, color } = PHASE_DISPLAY[phase];
 
     return (
         <span className={`px-2 py-1 rounded ${color} text-sm font-medium`}>
-            {status}
+            {label}
         </span>
     );
 }
@@ -102,14 +87,17 @@ export function PromotionTable() {
         {
             title: "Trạng thái",
             key: "status",
-            render: (row) => <PromotionStatusBadge startDate={row.startDate} endDate={row.endDate} />,
+            render: (row) => <PromotionStatusBadge phase={row.promotionPhase} />,
         },
         {
             title: "",
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => router.push(OwnerSaleByIdPageRoute(row.id))}
+                    onClick={() => {
+                        router.push(OwnerSaleByIdPageRoute(row.id));
+                        router.refresh();
+                    }}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem

@@ -4,7 +4,9 @@ export type PromotionType = "Product" | "Combo" | "Order";
 
 export type DiscountType = "Percent" | "Fixed";
 
-export type PromotionStatus = "Active" | "Deleted";
+export type PromotionStatus = "Active" | "Stopped" | "Deleted";
+
+export type PromotionPhase = "Upcoming" | "Ongoing" | "Expired";
 
 // ── Shared fields across all promotion types ──────────────────────────────────
 
@@ -13,7 +15,8 @@ interface BasePromotion {
     promotionId: string
     promotionName: string
     description: string
-    promotionStatus: PromotionStatus
+    promotionStatus: PromotionStatus,
+    promotionPhase: PromotionPhase,
     startDate: string
     endDate: string
     createdAt: string

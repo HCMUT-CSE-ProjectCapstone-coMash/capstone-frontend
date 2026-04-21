@@ -1,11 +1,109 @@
-import { Promotion } from "@/types/promotion";
+import { ComboDeal, ProductDiscountItem, Promotion, PromotionLevel, PromotionType } from "@/types/promotion";
 import { TextInput } from "../FormInputs/TextInput";
+import { useState } from "react";
+import { SelectInput } from "../FormInputs/SelectInput";
+import { SelectOption } from "@/types/UIType";
+import { DatePickerInput } from "../FormInputs/DatePickerInput";
+import { ProductPromotionForm } from "./PromotionTypes/ProductPromotionForm";
+import { ComboPromotionForm } from "./PromotionTypes/ComoboPromotionForm";
+import { OrderPromotionForm } from "./PromotionTypes/OrderPromotionForm";
+
+const PROMOTION_TYPE_OPTIONS: SelectOption[] = [
+    { label: "KM sản phẩm", value: "Product" },
+    { label: "KM combo", value: "Combo" },
+    { label: "KM đơn hàng", value: "Order" },
+];
+
+interface FormState {
+    promotionName: string,
+    promotionType: PromotionType,
+    startDate: string,
+    endDate: string,
+    description: string,
+
+    productDiscounts: ProductDiscountItem[],
+    combos: ComboDeal[],
+    levels: PromotionLevel[],
+}
+
+const emptyLevel = (): PromotionLevel => ({
+    minValue: 0,
+    discountType: "Percent",
+    discountValue: 0,
+    maxDiscount: 0,
+});
+
+const initialFormState: FormState = {
+    promotionName: "",
+    promotionType: "Product",
+    startDate: "",
+    endDate: "",
+    description: "",
+
+    productDiscounts: [] as ProductDiscountItem[],
+    combos: [] as ComboDeal[],
+    levels: [emptyLevel()],
+};
+
+function promotionToFormState(promotion: Promotion): FormState {
+    const base = {
+        promotionName: promotion.promotionName,
+        promotionType: promotion.promotionType,
+        startDate: promotion.startDate,
+        endDate: promotion.endDate,
+        description: promotion.description,
+    };
+
+    console.log(promotion)
+
+    switch (promotion.promotionType) {
+        case "Product":
+            return {
+                ...initialFormState,
+                ...base,
+                productDiscounts: promotion.productDiscounts.map((pd) => ({
+                    product: pd.product,
+                    discountType: pd.discountType,
+                    discountValue: pd.discountValue,
+                })),
+            };
+
+        case "Combo":
+            return {
+                ...initialFormState,
+                ...base,
+                combos: promotion.combos.map((c) => ({
+                    comboName: c.comboName,
+                    comboPrice: c.comboPrice,
+                    comboItems: c.comboItems,
+                })),
+            };
+
+        case "Order":
+            return {
+                ...initialFormState,
+                ...base,
+                levels: promotion.levels.map((l) => ({
+                    minValue: l.minValue,
+                    discountType: l.discountType,
+                    discountValue: l.discountValue,
+                    maxDiscount: l.maxDiscount,
+                })),
+            };
+    }
+}
 
 export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
+    const [form, setForm] = useState<FormState>(() => promotionToFormState(promotion));
+ 
+    const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+        setForm((prev) => ({ ...prev, [key]: value }));
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
     }
+
 
     return (
         <form
@@ -22,13 +120,70 @@ export function UpdatePromotionForm({ promotion } : { promotion: Promotion }) {
                     disabled={true}
                 />
 
-                {/* <TextInput
+                <TextInput
                     label="Tên khuyến mãi"
                     value={promotion.promotionName}
                     placeHolder="Nhập tên khuyến mãi"
                     onChange={(e) => setField("promotionName" ,e.target.value)}
-                /> */}
+                />
             </div>
+
+            {/* Phân loại + Ngày bắt đầu + Ngày kết thúc */}
+            <div className="grid grid-cols-3 gap-6">
+                <SelectInput
+                    label="Phân loại"
+                    value={form.promotionType}
+                    onChange={() => {}}
+                    options={PROMOTION_TYPE_OPTIONS}
+                    disabled={true}
+                />
+ 
+                <DatePickerInput
+                    label="Ngày bắt đầu"
+                    value={form.startDate}
+                    placeHolder="Chọn ngày bắt đầu"
+                    onChange={(date) => setField("startDate", date)}
+                />
+ 
+                <DatePickerInput
+                    label="Ngày kết thúc"
+                    value={form.endDate}
+                    placeHolder="Chọn ngày kết thúc"
+                    onChange={(date) => setField("endDate", date)}
+                />
+            </div>
+ 
+            {/* Mô tả */}
+            <TextInput
+                label="Mô tả"
+                value={form.description}
+                placeHolder="Mô tả (nếu có)"
+                inputType="text"
+                onChange={(e) => setField("description", e.target.value)}
+            />
+
+            {form.promotionType === "Product" && (  
+                <ProductPromotionForm 
+                    productDiscounts={form.productDiscounts}
+                    onChange={(productDiscounts) => setField("productDiscounts", productDiscounts)}
+                />
+            )}
+
+            {/* Combo */}
+            {form.promotionType === "Combo" && (
+                <ComboPromotionForm
+                    combos={form.combos}
+                    onChange={(combos) => setField("combos", combos)}
+                />
+            )}
+
+            {/* Order */}
+            {form.promotionType === "Order" && (
+                <OrderPromotionForm
+                    levels={form.levels}
+                    onChange={(levels) => setField("levels", levels)}
+                />
+            )}
         </form>
     )
 }

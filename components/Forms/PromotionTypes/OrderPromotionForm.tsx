@@ -38,6 +38,7 @@ export function OrderPromotionForm({ levels, onChange} : OrderPromotionFormProps
 
             <div className="flex justify-end mt-3">
                 <button 
+                    type="button"
                     className="flex items-center gap-1 text-sm text-pink-500 font-medium hover:text-pink-600 cursor-pointer transition-colors"
                     onClick={addLevel}
                 >
