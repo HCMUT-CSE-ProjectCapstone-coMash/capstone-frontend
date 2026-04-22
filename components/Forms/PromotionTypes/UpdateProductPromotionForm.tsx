@@ -56,6 +56,7 @@ export function UpdateProductPromotionForm({ promotion } : UpdateProductPromotio
             type: i.discountType,
             value: i.discountValue,
         }));
+        
         const originalItems = promotion.productDiscounts.map((i) => ({
             id: i.product.id,
             type: i.discountType,

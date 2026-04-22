@@ -72,6 +72,7 @@ export function UpdateOrderPromotionForm({ promotion } : UpdateOrderPromotionFor
             value: i.discountValue,
             maxDiscount: i.maxDiscount,
         }));
+        
         const originalItems = promotion.levels.map((i) => ({
             minValue: i.minValue,
             type: i.discountType,
