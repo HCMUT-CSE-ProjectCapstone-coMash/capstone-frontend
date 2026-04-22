@@ -1,23 +1,43 @@
 "use client";
 
+import { ProductDiscountItem, ProductPromotion } from "@/types/promotion"
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { SelectedProductsTable } from "@/components/Tables/Promotions/SelectedProductsTable";
 import { Product, ProductWithOrderStatus } from "@/types/product";
-import { ProductDiscountItem } from "@/types/promotion";
-import { FetchApprovedProductByName } from "@/api/products/products";
-import Image from "next/image";
 import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
-import { SelectedProductsTable } from "../../Tables/Promotions/SelectedProductsTable";
+import { FetchApprovedProductByName } from "@/api/products/products";
+import { useQuery } from "@tanstack/react-query";
+import Image from "next/image";
+import { SharedPromotionFields } from "./SharedPromotionFields";
 
-// ── Props ──────────────────────────────────────────────────────────────────────
-
-interface ProductPromotionFormProps {
-    productDiscounts: ProductDiscountItem[];
-    onChange: (productDiscounts: ProductDiscountItem[]) => void;
+interface UpdateProductPromotionFormProps {
+    promotion: ProductPromotion
 }
 
-export function ProductPromotionForm({ productDiscounts, onChange } : ProductPromotionFormProps) {
+interface FormState {
+    promotionName: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    productDiscounts: ProductDiscountItem[];
+}
+
+export function UpdateProductPromotionForm({ promotion } : UpdateProductPromotionFormProps) {
+    const [formState, setFormState] = useState<FormState>({
+        promotionName: promotion.promotionName,
+        startDate: promotion.startDate,
+        endDate: promotion.endDate,
+        description: promotion.description,
+        productDiscounts: promotion.productDiscounts
+    });
+
+    const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
+        setFormState((prev) => ({ ...prev, [key]: value }));
+    }
+
+    // -- Product search & selection ─────────────────────────────────────────────────
+
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
@@ -38,7 +58,7 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
     // ── Handlers ───────────────────────────────────────────────────────────────
 
     const addProduct = (product: Product) => {
-        if (productDiscounts.some((p) => p.product.id === product.id)) return;
+        if (formState.productDiscounts.some((p) => p.product.id === product.id)) return;
 
         const newDiscountItem: ProductDiscountItem = {
             product,
@@ -46,21 +66,29 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
             discountValue: 0,
         };
 
-        onChange([...productDiscounts, newDiscountItem]);
+        setField("productDiscounts", [...formState.productDiscounts, newDiscountItem]);
     };
 
     const updateProduct = (productId: string, patch: Partial<ProductDiscountItem>) => {
-        onChange(productDiscounts.map((item) => item.product.id === productId ? { ...item, ...patch } : item));
+        setField("productDiscounts", formState.productDiscounts.map((item) => item.product.id === productId ? { ...item, ...patch } : item));
     };
 
     const removeProduct = (productId: string) => {
-        onChange(productDiscounts.filter((item) => item.product.id !== productId));
-    }
+        setField("productDiscounts", formState.productDiscounts.filter((item) => item.product.id !== productId));
+    };
 
-    // --- Render ───────────────────────────────────────────────────────────────────
+    // ── Render ────────────────────────────────────────────────────────────────
 
     return (
-        <div className="flex flex-col gap-4">
+        <form
+            className="py-10 flex flex-col gap-6"
+        >
+            <SharedPromotionFields
+                promotion={promotion}
+                values={formState}
+                onChange={setField}
+            />
+
             <div className="flex items-center justify-between">
                 <p className="text-sm font-normal text-tgray9">Sản phẩm áp dụng</p>
 
@@ -85,22 +113,17 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
+                        disabled={promotion.promotionPhase !== "Upcoming"}
                     />
                 </div>
             </div>
 
-            {productDiscounts.length > 0 ? (
-                <SelectedProductsTable 
-                    productDiscounts={productDiscounts}
-                    onUpdate={updateProduct}
-                    onRemove={removeProduct}
-                    isEditable={true}
-                />
-            ) : (
-                <div className="rounded-lg border-[0.5px] border-dashed border-tgray5 px-4 py-8 text-center text-sm text-gray-400">
-                    Tìm và chọn sản phẩm để áp dụng khuyến mãi
-                </div>
-            )}
-        </div>
+            <SelectedProductsTable
+                productDiscounts={formState.productDiscounts}
+                onUpdate={updateProduct}
+                onRemove={removeProduct}
+                isEditable={promotion.promotionPhase === "Upcoming"}
+            />
+        </form>
     )
 }

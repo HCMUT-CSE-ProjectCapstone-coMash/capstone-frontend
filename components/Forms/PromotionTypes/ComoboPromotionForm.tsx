@@ -6,10 +6,9 @@ import { ComboTable } from "../../Tables/Promotions/ComboTable";
 interface ComboPromotionFormProps {
     combos: ComboDeal[];
     onChange: (combos: ComboDeal[]) => void;
-    isEditable: boolean;
 }
 
-export function ComboPromotionForm({ combos, onChange, isEditable }: ComboPromotionFormProps) {
+export function ComboPromotionForm({ combos, onChange }: ComboPromotionFormProps) {
 
     const addCombo = () => {
         const newCombo: ComboDeal = {
@@ -33,15 +32,13 @@ export function ComboPromotionForm({ combos, onChange, isEditable }: ComboPromot
             <div className="flex items-center justify-between">
                 <p className="text-sm font-normal text-tgray9">Combo áp dụng</p>
 
-                {isEditable && (
-                    <button
-                        type="button"
-                        onClick={addCombo}
-                        className="px-3 py-2 text-sm font-semibold rounded-lg bg-purple text-white hover:bg-purple/80 transition-colors cursor-pointer"
-                    >
-                        + Thêm combo
-                    </button>
-                )}
+                <button
+                    type="button"
+                    onClick={addCombo}
+                    className="px-3 py-2 text-sm font-semibold rounded-lg bg-purple text-white hover:bg-purple/80 transition-colors cursor-pointer"
+                >
+                    + Thêm combo
+                </button>
             </div>
 
             {combos.length > 0 ? (
@@ -53,7 +50,7 @@ export function ComboPromotionForm({ combos, onChange, isEditable }: ComboPromot
                             index={index}
                             onUpdate={(patch) => updateCombo(index, patch)}
                             onRemove={() => removeCombo(index)}
-                            isEditable={isEditable}
+                            isEditable={true}
                         />
                     ))}
                 </div>

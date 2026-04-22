@@ -3,7 +3,9 @@
 import { FetchPromotionById } from "@/api/promotions/promotions";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { UpdatePromotionForm } from "@/components/Forms/UpdatePromotionForm";
+import { UpdateProductPromotionForm } from "@/components/Forms/PromotionTypes/UpdateProductPromotionForm";
+import { UpdateOrderPromotionForm } from "@/components/Forms/PromotionTypes/UpdateOrderPromotionForm";
+import { UpdateComboPromotionForm } from "@/components/Forms/PromotionTypes/UpdateComboPromotionForm";
 
 export default function PromotionDetailPage() {
     const { promotionId } = useParams();
@@ -30,21 +32,27 @@ export default function PromotionDetailPage() {
                 </button>
             </div>
 
-            {isLoading && (
+            {isLoading ? (
                 <div className="py-20 text-center text-tgray9">Đang tải khuyến mãi...</div>
-            )}
- 
-            {isError && (
+            ) : isError ? (
                 <div className="py-20 text-center text-red">
                     Không thể tải khuyến mãi. Vui lòng thử lại.
                 </div>
-            )}
- 
-            {!isLoading && !isError && !promotion && (
+            ) : !promotion ? (
                 <div className="py-20 text-center text-tgray9">Không tìm thấy khuyến mãi.</div>
+            ) : (
+                <>
+                    {promotion.promotionType === "Product" && (
+                        <UpdateProductPromotionForm promotion={promotion} />
+                    )}
+                    {promotion.promotionType === "Combo" && (
+                        <UpdateComboPromotionForm promotion={promotion} />
+                    )}
+                    {promotion.promotionType === "Order" && (
+                        <UpdateOrderPromotionForm promotion={promotion} />
+                    )}
+                </>
             )}
- 
-            {promotion && <UpdatePromotionForm promotion={promotion} />}
         </main>
     );
 }
