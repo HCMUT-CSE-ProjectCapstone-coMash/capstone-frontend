@@ -43,13 +43,13 @@ export default function PromotionDetailPage() {
             ) : (
                 <>
                     {promotion.promotionType === "Product" && (
-                        <UpdateProductPromotionForm promotion={promotion} />
+                        <UpdateProductPromotionForm key={JSON.stringify(promotion)} promotion={promotion} />
                     )}
                     {promotion.promotionType === "Combo" && (
-                        <UpdateComboPromotionForm promotion={promotion} />
+                        <UpdateComboPromotionForm key={JSON.stringify(promotion)} promotion={promotion} />
                     )}
                     {promotion.promotionType === "Order" && (
-                        <UpdateOrderPromotionForm promotion={promotion} />
+                        <UpdateOrderPromotionForm key={JSON.stringify(promotion)} promotion={promotion} />
                     )}
                 </>
             )}

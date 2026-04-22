@@ -116,3 +116,24 @@ export type CreatePromotionPayload =
     | CreateProductPromotionPayload
     | CreateComboPromotionPayload
     | CreateOrderPromotionPayload;
+
+// ── Update payload DTOs ───────────────────────────────────────────────────────
+
+interface BaseUpdatePromotionPayload {
+    promotionName: string;
+    description: string;
+    startDate: string;
+    endDate: string;
+}
+
+export interface UpdateProductPromotionPayload extends BaseUpdatePromotionPayload {
+    productDiscounts: ProductDiscountItemDto[];
+}
+
+export interface UpdateComboPromotionPayload extends BaseUpdatePromotionPayload {
+    combos: ComboDealDto[];
+}
+
+export interface UpdateOrderPromotionPayload extends BaseUpdatePromotionPayload {
+    levels: PromotionLevel[];
+}

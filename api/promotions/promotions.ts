@@ -1,4 +1,4 @@
-import { CreatePromotionPayload } from "@/types/promotion";
+import { CreatePromotionPayload, UpdateComboPromotionPayload, UpdateOrderPromotionPayload, UpdateProductPromotionPayload } from "@/types/promotion";
 import { axiosClient } from "../axiosClient";
 
 export async function FetchPromotionId() {
@@ -40,6 +40,37 @@ export async function FetchPromotions(currentPage: number, pageSize: number, cat
 export async function FetchPromotionById(promotionId: string) {
     const response = await axiosClient.get(
         "/promotions/" + promotionId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function UpdateProductPromotion(promotionId: string, payload: UpdateProductPromotionPayload) {
+    const response = await axiosClient.patch(
+        "/promotions/product/" + promotionId,
+        payload,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function UpdateOrderPromotion(promotionId: string, payload: UpdateOrderPromotionPayload) {
+    const response = await axiosClient.patch(
+        "/promotions/order/" + promotionId,
+        payload,
+        { withCredentials: true }
+    );
+
+    return response.data;
+    
+}
+
+export async function UpdateComboPromotion(promotionId: string, payload: UpdateComboPromotionPayload) {
+    const response = await axiosClient.patch(
+        "/promotions/combo/" + promotionId,
+        payload,
         { withCredentials: true }
     );
 
