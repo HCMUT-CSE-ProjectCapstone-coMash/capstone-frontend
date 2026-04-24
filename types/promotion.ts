@@ -26,8 +26,8 @@ interface BasePromotion {
 
 export interface ProductDiscountItem {
     product: Product,
-    discountType: DiscountType
-    discountValue: number,
+    discountType: DiscountType,
+    discountValue: number
 }
 
 export interface ProductPromotion extends BasePromotion {

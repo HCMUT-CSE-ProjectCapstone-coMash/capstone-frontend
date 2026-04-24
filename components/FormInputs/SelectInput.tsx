@@ -8,9 +8,10 @@ interface SelectInputProps {
     value: string;
     onChange: (value: string) => void;
     disabled?: boolean;
+    noDefaultOption?: boolean;
 }
 
-export function SelectInput({ label, options, value, onChange, disabled }: SelectInputProps) {
+export function SelectInput({ label, options, value, onChange, disabled, noDefaultOption = false }: SelectInputProps) {
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -52,12 +53,14 @@ export function SelectInput({ label, options, value, onChange, disabled }: Selec
                 {/* Danh sách options tùy chỉnh */}
                 {isOpen && (
                     <ul className="absolute z-10 w-full mt-1 bg-white border border-tgray5 rounded-lg shadow-lg overflow-hidden">
-                        <li
-                            onClick={() => { onChange(""); setIsOpen(false); }}
-                            className="p-2.5 text-sm hover:bg-purple/10 cursor-pointer"
-                        >
-                            Lựa chọn
-                        </li>
+                        {!noDefaultOption && (
+                            <li
+                                onClick={() => { onChange(""); setIsOpen(false); }}
+                                className="p-2.5 text-sm hover:bg-purple/10 cursor-pointer"
+                            >
+                                Lựa chọn
+                            </li>
+                        )}
                         {options.map((option) => (
                             <li
                                 key={option.value}

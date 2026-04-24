@@ -12,13 +12,12 @@ import { RootState } from "@/utilities/store";
 import { PaymentMethod } from "@/const/PaymentMethod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
-import { AxiosError } from "axios";
 import { Customer } from "@/types/customer";
-import { clearSaleProducts, setCustomer } from "@/utilities/SaleProductStore";
 import { SaleOrderRequest, SaleOrderResponse } from "@/types/saleOrder";
 import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 import { PrintBill } from "../PrintBill";
+import { CartLine } from "@/types/cart";
 
 interface InvoiceFormState {
     customerName: string;
@@ -41,128 +40,56 @@ const paymentOptions: { value: string, label: string }[] = [
 ];
 
 interface InvoiceFormProps {
-    completedOrder: SaleOrderResponse | null;
-    setCompletedOrder: (order: SaleOrderResponse | null) => void;
+    cart: CartLine[];
 }
 
-export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormProps) {
+export function InvoiceForm({ cart }: InvoiceFormProps) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
-    const products = useSelector((state: RootState) => state.saleProduct.products);
-    const selectedCustomer = useSelector((state: RootState) => state.saleProduct.customer);
-
-    const isDisabled = completedOrder !== null;
 
     const [form, setForm] = useState<InvoiceFormState>(initialInvoiceFormState);
     const setField = <K extends keyof InvoiceFormState>(key: K, value: InvoiceFormState[K]) => {
         setForm((prev) => ({ ...prev, [key]: value }));
     };
 
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null); 
+
+    // -- Current time state ------------------------------------------------------------------
     const [currentTime, setCurrentTime] = useState<string>("");
 
-    const totalAmount = products.reduce((sum, product) => {
-        const discountedPrice = Math.round(product.salePrice * (1 - product.discount / 100));
-        return sum + discountedPrice * product.quantity;
-    }, 0);
-
-    // Xử lý thay đổi phương thức thanh toán
-    const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedMethod = e.target.value as PaymentMethod;
-        setField("paymentMethod", selectedMethod);
-
-        if (selectedMethod === PaymentMethod.CASH) {
-            setField("customerMoney", 0)
-        } else if (selectedMethod === PaymentMethod.TRANSFER) {
-            setField("customerMoney", totalAmount);
-        } else if (selectedMethod === PaymentMethod.DEBIT) {
-            setField("customerMoney", 0);
-        }
-    };
-
-    // --- TÍNH TOÁN TIỀN THỐI / TIỀN NỢ ---
-    const isDebit = form.paymentMethod === PaymentMethod.DEBIT;
-
-    // Tiền thối (chỉ tính khi khách đưa dư)
-    const returnMoney = form.customerMoney > totalAmount ? form.customerMoney - totalAmount : 0;
-
-    // Tiền nợ (chỉ tính khi khách đưa thiếu)
-    const debtAmount = totalAmount > form.customerMoney ? totalAmount - form.customerMoney : 0;
-
-    // Xác định Text và Số tiền hiển thị dựa trên phương thức thanh toán
-    const displayLabel = isDebit ? "Số tiền còn nợ" : "Số tiền hoàn trả";
-    const displayAmount = isDebit ? debtAmount : returnMoney;
-
-    // Mutation để tạo khách hàng mới
-    const createCustomerMutation = useMutation({
-        mutationFn: ({ customerName, customerPhone, userId } : { customerName: string, customerPhone: string, userId: string }) => CreateCustomer(customerName, customerPhone, userId),
-
-        onSuccess: (data) => {
-            setField("customerName", data.customerName);
-            setField("customerPhone", data.customerPhone);
-            dispatch(setCustomer({
-                id: data.customerId,
-                customerName: data.customerName,
-                customerPhone: data.customerPhone,
-                customerStatus: data.customerStatus,
-                createdAt: data.createdAt,
-                createdBy: data.createdBy
-            }));
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Tạo khách hàng thành công: ${data.customerName}` }));
-        },
-
-        onError: (error: AxiosError<{ message: string }>) => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: error.response?.data.message }));
-        }
-    });
-
-    // Mutation để tạo đơn hàng mới (xuất hóa đơn)
-    const createSaleOrderMutation = useMutation({
-        mutationFn: ({ saleOrder }: { saleOrder: SaleOrderRequest }) => CreateSaleOrder(saleOrder),
-
-        onSuccess: (data) => {
-            setCompletedOrder(data);
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công!" }));
-        },
-
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Xuất hóa đơn thất bại. Vui lòng thử lại." }));
-        }
-    });
-
     useEffect(() => {
-    const updateTime = () => {
-        const now = new Date();
-        
-        // Lấy ngày, tháng, năm
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0'); // Tháng trong JS bắt đầu từ 0
-        const year = now.getFullYear();
-        
-        // Lấy giờ, phút
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        
-        // Nối chuỗi theo định dạng mong muốn
-        setCurrentTime(`${day}/${month}/${year} - ${hours}:${minutes}`);
-    };
-
-    updateTime(); // Gọi ngay lần đầu tiên component mount
-
-    // (Tùy chọn) Cập nhật lại thời gian mỗi 60 giây để đồng hồ chạy real-time
-    const intervalId = setInterval(updateTime, 60000); 
-
-    // Cleanup function để tránh rò rỉ bộ nhớ
-    return () => clearInterval(intervalId);
+        const updateTime = () => {
+            const now = new Date();
+            
+            // Lấy ngày, tháng, năm
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0'); // Tháng trong JS bắt đầu từ 0
+            const year = now.getFullYear();
+            
+            // Lấy giờ, phút
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            // Nối chuỗi theo định dạng mong muốn
+            setCurrentTime(`${day}/${month}/${year} - ${hours}:${minutes}`);
+        };
+    
+        updateTime(); // Gọi ngay lần đầu tiên component mount
+    
+        // (Tùy chọn) Cập nhật lại thời gian mỗi 60 giây để đồng hồ chạy real-time
+        const intervalId = setInterval(updateTime, 60000); 
+    
+        // Cleanup function để tránh rò rỉ bộ nhớ
+        return () => clearInterval(intervalId);
     }, []);
 
-    const debouncedName = useDebounce(form.customerName, 500);
-    const debouncedPhone = useDebounce(form.customerPhone, 500);
+    // -- Search customer by name ----------------------------------------------------------------
+    const debouncedSearchName = useDebounce(form.customerName, 500);
 
-    // Tìm kiếm khách hàng theo tên và số điện thoại với react-query
     const { data: customersByName = [] } = useQuery({
-        queryKey: ["customersByName", debouncedName, ],
-        queryFn: () => FetchCustomerByName(debouncedName, ),
-        enabled: debouncedName.length >= 2,
+        queryKey: ["customersByName", debouncedSearchName],
+        queryFn: () => FetchCustomerByName(debouncedSearchName),
+        enabled: debouncedSearchName.length >= 2,
         staleTime: 0,
         gcTime: 0
     });
@@ -173,21 +100,41 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
         data: c
     }));
 
+    // -- Search customer by phone ----------------------------------------------------------------
+    const debouncedSearchPhone = useDebounce(form.customerPhone, 500);
+
     const { data: customersByPhone = [] } = useQuery({
-        queryKey: ["customersByPhone", debouncedPhone],
-        queryFn: () => FetchCustomerByPhone(debouncedPhone),
-        enabled: debouncedPhone.length >= 3,
+        queryKey: ["customersByPhone", debouncedSearchPhone],
+        queryFn: () => FetchCustomerByPhone(debouncedSearchPhone),
+        enabled: debouncedSearchPhone.length >= 3,
         staleTime: 0,
-        gcTime: 0,
+        gcTime: 0
     });
-    
+
     const phoneSuggestions = customersByPhone.map((c: Customer) => ({
         label: c.customerPhone,
         value: c.id,
         data: c,
     }));
 
-    // Xử lý tạo khách hàng mới
+    // -- Create new customer -----------------------------------------------------------------
+    type CreateCustomerPayload = {
+        customerName: string;
+        customerPhone: string;
+        userId: string;
+    }
+
+    const createCustomerMutation = useMutation({
+        mutationFn: ({ customerName, customerPhone, userId } : CreateCustomerPayload) => CreateCustomer(customerName, customerPhone, userId),
+        onSuccess: (data: Customer) => {
+            setSelectedCustomer(data);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã tạo khách hàng mới" }));
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo khách hàng mới" }));
+        }
+    });
+
     const handleCreateCustomer = () => {
         if (!user.id) return;
 
@@ -206,41 +153,63 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
             customerPhone: form.customerPhone,
             userId: user.id
         });
+    }
+
+    // -- Calculate total amount --------------------------------------------------------------
+    const calculateLineTotal = (line: CartLine): number => {
+        if (line.kind === "combo") {
+            return line.appliedCombo.comboPrice * line.quantity;
+        }
+    
+        const basePrice = line.product.salePrice;
+    
+        const promotionPrice = line.appliedPromotion
+            ? line.appliedPromotion.discountType === "Percent"
+                ? basePrice * (1 - line.appliedPromotion.discountValue / 100)
+                : basePrice - line.appliedPromotion.discountValue
+            : basePrice;
+    
+        const finalPrice = Math.round(promotionPrice * (1 - line.discount / 100));
+    
+        return finalPrice * line.quantity;
     };
 
-    // Xử lý xóa khách hàng đã chọn
-    const handleClearCustomer = () => {
-        dispatch(setCustomer(undefined));
-        setField("customerName", "");
-        setField("customerPhone", "");
+    const totalAmount = cart.reduce((sum, line) => sum + calculateLineTotal(line), 0);
+
+    // -- Handle payment method change --------------------------------------------------------
+    const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedMethod = e.target.value as PaymentMethod;
+        setField("paymentMethod", selectedMethod);
+
+        if (selectedMethod === PaymentMethod.CASH) {
+            setField("customerMoney", 0)
+        } else if (selectedMethod === PaymentMethod.TRANSFER) {
+            setField("customerMoney", totalAmount);
+        } else if (selectedMethod === PaymentMethod.DEBIT) {
+            setField("customerMoney", 0);
+        }
     };
 
-    // Xử lý submit form (xuất hóa đơn)
+    const isDebt = form.paymentMethod === PaymentMethod.DEBIT;
+
+    const returnMoney = form.customerMoney > totalAmount ? form.customerMoney - totalAmount : 0;
+
+    const debtAmount = totalAmount > form.customerMoney ? totalAmount - form.customerMoney : 0;
+
+    const displayLabel = isDebt ? "Số tiền còn nợ" : "Số tiền hoàn trả";
+    const displayAmount = isDebt ? debtAmount : returnMoney;
+
+    // -- Handle create sale order ------------------------------------------------------------
+    const createSaleOrderMutation = useMutation({
+
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log(cart);
+    }
 
-        if (!user.id) return;
-        
-        if (products.length === 0) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm sản phẩm vào hóa đơn" }));
-            return;
-        }
-        
-        const invoiceData: SaleOrderRequest = {
-            customerId: selectedCustomer ? selectedCustomer.id : "",
-            userId: user.id,
-            paymentMethod: form.paymentMethod,
-            debitMoney: debtAmount,
-            products: products.map((p) => ({
-                productId: p.id,
-                selectedSize: p.selectedSize,
-                quantity: p.quantity,
-                discount: p.discount
-            }))
-        };
-
-        createSaleOrderMutation.mutate({ saleOrder: invoiceData });
-    };
+    // -- Render ------------------------------------------------------------------------------
 
     return (
         <form 
@@ -250,7 +219,7 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
                 <div className="text-sm text-tgray9">Thời gian bán hàng</div>
                 <div className="text-sm">{currentTime || "--/--/---- - --:--"}</div>
             </div>
-            
+
             <div className="flex flex-row justify-between">
                 <div className="text-sm text-tgray9">Người bán hàng</div>
                 <div className="text-sm">{user.fullName}</div>
@@ -270,8 +239,11 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
                         <button
                             type="button"
                             className={`py-2 px-4 rounded-lg border border-red-500 text-red-500 text-sm font-medium transition hover:bg-red-50 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`}
-                            onClick={handleClearCustomer}
-                            disabled={isDisabled}
+                            onClick={() => {
+                                setSelectedCustomer(null);
+                                setField("customerName", "");
+                                setField("customerPhone", "");
+                            }}
                         >
                             Đổi khách hàng
                         </button>
@@ -283,56 +255,32 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
                         label={"Tên khách hàng"}
                         placeHolder="Nhập tên khách hàng để tìm kiếm hoặc tạo mới"
                         value={form.customerName}
-                        onChange={(e) => {
-                            setField("customerName", e.target.value);
-                        }}
+                        onChange={(e) => setField("customerName", e.target.value)}
                         suggestions={nameSuggestions}
                         onSuggestionClick={(item) => {
-                            setField("customerName", item.label);
-                            setField("customerPhone", item.data.customerPhone);
-                            dispatch(setCustomer({ 
-                                id: item.data.id,
-                                customerName: item.data.customerName,
-                                customerPhone: item.data.customerPhone,
-                                customerStatus: item.data.customerStatus,
-                                createdAt: item.data.createdAt,
-                                createdBy: item.data.createdBy
-                            }));
-                        }}                
+                            setSelectedCustomer(item.data);
+                        }}
                         renderItem={(item) => (
                             <div className="flex justify-between items-center">
                                 <p>{item.label} - {item.data.customerPhone}</p>
                             </div>
                         )}
-                        disabled={isDisabled}
                     />
 
                     <SearchInput<Customer>
                         label={"Số điện thoại khách hàng"}
                         placeHolder="Nhập số điện thoại để tìm kiếm hoặc tạo mới"
                         value={form.customerPhone}
-                        onChange={(e) => {
-                            setField("customerPhone", e.target.value);
-                        }}
+                        onChange={(e) => setField("customerPhone", e.target.value)}
                         suggestions={phoneSuggestions}
                         onSuggestionClick={(item) => {
-                            setField("customerName", item.data.customerName);
-                            setField("customerPhone", item.label);
-                            dispatch(setCustomer({ 
-                                id: item.data.id,
-                                customerName: item.data.customerName,
-                                customerPhone: item.data.customerPhone,
-                                customerStatus: item.data.customerStatus,
-                                createdAt: item.data.createdAt,
-                                createdBy: item.data.createdBy
-                            }));
+                            setSelectedCustomer(item.data);
                         }}
                         renderItem={(item) => (
                             <div className="flex justify-between items-center">
-                                <p>{item.data.customerName} - {item.label}</p>
+                                <p>{item.label} - {item.data.customerName}</p>
                             </div>
                         )}
-                        disabled={isDisabled}
                     />
 
                     <div className="flex justify-end">
@@ -340,7 +288,6 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
                             type="button"
                             className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleCreateCustomer}
-                            disabled={isDisabled}
                         >
                             Tạo khách hàng mới
                         </button>
@@ -352,14 +299,13 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
                 <div className="text-sm text-tgray9">Tổng tiền</div>
                 <div className="text-sm font-semibold">{formatThousands(totalAmount)} VND</div>
             </div>
-            
+
             <RadioInput
                 label="Phương thức thanh toán"
                 labelPosition="right"
                 options={paymentOptions}
                 value={form.paymentMethod}
                 onChange={handlePaymentMethodChange} 
-                disabled={isDisabled}
             />
 
             <TextInput
@@ -375,32 +321,15 @@ export function InvoiceForm({ completedOrder, setCompletedOrder }: InvoiceFormPr
                 <div className="text-sm text-tgray9">{displayLabel}</div>
                 <div className="text-sm font-semibold">{formatThousands(displayAmount)} VND</div>
             </div>
-            
-            {completedOrder ? (
-                <div className="flex gap-3 self-center">
-                    <PrintBill order={completedOrder}/>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setCompletedOrder(null);
-                            setForm(initialInvoiceFormState);
-                            dispatch(clearSaleProducts());
-                        }}
-                        className="p-2.5 w-45 rounded-lg text-purple font-semibold border border-purple text-base cursor-pointer hover:bg-purple/10 transition-all"
-                    >
-                        Tạo đơn mới
-                    </button>
-                </div>
-            ) : (
-                <button
-                    type="submit"
-                    onClick={handleSubmit}
-                    disabled={createSaleOrderMutation.isPending}
-                    className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Xuất hóa đơn"}
-                </button>
-            )}
+
+            <button
+                type="submit"
+                onClick={handleSubmit}
+                disabled={createSaleOrderMutation.isPending}
+                className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Xuất hóa đơn"}
+            </button>
         </form>
     );
 }

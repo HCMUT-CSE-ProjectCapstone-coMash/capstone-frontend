@@ -76,3 +76,12 @@ export async function UpdateComboPromotion(promotionId: string, payload: UpdateC
 
     return response.data;
 }
+
+export async function GetPromotionsByProductId(productId: string) {
+    const response = await axiosClient.get(
+        "/promotions/get-promotions/" + productId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
