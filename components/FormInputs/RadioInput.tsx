@@ -27,7 +27,7 @@ export function RadioInput({ label, value, onChange, options, labelPosition = "t
             )}
             
             {/* Vùng chứa các Radio Buttons */}
-            <div className={`flex items-center gap-6 text-sm ${isRight ? 'w-auto' : 'w-full'}`}>
+            <div className={`flex items-center gap-6 text-sm ${isRight ? 'w-auto' : 'w-full justify-between'}`}>
                 {options.map((option) => {
                     const isChecked = value === option.value;
                     

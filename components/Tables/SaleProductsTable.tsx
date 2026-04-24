@@ -51,153 +51,50 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
 
     const columns: Column<CartLine>[] = [
         { title: "Tên sản phẩm", key: "productName", render: (line) => (
-            <>
-                {line.kind === "product" ? (
-                    <div className="flex items-center justify-center gap-4">
-                        <div className="relative w-12 h-12">
-                            <Image src={line.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
-                        </div>
-                        <p>{line.product.productName}</p>
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-start gap-2">
-                        {line.appliedCombo.comboItems.map((item, index) => (
-                            <div key={index} className="flex items-center gap-4">
-                                <div className="relative w-12 h-12">
-                                    <Image src={item.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
-                                </div>
-                                <p>{item.product.productName}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </>
+            <ProductNameCell line={line}/>
         )},
         { title: "Kích cỡ", key: "size", render: (line) => (
-            <>
-                {line.kind === "product" ? (
-                    <div className="w-16 mx-auto">
-                        <SelectInput
-                            label=""
-                            options={
-                                line.kind === "product"
-                                    ? sortSizes(
-                                        line.product.quantities.map((q) => q.size),
-                                        line.product.sizeType
-                                        ).map((size) => ({ label: size, value: size }))
-                                    : []
-                            }                    
-                            value={line.kind === "product" ? line.selectedSize : ""}
-                            onChange={(value) => onSizeChange(cart.indexOf(line), value)}
-                            noDefaultOption={true}
-                        />
-                    </div>
-                ) : (
-                    <div>
-                        <button
-                            className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
-                            type="button"
-                            onClick={() => {}}
-                        >
-                            Xem
-                        </button>
-                    </div>
-                )}
-            </>
+            <SizeCell line={line} lineIndex={cart.indexOf(line)} onSizeChange={onSizeChange}/>
         )},
         { title: "Đơn giá", key: "unitPrice", render: (line) => (
             <UnitPriceCell line={line} />
         )},        
-        { title: "Số lượng", key: "quantity", render: (line) => {
-            const available = getAvailableQuantity(line);
-            return (
-                <div className="flex items-center justify-center gap-4">
-                    <button 
-                        className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
-                        onClick={() => {
-                            if (line.quantity - 1 <= 0) {
-                                onQuantityChange(cart.indexOf(line), line.quantity - 1);
-                                dispatch(addAlert({ type: AlertType.WARNING, message: "Đã xoá sản phẩm khỏi giỏ hàng" }));
-                            } else {
-                                onQuantityChange(cart.indexOf(line), line.quantity - 1);
-                                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã giảm số lượng" }));
-                            }
-                        }}
-                    >
-                        <MinusIcon width={24} height={24} className=""/>
-                    </button>
-                    <p>{line.quantity}</p>
-                    <button 
-                        className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
-                        onClick={() => {
-                            if (line.quantity < available) {
-                                onQuantityChange(cart.indexOf(line), line.quantity + 1)
-                                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật số lượng thành công" }));
-                            } else {
-                                dispatch(addAlert({ type: AlertType.WARNING, message: `Số lượng tối đa là ${available}` }));
-                            }
-                        }}
-                    >
-                        <AddIcon width={24} height={24} className=""/>
-                    </button>
-                </div>
-            );
-        }},
-        { title: "Chiết khấu", key: "discount", render: (line) => (
-            <>
-                {line.kind === "product" ? (
-                    <Cell
-                        isPercentage={true}
-                        value={line.discount}
-                        onSave={(value) => {
-                            if (value < 0 || value > 100) {
-                                dispatch(addAlert({ type: AlertType.WARNING, message: "Chiết khấu phải từ 0% đến 100%" }));
-                                return;
-                            }
-                            onDiscountChange(cart.indexOf(line), value);
-                            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã cập nhật chiết khấu thành ${value}%` }));
-                        }}        
-                    />
-                ) : (
-                    <div></div>
-                )}
-            </>
+        { title: "Số lượng", key: "quantity", render: (line) => (
+            <QuantityCell 
+                line={line} 
+                lineIndex={cart.indexOf(line)} 
+                availableQuantity={getAvailableQuantity(line)} 
+                onQuantityChange={onQuantityChange}
+                dispatch={dispatch}
+            />
         )},
-        { title: "Khuyến mãi", key: "promotion", render: (line) => {
-            if (line.kind === "combo") return (
-                <span className="text-purple font-semibold">{line.appliedCombo.comboName}</span>
-            );
-
-            const count = line.availableCombos.length;
-
-            return (
-                <Badge
-                    count={count}
-                >
-                    <button
-                        className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
-                        type="button"
-                        onClick={() => {
-                            setSelectedPromotionLine(line);
-                            setIsPromotionModalOpen(true);
-                        }}
-                    >
-                        Xem
-                    </button>
-                </Badge>
-            );
-        }},
+        { title: "Tồn kho", key: "available", render: (line) => (
+            <StockCell line={line} cart={cart}/>
+        )},
+        { title: "Chiết khấu", key: "discount", render: (line) => (
+            <DiscountCell 
+                line={line} 
+                lineIndex={cart.indexOf(line)} 
+                onDiscountChange={onDiscountChange} 
+                dispatch={dispatch}
+            />
+        )},
+        { title: "Khuyến mãi", key: "promotion", render: (line) => (
+            <PromotionCell 
+                line={line} 
+                onOpen={(line) => {
+                    setSelectedPromotionLine(line);
+                    setIsPromotionModalOpen(true);
+                }} 
+            />
+        )},
         { title: "Xoá", key: "delete", render: (line) => (
-            <button
-                className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
-                onClick={() => {
-                    onRemove(cart.indexOf(line));
-                    const name = line.kind === "product" ? line.product.productName : line.appliedCombo.comboName;
-                    dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã xoá "${name}" khỏi giỏ hàng` }));
-                }}
-            >
-                <TrashIcon width={24} height={24} className={"text-red-500"}/>
-            </button>
+            <DeleteCell 
+                line={line} 
+                lineIndex={cart.indexOf(line)} 
+                onRemove={onRemove} 
+                dispatch={dispatch}
+            />
         )}
     ];
 
@@ -225,6 +122,109 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
             )}
         </>
     )
+}
+
+// -- Component for rendering product name --
+function ProductNameCell({ line }: { line: CartLine }) {
+    if (line.kind === "product") {
+        return (
+            <div className="flex items-center justify-center gap-4">
+                <div className="relative w-12 h-12">
+                    <Image src={line.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                </div>
+                <p>{line.product.productName}</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col items-start gap-2">
+            {line.appliedCombo.comboItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-4">
+                    <div className="relative w-12 h-12">
+                        <Image src={item.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                    </div>
+                    <p>{item.product.productName}</p>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// -- Component for rendering size selector --
+interface SizeCellProps {
+    line: CartLine;
+    onSizeChange: (lineIndex: number, newSize: string) => void;
+    lineIndex: number;
+}
+
+function SizeCell({ line, onSizeChange, lineIndex }: SizeCellProps) {
+    if (line.kind === "product") {
+        return (
+            <div className="w-16 mx-auto">
+                <SelectInput
+                    label=""
+                    options={sortSizes(line.product.quantities.map((q) => q.size), line.product.sizeType).map((size) => ({ label: size, value: size }))}
+                    value={line.selectedSize}
+                    onChange={(value) => onSizeChange(lineIndex, value)}
+                    noDefaultOption={true}
+                />
+            </div>
+        );
+    }
+
+    return (
+        <button
+            className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+            type="button"
+            onClick={() => {}}
+        >
+            Xem
+        </button>
+    );
+}
+
+// -- Component for rendering quantity controls --
+interface QuantityCellProps {
+    line: CartLine;
+    lineIndex: number;
+    availableQuantity: number;
+    onQuantityChange: (lineIndex: number, newQuantity: number) => void;
+    dispatch: ReturnType<typeof useDispatch>;
+}
+
+function QuantityCell({ line, lineIndex, availableQuantity, onQuantityChange, dispatch }: QuantityCellProps) {
+    return (
+        <div className="flex items-center justify-center gap-4">
+            <button
+                className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={() => {
+                    onQuantityChange(lineIndex, line.quantity - 1);
+                    if (line.quantity - 1 <= 0) {
+                        dispatch(addAlert({ type: AlertType.WARNING, message: "Đã xoá sản phẩm khỏi giỏ hàng" }));
+                    } else {
+                        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã giảm số lượng" }));
+                    }
+                }}
+            >
+                <MinusIcon width={24} height={24} className=""/>
+            </button>
+            <p>{line.quantity}</p>
+            <button
+                className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+                onClick={() => {
+                    if (line.quantity < availableQuantity) {
+                        onQuantityChange(lineIndex, line.quantity + 1);
+                        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật số lượng thành công" }));
+                    } else {
+                        dispatch(addAlert({ type: AlertType.WARNING, message: `Số lượng tối đa là ${availableQuantity}` }));
+                    }
+                }}
+            >
+                <AddIcon width={24} height={24} className=""/>
+            </button>
+        </div>
+    );
 }
 
 // -- Component for rendering unit price with promotion and discount details in tooltip --
@@ -298,5 +298,103 @@ function UnitPriceCell({ line }: { line: CartLine }) {
                 </span>
             </div>
         </Tooltip>
+    );
+}
+
+// -- Component for rendering stock with cart-aware remaining quantities --
+function StockCell({ line, cart }: { line: CartLine; cart: CartLine[] }) {
+    if (line.kind !== "product") return <></>;
+
+    return (
+        <div className="flex flex-col items-center">
+            {sortSizes(line.product.quantities.map((q) => q.size), line.product.sizeType).map((size) => {
+                const quantity = line.product.quantities.find((q) => q.size === size)!;
+
+                const totalInCart = cart
+                    .filter(l => l.kind === "product" && l.product.id === line.product.id && l.selectedSize === size)
+                    .reduce((sum, l) => sum + l.quantity, 0);
+
+                const remaining = quantity.quantities - totalInCart;
+
+                if (remaining <= 0) return null;
+
+                return (
+                    <div key={size} className="flex justify-center items-center gap-2 text-sm">
+                        <span className="font-medium">{size}:</span>
+                        <span className="text-purple font-bold">{remaining}</span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+// -- Component for rendering discount cell --
+type DiscountCellProps = {
+    line: CartLine;
+    lineIndex: number;
+    onDiscountChange: (lineIndex: number, discount: number) => void;
+    dispatch: ReturnType<typeof useDispatch>;
+}
+
+function DiscountCell({ line, lineIndex, onDiscountChange, dispatch }: DiscountCellProps) {
+    if (line.kind !== "product") return <div></div>;
+
+    return (
+        <Cell
+            isPercentage={true}
+            value={line.discount}
+            onSave={(value) => {
+                if (value < 0 || value > 100) {
+                    dispatch(addAlert({ type: AlertType.WARNING, message: "Chiết khấu phải từ 0% đến 100%" }));
+                    return;
+                }
+                onDiscountChange(lineIndex, value);
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã cập nhật chiết khấu thành ${value}%` }));
+            }}
+        />
+    );
+}
+
+// -- Component for rendering promotion button --
+function PromotionCell({ line, onOpen }: { line: CartLine; onOpen: (line: CartLine) => void; }) {
+    if (line.kind === "combo") {
+        return <span className="text-purple font-semibold">{line.appliedCombo.comboName}</span>;
+    }
+
+    return (
+        <Badge count={line.availableCombos.length}>
+            <button
+                className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+                type="button"
+                onClick={() => onOpen(line)}
+            >
+                Xem
+            </button>
+        </Badge>
+    );
+}
+
+// -- Component for rendering delete button --
+type DeleteCellProps = {
+    line: CartLine;
+    lineIndex: number;
+    onRemove: (lineIndex: number) => void;
+    dispatch: ReturnType<typeof useDispatch>;
+}
+
+function DeleteCell({ line, lineIndex, onRemove, dispatch }: DeleteCellProps) {
+
+    return (
+        <button
+            className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
+            onClick={() => {
+                onRemove(lineIndex);
+                const name = line.kind === "product" ? line.product.productName : line.appliedCombo.comboName;
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã xoá "${name}" khỏi giỏ hàng` }));
+            }}
+        >
+            <TrashIcon width={24} height={24} className={"text-red-500"}/>
+        </button>
     );
 }

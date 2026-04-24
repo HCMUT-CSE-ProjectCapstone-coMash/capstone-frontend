@@ -302,7 +302,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
 
             <RadioInput
                 label="Phương thức thanh toán"
-                labelPosition="right"
+                labelPosition="top"
                 options={paymentOptions}
                 value={form.paymentMethod}
                 onChange={handlePaymentMethodChange} 

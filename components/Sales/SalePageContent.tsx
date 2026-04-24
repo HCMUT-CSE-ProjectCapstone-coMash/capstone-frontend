@@ -211,9 +211,9 @@ export function SalePageContent() {
 
     return (
         <main className="px-10 pt-10 pb-25">
-            <div className="grid grid-cols-5 gap-x-10 gap-y-5">
+            <div className="grid grid-cols-7 gap-x-10 gap-y-5">
                 {/* Row 1: title + search */}
-                <div className="col-span-3 flex items-center">
+                <div className="col-span-5 flex items-center">
                     <p className="text-purple text-3xl font-medium">Bán hàng</p>
                 </div>
 
@@ -243,7 +243,7 @@ export function SalePageContent() {
                 </div>
 
                 {/* Row 2: table + form */}
-                <div className="col-span-3">
+                <div className="col-span-5">
                     <SaleProductsTable 
                         cart={cart}
                         onQuantityChange={UpdateQuantity}
