@@ -22,9 +22,10 @@ interface SearchInputProps<T> {
     isItemDisabled?: (item: Suggestion<T>) => boolean;
     isIcon?: boolean,
     disabled?: boolean,
+    onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
-export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError, isItemDisabled, isIcon = false, disabled = false } : SearchInputProps<T>) {
+export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosition="top", suggestions, onSuggestionClick, renderItem, isError, isItemDisabled, isIcon = false, disabled = false, onKeyDown } : SearchInputProps<T>) {
     const isLeft = labelPosition === "left";
     const borderClass = isError ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-tgray5 focus:border-purple focus:ring-purple";
 
@@ -50,6 +51,7 @@ export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosit
                     onFocus={() => !disabled && setShowSuggestions(true)}
                     onBlur={() => setShowSuggestions(false)}
                     className={`w-full h-12 ${isIcon ? 'pl-10' : 'px-2.5'} px-2.5 rounded-lg border-[0.5px] border-solid focus:outline-none focus:ring-1 transition-colors caret-purple ${borderClass} ${disabled ? "cursor-not-allowed opacity-70 bg-gray-100" : ""}`}
+                    onKeyDown={onKeyDown}
                 />
 
                 {!disabled && showSuggestions && suggestions.length > 0 && (

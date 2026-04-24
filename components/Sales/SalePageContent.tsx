@@ -3,7 +3,7 @@
 import { Product, ProductWithOrderStatus } from "@/types/product";
 import { SearchInput } from "../FormInputs/SearchInput";
 import { SaleProductsTable } from "../Tables/SaleProductsTable";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -267,25 +267,28 @@ export function SalePageContent() {
         setSearchTerm("");
     }
 
-    // -- 
-    useEffect(() => {
-        if (!debouncedName || products.length === 0) return;
-
-        const lastDash = debouncedName.lastIndexOf("-");
+    // -- Search input key handler ----------------------------------------------------------------
+    const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key !== "Enter") return;
+    
+        const lastDash = searchTerm.lastIndexOf("-");
         if (lastDash <= 0) return;
     
-        const potentialId = debouncedName.slice(0, lastDash).toUpperCase();
-        const potentialSize = debouncedName.slice(lastDash + 1).toUpperCase();
+        const potentialId = searchTerm.slice(0, lastDash).toUpperCase();
+        const potentialSize = searchTerm.slice(lastDash + 1).toUpperCase();
     
         const matched = products.find((p: ProductWithOrderStatus) =>
             p.productId.toUpperCase() === potentialId &&
             p.quantities.some((q) => q.size.toUpperCase() === potentialSize)
         );
-
-        if (!matched) return;
-
-
-    }, [debouncedName, products]);
+    
+        if (!matched) {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không tìm thấy sản phẩm" }));
+            return;
+        }
+    
+        await handleSuggestionOnClick(matched);
+    };
 
     // -- Render ------------------------------------------------------------------------------
 
@@ -319,6 +322,7 @@ export function SalePageContent() {
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
+                        onKeyDown={handleSearchKeyDown}
                     />
                 </div>
 
