@@ -46,10 +46,16 @@ export interface ProductCartLine {
     availableCombos: ComboDealResponse[];
 };
 
+export interface ComboItemSlot {
+    product: Product;
+    selectedSize: string;
+}
+
 export interface ComboCartLine {
     kind: "combo";
     appliedCombo: ComboDealResponse;
     quantity: number;
+    itemSlots: ComboItemSlot[];
 };
 
 export type CartLine = ProductCartLine | ComboCartLine;

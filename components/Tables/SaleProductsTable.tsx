@@ -2,7 +2,7 @@
 
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { CartLine } from "@/types/cart";
+import { CartLine, ComboDealResponse } from "@/types/cart";
 import Image from "next/image";
 import { formatThousands } from "@/utilities/numberFormat";
 import { AddIcon, MinusIcon, TrashIcon } from "@/public/assets/Icons";
@@ -23,6 +23,7 @@ interface SaleProductsTableProps {
     onRemove: ( lineIndex: number ) => void;
     onDiscountChange: ( lineIndex: number, newDiscount: number ) => void;
     onSizeChange: ( lineIndex: number, newSize: string ) => void;
+    onApplyCombo: (lineIndex: number, combo: ComboDealResponse) => void;
 }
 
 const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => {
@@ -37,7 +38,7 @@ const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => 
     });
 };
 
-export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange } : SaleProductsTableProps) {
+export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo } : SaleProductsTableProps) {
     const dispatch = useDispatch();
     
     const getAvailableQuantity = (line: CartLine): number => {
@@ -56,30 +57,53 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                         <div className="relative w-12 h-12">
                             <Image src={line.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
                         </div>
-                        <p className="">{line.product.productName}</p>
+                        <p>{line.product.productName}</p>
                     </div>
                 ) : (
-                    <span>{line.appliedCombo.comboName}</span>
+                    <div className="flex flex-col items-start gap-2">
+                        {line.appliedCombo.comboItems.map((item, index) => (
+                            <div key={index} className="flex items-center gap-4">
+                                <div className="relative w-12 h-12">
+                                    <Image src={item.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                                </div>
+                                <p>{item.product.productName}</p>
+                            </div>
+                        ))}
+                    </div>
                 )}
             </>
         )},
         { title: "Kích cỡ", key: "size", render: (line) => (
-            <div className="w-16 mx-auto">
-                <SelectInput
-                    label=""
-                    options={
-                        line.kind === "product"
-                            ? sortSizes(
-                                line.product.quantities.map((q) => q.size),
-                                line.product.sizeType
-                              ).map((size) => ({ label: size, value: size }))
-                            : []
-                    }                    
-                    value={line.kind === "product" ? line.selectedSize : ""}
-                    onChange={(value) => onSizeChange(cart.indexOf(line), value)}
-                    noDefaultOption={true}
-                />
-            </div>
+            <>
+                {line.kind === "product" ? (
+                    <div className="w-16 mx-auto">
+                        <SelectInput
+                            label=""
+                            options={
+                                line.kind === "product"
+                                    ? sortSizes(
+                                        line.product.quantities.map((q) => q.size),
+                                        line.product.sizeType
+                                        ).map((size) => ({ label: size, value: size }))
+                                    : []
+                            }                    
+                            value={line.kind === "product" ? line.selectedSize : ""}
+                            onChange={(value) => onSizeChange(cart.indexOf(line), value)}
+                            noDefaultOption={true}
+                        />
+                    </div>
+                ) : (
+                    <div>
+                        <button
+                            className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+                            type="button"
+                            onClick={() => {}}
+                        >
+                            Xem
+                        </button>
+                    </div>
+                )}
+            </>
         )},
         { title: "Đơn giá", key: "unitPrice", render: (line) => (
             <UnitPriceCell line={line} />
@@ -140,7 +164,9 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
             </>
         )},
         { title: "Khuyến mãi", key: "promotion", render: (line) => {
-            if (line.kind === "combo") return <div></div>
+            if (line.kind === "combo") return (
+                <span className="text-purple font-semibold">{line.appliedCombo.comboName}</span>
+            );
 
             const count = line.availableCombos.length;
 
@@ -167,7 +193,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 onClick={() => {
                     onRemove(cart.indexOf(line));
                     const name = line.kind === "product" ? line.product.productName : line.appliedCombo.comboName;
-                    dispatch(addAlert({ type: AlertType.WARNING, message: `Đã xoá "${name}" khỏi giỏ hàng` }));
+                    dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã xoá "${name}" khỏi giỏ hàng` }));
                 }}
             >
                 <TrashIcon width={24} height={24} className={"text-red-500"}/>
@@ -187,7 +213,14 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                     isOpen={isPromotionModalOpen}
                     onClose={() => setIsPromotionModalOpen(false)}
                 >
-                    <PromotionSelectModal line={selectedPromotionLine}/>
+                    <PromotionSelectModal 
+                        line={selectedPromotionLine}
+                        onApplyCombo={(combo) => {
+                            onApplyCombo(cart.indexOf(selectedPromotionLine), combo);
+                            setIsPromotionModalOpen(false);
+                            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã áp dụng combo "${combo.comboName}"` }));
+                        }}
+                    />
                 </LayoutModal>
             )}
         </>

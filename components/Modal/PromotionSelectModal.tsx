@@ -1,12 +1,13 @@
-import { CartLine } from "@/types/cart";
+import { CartLine, ComboDealResponse } from "@/types/cart";
 import { formatThousands } from "@/utilities/numberFormat";
 import Image from "next/image";
 
 interface PromotionSelectModalProps {
     line: CartLine;
+    onApplyCombo: (combo: ComboDealResponse) => void;
 }
 
-export function PromotionSelectModal({ line }: PromotionSelectModalProps) {
+export function PromotionSelectModal({ line, onApplyCombo }: PromotionSelectModalProps) {
     if (line.kind !== "product") return null;
 
     const { availableCombos, product } = line;
@@ -85,7 +86,7 @@ export function PromotionSelectModal({ line }: PromotionSelectModalProps) {
                             {/* Apply button */}
                             <button
                                 type="button"
-                                onClick={() => {}}
+                                onClick={() => onApplyCombo(combo)}
                                 className="w-full py-2 rounded-lg bg-purple text-white text-sm font-medium hover:bg-purple/90 transition cursor-pointer"
                             >
                                 Áp dụng combo

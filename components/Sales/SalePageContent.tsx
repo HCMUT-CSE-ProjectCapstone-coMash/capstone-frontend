@@ -121,6 +121,21 @@ export function SalePageContent() {
         dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã đổi size thành ${newSize}` }));
     };
     
+    const ApplyCombo = (lineIndex: number, combo: ComboDealResponse) => {
+        const updatedCart = [...cart];
+        updatedCart[lineIndex] = {
+            kind: "combo",
+            appliedCombo: combo,
+            quantity: 1,
+            itemSlots: combo.comboItems.flatMap((item) =>
+                Array.from({ length: item.quantity }, () => ({
+                    product: item.product,
+                    selectedSize: item.product.quantities[0]?.size ?? "",
+                }))
+            ),
+        };
+        setCart(updatedCart);
+    };    
 
     // -- Promotion Helper --------------------------------------------------------------------
     const findBestProductPromotion = (data: PromotionsResponse, product: Product): AppliedProductDiscount | undefined => {
@@ -235,6 +250,7 @@ export function SalePageContent() {
                         onRemove={RemoveFromCart}
                         onDiscountChange={UpdateDiscount}
                         onSizeChange={UpdateSize}
+                        onApplyCombo={ApplyCombo}
                     />
                 </div>
 
