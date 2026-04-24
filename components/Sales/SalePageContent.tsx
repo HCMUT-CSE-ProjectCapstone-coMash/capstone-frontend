@@ -3,7 +3,7 @@
 import { Product, ProductWithOrderStatus } from "@/types/product";
 import { SearchInput } from "../FormInputs/SearchInput";
 import { SaleProductsTable } from "../Tables/SaleProductsTable";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -49,6 +49,27 @@ export function SalePageContent() {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể lấy thông tin khuyến mãi của sản phẩm" }));
         }
     });
+
+    // -- Cart and Size Checker -------------------------------------------------------------------
+    const getCurrentCartQuantity = (productId: string, size: string) => {
+        return cart.reduce((total, line) => {
+            if (line.kind === "product" && line.product.id === productId && line.selectedSize === size) {
+                return total + line.quantity;
+            }
+            return total;
+        }, 0);
+    };
+
+    const getAvailableSize = (product: Product): string | null => {
+        for (const sizeEntry of product.quantities) {
+            const currentQtyInCart = getCurrentCartQuantity(product.id, sizeEntry.size);
+    
+            if (sizeEntry.quantities - currentQtyInCart > 0) {
+                return sizeEntry.size;
+            }
+        }
+        return null;
+    };
 
     // -- Cart Handler ------------------------------------------------------------------------
     const AddToCart = (product: Product, selectedSize: string, availableCombos: ComboDealResponse[], appliedPromotion?: AppliedProductDiscount) => {
@@ -109,15 +130,37 @@ export function SalePageContent() {
         if (line.kind !== "product") return;
     
         const sizeEntry = line.product.quantities.find(q => q.size === newSize);
-        if (!sizeEntry || sizeEntry.quantities <= 0) {
+        if (!sizeEntry) return;
+    
+        const otherCartQty = cart.reduce((total, l, i) => {
+            if (i !== lineIndex && l.kind === "product" && l.product.id === line.product.id && l.selectedSize === newSize) {
+                return total + l.quantity;
+            }
+            return total;
+        }, 0);
+    
+        const available = sizeEntry.quantities - otherCartQty;
+    
+        if (available <= 0) {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Size này đã hết hàng" }));
             return;
         }
     
-        const clampedQuantity = Math.min(line.quantity, sizeEntry.quantities);
-    
-        updatedCart[lineIndex] = { ...line, selectedSize: newSize, quantity: clampedQuantity };
-        setCart(updatedCart);
+        const existingLineIndex = cart.findIndex(
+            (l, i) => i !== lineIndex && l.kind === "product" && l.product.id === line.product.id && l.selectedSize === newSize
+        );
+
+        if (existingLineIndex >= 0) {
+            const existingLine = updatedCart[existingLineIndex] as ProductCartLine;
+            const mergedQuantity = Math.min(existingLine.quantity + line.quantity, available + existingLine.quantity);
+            updatedCart[existingLineIndex] = { ...existingLine, quantity: mergedQuantity };
+            setCart(updatedCart.filter((_, i) => i !== lineIndex));
+        } else {
+            const clampedQuantity = Math.min(line.quantity, available);
+            updatedCart[lineIndex] = { ...line, selectedSize: newSize, quantity: clampedQuantity };
+            setCart(updatedCart);
+        }
+
         dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã đổi size thành ${newSize}` }));
     };
     
@@ -183,16 +226,33 @@ export function SalePageContent() {
     // -- Suggestion click handler ------------------------------------------------------------
     const handleSuggestionOnClick = async (product: Product) => {
         const lastDash = searchTerm.lastIndexOf("-");
-        const potentialSize = lastDash > 0 ? searchTerm.slice(lastDash + 1).toUpperCase() : "";
+        const HasExplicitSize = lastDash > 0;
 
-        const availableSizes = product.quantities.map((q) => q.size);
-        const selectedSize = availableSizes.includes(potentialSize) ? potentialSize : availableSizes[0];
+        let selectedSize: string | null = null;
 
-        const sizeEntry = product.quantities.find((q) => q.size === selectedSize);
-        if (!sizeEntry || sizeEntry.quantities <= 0) {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm đã hết hàng" }));
-            setSearchTerm("");
-            return;
+        if (HasExplicitSize) {
+            const potentialSize = searchTerm.slice(lastDash + 1).toUpperCase();
+
+            const sizeEntry = product.quantities.find(q => q.size === potentialSize);
+            if (!sizeEntry) {
+                dispatch(addAlert({ type: AlertType.ERROR, message: "Size không tồn tại" }));
+                return;
+            }
+
+            const currentQtyInCart = getCurrentCartQuantity(product.id, potentialSize);
+
+            if (sizeEntry.quantities - currentQtyInCart <= 0) {
+                dispatch(addAlert({ type: AlertType.ERROR, message: "Size này đã hết hàng" }));
+                return;
+            }
+            selectedSize = potentialSize;
+        } else {
+            selectedSize = getAvailableSize(product);
+
+            if (!selectedSize) {
+                dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm đã hết hàng" }));
+                return;
+            }
         }
 
         try {
@@ -206,6 +266,26 @@ export function SalePageContent() {
 
         setSearchTerm("");
     }
+
+    // -- 
+    useEffect(() => {
+        if (!debouncedName || products.length === 0) return;
+
+        const lastDash = debouncedName.lastIndexOf("-");
+        if (lastDash <= 0) return;
+    
+        const potentialId = debouncedName.slice(0, lastDash).toUpperCase();
+        const potentialSize = debouncedName.slice(lastDash + 1).toUpperCase();
+    
+        const matched = products.find((p: ProductWithOrderStatus) =>
+            p.productId.toUpperCase() === potentialId &&
+            p.quantities.some((q) => q.size.toUpperCase() === potentialSize)
+        );
+
+        if (!matched) return;
+
+
+    }, [debouncedName, products]);
 
     // -- Render ------------------------------------------------------------------------------
 

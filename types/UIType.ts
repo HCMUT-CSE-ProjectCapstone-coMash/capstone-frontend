@@ -17,7 +17,7 @@ export interface SelectOption {
 export interface Column<T> {
     title: string,
     key: string,
-    render?: (row: T) => React.ReactNode;
+    render?: (row: T, index: number) => React.ReactNode;
 };
 
 export interface TablePagination {

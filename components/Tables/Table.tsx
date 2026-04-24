@@ -35,7 +35,7 @@ export function Table<T>({ columns, data, isLoading = false, pagination }: Table
                                 <tr key={rowIndex}>
                                     {columns.map((column, colIndex) => (
                                         <td key={colIndex} className="p-4 text-center border-b border-gray-500">
-                                            {column.render ? column.render(row) : [column.key]}
+                                            {column.render ? column.render(row, rowIndex) : [column.key]}
                                         </td>
                                     ))}
                                 </tr>

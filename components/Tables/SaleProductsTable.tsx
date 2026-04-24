@@ -53,16 +53,16 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
         { title: "Tên sản phẩm", key: "productName", render: (line) => (
             <ProductNameCell line={line}/>
         )},
-        { title: "Kích cỡ", key: "size", render: (line) => (
-            <SizeCell line={line} lineIndex={cart.indexOf(line)} onSizeChange={onSizeChange}/>
+        { title: "Kích cỡ", key: "size", render: (line, index) => (
+            <SizeCell line={line} lineIndex={index} onSizeChange={onSizeChange}/>
         )},
         { title: "Đơn giá", key: "unitPrice", render: (line) => (
             <UnitPriceCell line={line} />
         )},        
-        { title: "Số lượng", key: "quantity", render: (line) => (
+        { title: "Số lượng", key: "quantity", render: (line, index) => (
             <QuantityCell 
                 line={line} 
-                lineIndex={cart.indexOf(line)} 
+                lineIndex={index} 
                 availableQuantity={getAvailableQuantity(line)} 
                 onQuantityChange={onQuantityChange}
                 dispatch={dispatch}
@@ -71,27 +71,27 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
         { title: "Tồn kho", key: "available", render: (line) => (
             <StockCell line={line} cart={cart}/>
         )},
-        { title: "Chiết khấu", key: "discount", render: (line) => (
+        { title: "Chiết khấu", key: "discount", render: (line, index) => (
             <DiscountCell 
                 line={line} 
-                lineIndex={cart.indexOf(line)} 
+                lineIndex={index} 
                 onDiscountChange={onDiscountChange} 
                 dispatch={dispatch}
             />
         )},
-        { title: "Khuyến mãi", key: "promotion", render: (line) => (
+        { title: "Khuyến mãi", key: "promotion", render: (line, index) => (
             <PromotionCell 
                 line={line} 
-                onOpen={(line) => {
+                onOpen={() => {
                     setSelectedPromotionLine(line);
                     setIsPromotionModalOpen(true);
                 }} 
             />
         )},
-        { title: "Xoá", key: "delete", render: (line) => (
+        { title: "Xoá", key: "delete", render: (line, index) => (
             <DeleteCell 
                 line={line} 
-                lineIndex={cart.indexOf(line)} 
+                lineIndex={index} 
                 onRemove={onRemove} 
                 dispatch={dispatch}
             />
