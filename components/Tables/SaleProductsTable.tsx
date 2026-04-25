@@ -25,6 +25,7 @@ interface SaleProductsTableProps {
     onDiscountChange: ( lineIndex: number, newDiscount: number ) => void;
     onSizeChange: ( lineIndex: number, newSize: string ) => void;
     onApplyCombo: (lineIndex: number, combo: ComboDealResponse) => void;
+    onComboSlotQuantityChange: (lineIndex: number, slotIndex: number, size: string, newQuantity: number) => void;
 }
 
 const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => {
@@ -39,7 +40,7 @@ const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => 
     });
 };
 
-export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo } : SaleProductsTableProps) {
+export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo, onComboSlotQuantityChange } : SaleProductsTableProps) {
     const dispatch = useDispatch();
     
     const getAvailableQuantity = (line: CartLine): number => {
@@ -50,7 +51,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
     const [selectedPromotionLine, setSelectedPromotionLine] = useState<CartLine | null>(null);
     const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
 
-    const [selectedComboLine, setSelectedComboLine] = useState<CartLine | null>(null);
+    const [selectedComboLineIndex, setSelectedComboLineIndex] = useState<number | null>(null);
     const [isComboSizeModalOpen, setIsComboSizeModalOpen] = useState(false);
 
     const columns: Column<CartLine>[] = [
@@ -63,7 +64,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 lineIndex={index} 
                 onSizeChange={onSizeChange} 
                 onOpenComboSize={() => {
-                    setSelectedComboLine(line);
+                    setSelectedComboLineIndex(index);
                     setIsComboSizeModalOpen(true);
                 }}
             />
@@ -133,12 +134,19 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 </LayoutModal>
             )}
 
-            {selectedComboLine && (
+            {selectedComboLineIndex !== null && cart[selectedComboLineIndex]?.kind === "combo" && (
                 <LayoutModal 
                     isOpen={isComboSizeModalOpen} 
-                    onClose={() => setIsComboSizeModalOpen(false)}
+                    onClose={() => {
+                        setIsComboSizeModalOpen(false);
+                        setSelectedComboLineIndex(null);
+                    }}
                 >
-                    <ComboSizeModal line={selectedComboLine} />
+                    <ComboSizeModal 
+                        line={cart[selectedComboLineIndex]}
+                        lineIndex={selectedComboLineIndex}
+                        onSlotQuantityChange={onComboSlotQuantityChange}
+                    />
                 </LayoutModal>
             )}
         </>
@@ -182,7 +190,6 @@ interface SizeCellProps {
 
 function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize }: SizeCellProps) {
     if (line.kind === "product") {
-
         return (
             <div className="w-16 mx-auto">
                 <SelectInput
@@ -196,14 +203,22 @@ function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize }: SizeCellPr
         );
     }
 
+    const missingCount = line.itemSlots.reduce((sum, slot) => {
+        const selectedTotal = slot.selectedQuantity.reduce((s, q) => s + q.quantities, 0);
+        const diff = slot.requiredQuantity - selectedTotal;
+        return sum + Math.max(diff, 0);
+    }, 0);
+
     return (
-        <button
-            className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
-            type="button"
-            onClick={onOpenComboSize}
-        >
-            Xem
-        </button>
+        <Badge count={missingCount}>
+            <button
+                className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+                type="button"
+                onClick={onOpenComboSize}
+            >
+                Xem
+            </button>
+        </Badge>
     );
 }
 
@@ -353,7 +368,7 @@ function StockCell({ line, cart }: { line: CartLine; cart: CartLine[] }) {
     // Combo: show each item slot's product name + selected size
     return (
         <div className="flex flex-col items-start gap-1">
-            
+
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { Product } from "./product";
+import { Product, ProductQuantity } from "./product";
 import { ComboDeal, ComboItem, ComboPromotion, DiscountType, ProductPromotion } from "./promotion";
 
 // -- Promotion API response types ----------------------------------------------------------------
@@ -48,7 +48,8 @@ export interface ProductCartLine {
 
 export interface ComboItemSlot {
     product: Product;
-    selectedSize: string;
+    requiredQuantity: number;
+    selectedQuantity: ProductQuantity[];
 }
 
 export interface ComboCartLine {
