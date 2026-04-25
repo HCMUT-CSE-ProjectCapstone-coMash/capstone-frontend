@@ -16,6 +16,7 @@ import { sizesLetter, sizesNumber } from "@/const/product";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { useState } from "react";
 import { PromotionSelectModal } from "../Modal/PromotionSelectModal";
+import { ComboSizeModal } from "../Modal/ComboSizeModal";
 
 interface SaleProductsTableProps {
     cart: CartLine[];
@@ -49,12 +50,23 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
     const [selectedPromotionLine, setSelectedPromotionLine] = useState<CartLine | null>(null);
     const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
 
+    const [selectedComboLine, setSelectedComboLine] = useState<CartLine | null>(null);
+    const [isComboSizeModalOpen, setIsComboSizeModalOpen] = useState(false);
+
     const columns: Column<CartLine>[] = [
         { title: "Tên sản phẩm", key: "productName", render: (line) => (
             <ProductNameCell line={line}/>
         )},
         { title: "Kích cỡ", key: "size", render: (line, index) => (
-            <SizeCell line={line} lineIndex={index} onSizeChange={onSizeChange}/>
+            <SizeCell 
+                line={line} 
+                lineIndex={index} 
+                onSizeChange={onSizeChange} 
+                onOpenComboSize={() => {
+                    setSelectedComboLine(line);
+                    setIsComboSizeModalOpen(true);
+                }}
+            />
         )},
         { title: "Đơn giá", key: "unitPrice", render: (line) => (
             <UnitPriceCell line={line} />
@@ -79,7 +91,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 dispatch={dispatch}
             />
         )},
-        { title: "Khuyến mãi", key: "promotion", render: (line, index) => (
+        { title: "Khuyến mãi", key: "promotion", render: (line) => (
             <PromotionCell 
                 line={line} 
                 onOpen={() => {
@@ -120,6 +132,15 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                     />
                 </LayoutModal>
             )}
+
+            {selectedComboLine && (
+                <LayoutModal 
+                    isOpen={isComboSizeModalOpen} 
+                    onClose={() => setIsComboSizeModalOpen(false)}
+                >
+                    <ComboSizeModal line={selectedComboLine} />
+                </LayoutModal>
+            )}
         </>
     )
 }
@@ -156,10 +177,12 @@ interface SizeCellProps {
     line: CartLine;
     onSizeChange: (lineIndex: number, newSize: string) => void;
     lineIndex: number;
+    onOpenComboSize: () => void;
 }
 
-function SizeCell({ line, onSizeChange, lineIndex }: SizeCellProps) {
+function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize }: SizeCellProps) {
     if (line.kind === "product") {
+
         return (
             <div className="w-16 mx-auto">
                 <SelectInput
@@ -177,7 +200,7 @@ function SizeCell({ line, onSizeChange, lineIndex }: SizeCellProps) {
         <button
             className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
             type="button"
-            onClick={() => {}}
+            onClick={onOpenComboSize}
         >
             Xem
         </button>
@@ -303,28 +326,34 @@ function UnitPriceCell({ line }: { line: CartLine }) {
 
 // -- Component for rendering stock with cart-aware remaining quantities --
 function StockCell({ line, cart }: { line: CartLine; cart: CartLine[] }) {
-    if (line.kind !== "product") return <></>;
+    if (line.kind === "product") {
+        return (
+            <div className="flex flex-col items-center">
+                {sortSizes(line.product.quantities.map((q) => q.size), line.product.sizeType).map((size) => {
+                    const quantity = line.product.quantities.find((q) => q.size === size)!;
 
+                    const totalInCart = cart
+                        .filter(l => l.kind === "product" && l.product.id === line.product.id && l.selectedSize === size)
+                        .reduce((sum, l) => sum + l.quantity, 0);
+
+                    const remaining = quantity.quantities - totalInCart;
+                    if (remaining <= 0) return null;
+
+                    return (
+                        <div key={size} className="flex justify-center items-center gap-2 text-sm">
+                            <span className="font-medium">{size}:</span>
+                            <span className="text-purple font-bold">{remaining}</span>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+
+    // Combo: show each item slot's product name + selected size
     return (
-        <div className="flex flex-col items-center">
-            {sortSizes(line.product.quantities.map((q) => q.size), line.product.sizeType).map((size) => {
-                const quantity = line.product.quantities.find((q) => q.size === size)!;
-
-                const totalInCart = cart
-                    .filter(l => l.kind === "product" && l.product.id === line.product.id && l.selectedSize === size)
-                    .reduce((sum, l) => sum + l.quantity, 0);
-
-                const remaining = quantity.quantities - totalInCart;
-
-                if (remaining <= 0) return null;
-
-                return (
-                    <div key={size} className="flex justify-center items-center gap-2 text-sm">
-                        <span className="font-medium">{size}:</span>
-                        <span className="text-purple font-bold">{remaining}</span>
-                    </div>
-                );
-            })}
+        <div className="flex flex-col items-start gap-1">
+            
         </div>
     );
 }
