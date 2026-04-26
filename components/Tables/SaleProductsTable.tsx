@@ -45,8 +45,40 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
     const dispatch = useDispatch();
     
     const getAvailableQuantity = (line: CartLine): number => {
-        if (line.kind === "combo") return Infinity;
-        return line.product.quantities.find(q => q.size === line.selectedSize)?.quantities ?? 0;
+        if (line.kind === "product") {
+            return line.product.quantities.find(q => q.size === line.selectedSize)?.quantities ?? 0;
+        }
+        
+        const lineIndex = cart.indexOf(line);
+        let maxCombos = Infinity;
+
+        for (let slotIdx = 0; slotIdx < line.itemSlots.length; slotIdx++) {
+            const slot = line.itemSlots[slotIdx];
+            const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
+            const totalStock = slot.product.quantities.reduce((s, q) => s + q.quantities, 0);
+    
+            const otherUsage = cart.reduce((total, l, i) => {
+                if (i === lineIndex) return total;
+                if (l.kind === "product" && l.product.id === slot.product.id) {
+                    return total + l.quantity;
+                }
+                if (l.kind === "combo") {
+                    return total + l.itemSlots.reduce((s, sl) => {
+                        if (sl.product.id !== slot.product.id) return s;
+                        const filled = sl.selectedQuantity.reduce((qs, q) => qs + q.quantities, 0);
+                        const unfilled = Math.max(0, sl.requiredQuantity - filled);
+                        return s + filled + unfilled;
+                    }, 0);
+                }
+                return total;
+            }, 0);
+            
+            const availForSlot = totalStock - otherUsage;
+            const maxForSlot = Math.floor(availForSlot / perComboReq);
+            maxCombos = Math.min(maxCombos, maxForSlot);
+        }
+
+        return Math.max(0, maxCombos);
     };
 
     const [selectedPromotionLine, setSelectedPromotionLine] = useState<CartLine | null>(null);

@@ -268,17 +268,42 @@ export function SalePageContent() {
         const line = updatedCart[lineIndex];
     
         let newCart: CartLine[];
+        let skipOptimize = false;
     
         if (newQuantity <= 0) {
             newCart = updatedCart.filter((_, index) => index !== lineIndex);
+        } else if (line.kind === "combo"){
+            const updatedItemSlots = line.itemSlots.map((slot, slotIdx) => {
+                const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
+                const newRequiredQuantity = perComboReq * newQuantity;
+
+                const totalSelected = slot.selectedQuantity.reduce((sum, q) => sum + q.quantities, 0);
+                let updatedSelectedQuantity = slot.selectedQuantity;
+
+                if (totalSelected > newRequiredQuantity) {
+                    let excess = totalSelected - newRequiredQuantity;
+                    updatedSelectedQuantity = slot.selectedQuantity.map(q => {
+                        if (excess <= 0) return q;
+                        const reduction = Math.min(q.quantities, excess);
+                        excess -= reduction;
+                        return { ...q, quantities: q.quantities - reduction };
+                    });
+                }
+
+                return { ...slot, requiredQuantity: newRequiredQuantity, selectedQuantity: updatedSelectedQuantity };
+            });
+
+            updatedCart[lineIndex] = { ...line, quantity: newQuantity, itemSlots: updatedItemSlots };
+            newCart = updatedCart;
+            skipOptimize = true; 
         } else {
             updatedCart[lineIndex] = { ...line, quantity: newQuantity };
             newCart = updatedCart;
         }
     
         const allCombos = [...knownCombos.values()];
-        const finalCart = allCombos.length > 0 ? optimizeCombos(newCart, allCombos, knownCombos) : newCart;
-    
+        const finalCart = (!skipOptimize && allCombos.length > 0) ? optimizeCombos(newCart, allCombos, knownCombos) : newCart;
+        
         setCart(finalCart);
     };
 
