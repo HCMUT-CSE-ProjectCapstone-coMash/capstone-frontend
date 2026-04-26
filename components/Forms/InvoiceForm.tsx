@@ -13,11 +13,17 @@ import { PaymentMethod } from "@/const/PaymentMethod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
 import { Customer } from "@/types/customer";
-import { SaleOrderRequest, SaleOrderResponse } from "@/types/saleOrder";
+import { SaleComboRequest, SaleOrderRequest, SaleProductRequest } from "@/types/saleOrder";
 import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
-import { PrintBill } from "../PrintBill";
+// import { PrintBill } from "../PrintBill";
 import { CartLine } from "@/types/cart";
+
+const paymentOptions: { value: string, label: string }[] = [
+    { value: PaymentMethod.CASH, label: "Tiền mặt" },
+    { value: PaymentMethod.TRANSFER, label: "Chuyển khoản" },
+    { value: PaymentMethod.DEBIT, label: "Ghi nợ" }
+];
 
 interface InvoiceFormState {
     customerName: string;
@@ -33,14 +39,48 @@ const initialInvoiceFormState: InvoiceFormState = {
     paymentMethod: PaymentMethod.CASH,
 };
 
-const paymentOptions: { value: string, label: string }[] = [
-    { value: PaymentMethod.CASH, label: "Tiền mặt" },
-    { value: PaymentMethod.TRANSFER, label: "Chuyển khoản" },
-    { value: PaymentMethod.DEBIT, label: "Ghi nợ" }
-];
-
 interface InvoiceFormProps {
     cart: CartLine[];
+}
+
+function mapCartToSaleOrderRequest(cartLines: CartLine[], customerId: string, userId: string, paymentMethod: PaymentMethod, debtAmount: number): SaleOrderRequest {
+    const products: SaleProductRequest[] = [];
+    const combos: SaleComboRequest[] = [];
+
+    for (const line of cartLines) {
+        if (line.kind === "product") {
+            products.push({
+                productId: line.product.id,
+                selectedSize: line.selectedSize,
+                quantity: line.quantity,
+                discount: line.discount,
+                promotionId: line.appliedPromotion ? line.appliedPromotion.id : ""
+            })
+        } else {
+            combos.push({
+                comboDealId: line.appliedCombo.id,
+                quantity: line.quantity,
+                items: line.itemSlots.flatMap(slot =>
+                    slot.selectedQuantity
+                        .filter(sq => sq.quantities > 0)
+                        .map(sq => ({
+                            productId: slot.product.id,
+                            selectedSize: sq.size,
+                            quantity: sq.quantities,
+                        }))
+                )
+            })
+        }
+    }
+
+    return {
+        customerId,
+        userId,
+        paymentMethod,
+        debtAmount,
+        products,
+        combos,
+    }
 }
 
 export function InvoiceForm({ cart }: InvoiceFormProps) {
@@ -201,12 +241,29 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
 
     // -- Handle create sale order ------------------------------------------------------------
     const createSaleOrderMutation = useMutation({
-
+        mutationFn: (saleOrderRequest: SaleOrderRequest) => CreateSaleOrder(saleOrderRequest),
+        onSuccess: (data) => {
+            console.log(data);
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo hóa đơn bán hàng" }));
+        }
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log(cart);
+
+        if (!user.id) return;
+        
+        const saleOrderRequest = mapCartToSaleOrderRequest(
+            cart, 
+            selectedCustomer ? selectedCustomer.id : "", 
+            user.id, 
+            form.paymentMethod, 
+            debtAmount
+        );
+
+        createSaleOrderMutation.mutate(saleOrderRequest);
     }
 
     // -- Render ------------------------------------------------------------------------------

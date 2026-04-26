@@ -99,7 +99,8 @@ export function SalePageContent() {
                 }
             } else {
                 for (const slot of line.itemSlots) {
-                    const key = `${slot.product.id}-__combo__`;
+                    const selectedSize = getAvailableSize(slot.product) ?? slot.product.quantities[0]?.size ?? ""
+                    const key = `${slot.product.id}-${selectedSize}`;
                     const existing = pool.get(key);
                     if (existing) {
                         pool.set(key, { ...existing, quantity: existing.quantity + slot.requiredQuantity });
@@ -107,7 +108,7 @@ export function SalePageContent() {
                         pool.set(key, {
                             kind: "product",
                             product: slot.product,
-                            selectedSize: "",
+                            selectedSize: selectedSize,
                             quantity: slot.requiredQuantity,
                             discount: 0,
                             availableCombos: [],
