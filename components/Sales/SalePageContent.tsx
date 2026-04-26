@@ -51,10 +51,22 @@ export function SalePageContent() {
     // -- Cart and Size Checker -------------------------------------------------------------------
     const getCurrentCartQuantity = (productId: string, size: string) => {
         return cart.reduce((total, line) => {
-            if (line.kind === "product" && line.product.id === productId && line.selectedSize === size) {
-                return total + line.quantity;
+            if (line.kind === "product") {
+                if (line.product.id === productId && line.selectedSize === size) {
+                    return total + line.quantity;
+                }
+                return total;
             }
-            return total;
+
+            return total + line.itemSlots.reduce((slotSum, slot) => {
+                if (slot.product.id !== productId) return slotSum;
+    
+                const filledForThisSize = slot.selectedQuantity.find(q => q.size === size)?.quantities ?? 0;
+                const filledTotal = slot.selectedQuantity.reduce((s, q) => s + q.quantities, 0);
+                const unfilledCapacity = Math.max(0, slot.requiredQuantity - filledTotal);
+    
+                return slotSum + filledForThisSize + unfilledCapacity;
+            }, 0);
         }, 0);
     };
 
@@ -87,25 +99,21 @@ export function SalePageContent() {
                 }
             } else {
                 for (const slot of line.itemSlots) {
-                    for (const sizeEntry of slot.selectedQuantity) {
-                        if (sizeEntry.quantities <= 0) continue;
-    
-                        const key = `${slot.product.id}-${sizeEntry.size}`;
-                        const existing = pool.get(key);
-                        if (existing) {
-                            pool.set(key, { ...existing, quantity: existing.quantity + sizeEntry.quantities });
-                        } else {
-                            pool.set(key, {
-                                kind: "product",
-                                product: slot.product,
-                                selectedSize: sizeEntry.size,
-                                quantity: sizeEntry.quantities,
-                                discount: 0,
-                                availableCombos: [],
-                            });
-                        }
+                    const key = `${slot.product.id}-__combo__`;
+                    const existing = pool.get(key);
+                    if (existing) {
+                        pool.set(key, { ...existing, quantity: existing.quantity + slot.requiredQuantity });
+                    } else {
+                        pool.set(key, {
+                            kind: "product",
+                            product: slot.product,
+                            selectedSize: "",
+                            quantity: slot.requiredQuantity,
+                            discount: 0,
+                            availableCombos: [],
+                        });
                     }
-                }
+                }    
             }
         }
     
@@ -119,6 +127,14 @@ export function SalePageContent() {
 
     const optimizeCombos = (currentCart: CartLine[], allCombos: ComboDealResponse[], knownCombosMap: Map<string, ComboDealResponse>): CartLine[] => {
         const pool = flattenToProducts(currentCart);
+
+        const existingComboQueues = new Map<string, ComboCartLine[]>();
+        for (const line of currentCart) {
+            if (line.kind !== "combo") continue;
+            const queue = existingComboQueues.get(line.appliedCombo.id) ?? [];
+            queue.push(line);
+            existingComboQueues.set(line.appliedCombo.id, queue);
+        }
 
         const bestResult = { savings: 0, combos: [] as ComboDealResponse[] };
 
@@ -170,16 +186,21 @@ export function SalePageContent() {
                     needed -= deducted;
                 }
             }
+
+            const existingLine = existingComboQueues.get(combo.id)?.shift();
+
             resultCart.push({
                 kind: "combo",
                 appliedCombo: combo,
                 quantity: 1,
-                itemSlots: combo.comboItems.map(item => ({
-                    product: item.product,
-                    requiredQuantity: item.quantity,
-                    selectedQuantity: buildInitialSlotQuantities(item.product),
-                })),
-            });            
+                itemSlots: existingLine
+                    ? existingLine.itemSlots
+                    : combo.comboItems.map(item => ({
+                        product: item.product,
+                        requiredQuantity: item.quantity,
+                        selectedQuantity: buildInitialSlotQuantities(item.product),
+                    })),
+            });
         }
 
         // Add back any remaining products that weren't included in combos
