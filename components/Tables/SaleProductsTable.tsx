@@ -27,6 +27,7 @@ interface SaleProductsTableProps {
     onSizeChange: ( lineIndex: number, newSize: string ) => void;
     onApplyCombo: (lineIndex: number, combo: ComboDealResponse) => void;
     onComboSlotQuantityChange: (lineIndex: number, slotIndex: number, size: string, newQuantity: number) => void;
+    onComboSizeModalClose: (lineIndex: number) => void;
 }
 
 const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => {
@@ -41,7 +42,7 @@ const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => 
     });
 };
 
-export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo, onComboSlotQuantityChange } : SaleProductsTableProps) {
+export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo, onComboSlotQuantityChange, onComboSizeModalClose } : SaleProductsTableProps) {
     const dispatch = useDispatch();
     
     const getAvailableQuantity = (line: CartLine): number => {
@@ -171,6 +172,9 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 <LayoutModal 
                     isOpen={isComboSizeModalOpen} 
                     onClose={() => {
+                        if (selectedComboLineIndex !== null) {
+                            onComboSizeModalClose(selectedComboLineIndex);
+                        }
                         setIsComboSizeModalOpen(false);
                         setSelectedComboLineIndex(null);
                     }}

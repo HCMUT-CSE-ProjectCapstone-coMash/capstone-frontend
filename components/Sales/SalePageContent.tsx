@@ -303,7 +303,7 @@ export function SalePageContent() {
     
         const allCombos = [...knownCombos.values()];
         const finalCart = (!skipOptimize && allCombos.length > 0) ? optimizeCombos(newCart, allCombos, knownCombos) : newCart;
-        
+
         setCart(finalCart);
     };
 
@@ -447,6 +447,45 @@ export function SalePageContent() {
         updatedCart[lineIndex] = { ...line, itemSlots: updatedItemSlots };
         setCart(updatedCart);
     }
+
+    const MergeDuplicateComboLines = (lineIndex: number) => {
+        const line = cart[lineIndex];
+        if (!line || line.kind !== "combo") return;
+    
+        const otherIndices: number[] = [];
+        cart.forEach((l, i) => {
+            if (i !== lineIndex && l.kind === "combo" && l.appliedCombo.id === line.appliedCombo.id) {
+                otherIndices.push(i);
+            }
+        });
+    
+        if (otherIndices.length === 0) return;
+    
+        const otherLines = otherIndices.map(i => cart[i] as ComboCartLine);
+        const mergedQuantity = line.quantity + otherLines.reduce((s, l) => s + l.quantity, 0);
+    
+        const mergedItemSlots = line.itemSlots.map((slot, slotIdx) => {
+            const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
+            return {
+                ...slot,
+                requiredQuantity: perComboReq * mergedQuantity,
+                selectedQuantity: slot.selectedQuantity.map(q => {
+                    const sumFromOthers = otherLines.reduce((sum, ol) => {
+                        const found = ol.itemSlots[slotIdx].selectedQuantity.find(oq => oq.size === q.size);
+                        return sum + (found?.quantities ?? 0);
+                    }, 0);
+                    return { ...q, quantities: q.quantities + sumFromOthers };
+                }),
+            };
+        });
+    
+        const updatedCart = [...cart];
+        updatedCart[lineIndex] = { ...line, quantity: mergedQuantity, itemSlots: mergedItemSlots };
+        const finalCart = updatedCart.filter((_, i) => !otherIndices.includes(i));
+    
+        setCart(finalCart);
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã gộp combo cùng loại" }));
+    };
 
     // -- Promotion Helper --------------------------------------------------------------------
     const findBestProductPromotion = (data: PromotionsResponse, product: Product): AppliedProductDiscount | undefined => {
@@ -601,6 +640,7 @@ export function SalePageContent() {
                         onSizeChange={UpdateSize}
                         onApplyCombo={ApplyCombo}
                         onComboSlotQuantityChange={UpdateComboSlotQuantity}
+                        onComboSizeModalClose={MergeDuplicateComboLines}
                     />
                 </div>
 
