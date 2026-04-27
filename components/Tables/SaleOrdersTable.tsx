@@ -70,7 +70,7 @@ export function SaleOrdersTable() {
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => router.push(OwnerSaleOrdersByIdPageRoute(row.saleOrderId))}
+                    onClick={() => router.push(OwnerSaleOrdersByIdPageRoute(row.id))}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
