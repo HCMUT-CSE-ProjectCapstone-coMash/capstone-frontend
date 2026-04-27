@@ -9,7 +9,7 @@ import { SaleOrderResponse } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { PaymentMethod } from "@/const/PaymentMethod";
 import { useQuery } from "@tanstack/react-query";
-import { FetchAllSaleOrders } from "@/api/saleOrders.ts/saleOrders";
+import { FetchSaleOrders } from "@/api/saleOrders.ts/saleOrders";
 
 const timeFilters = [
     { label: "Xem tất cả", value: "" },
@@ -42,7 +42,7 @@ export function SaleOrdersTable() {
 
     const { data, isLoading } = useQuery({
         queryKey: ["saleOrders", selectedTimeFilter, effectiveSearch],
-        queryFn: () => FetchAllSaleOrders(currentPage, pageSize, selectedTimeFilter, effectiveSearch)
+        queryFn: () => FetchSaleOrders(currentPage, pageSize, selectedTimeFilter, effectiveSearch)
     });
 
     const saleOrders = data?.items ?? [];
@@ -78,9 +78,7 @@ export function SaleOrdersTable() {
 
                 <NormalSearchInput
                     value={searchTerm}
-                    onChange={(e) => {
-                        setSearchTerm(e.target.value);
-                    }}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Tìm kiếm theo tên khách hàng hoặc mã đơn hàng"
                     className="w-md"
                 />
