@@ -190,7 +190,7 @@ export function SalePageContent() {
                     }
                 }
 
-                trySubsets(i + 1, [...chosen, combo], newRemaining);
+                trySubsets(i, [...chosen, combo], newRemaining);
             }
         };
 
@@ -242,7 +242,7 @@ export function SalePageContent() {
             }
         }    
     
-        return resultCart;    
+        return mergeComboLines(resultCart);;    
     };
 
     // -- Cart Handler ------------------------------------------------------------------------
@@ -504,42 +504,55 @@ export function SalePageContent() {
         setCart(updatedCart);
     }
 
+
+    const mergeComboLines = (cartLines: CartLine[]): CartLine[] => {
+        const seen = new Map<string, number>();
+        const result: CartLine[] = [];
+
+        for (const line of cartLines) {
+            if (line.kind !== "combo") {
+                result.push(line);
+                continue;
+            }
+
+            const existingIndex = seen.get(line.appliedCombo.id);
+            if (existingIndex === undefined) {
+                seen.set(line.appliedCombo.id, result.length);
+                result.push({ ...line });
+                continue;
+            }
+
+            const existing = result[existingIndex] as ComboCartLine;
+            const mergedQuantity = existing.quantity + line.quantity;
+
+            result[existingIndex] = {
+                ...existing,
+                quantity: mergedQuantity,
+                itemSlots: existing.itemSlots.map((slot, slotIdx) => {
+                    const perComboReq = existing.appliedCombo.comboItems[slotIdx].quantity;
+                    return {
+                        ...slot,
+                        requiredQuantity: perComboReq * mergedQuantity,
+                        selectedQuantity: slot.selectedQuantity.map(q => {
+                            const fromIncoming = line.itemSlots[slotIdx].selectedQuantity.find(oq => oq.size === q.size);
+                            return { ...q, quantities: q.quantities + (fromIncoming?.quantities ?? 0) };
+                        }),
+                    };
+                }),
+            };
+        }
+
+        return result;
+    };
+
     const MergeDuplicateComboLines = (lineIndex: number) => {
         const line = cart[lineIndex];
         if (!line || line.kind !== "combo") return;
     
-        const otherIndices: number[] = [];
-        cart.forEach((l, i) => {
-            if (i !== lineIndex && l.kind === "combo" && l.appliedCombo.id === line.appliedCombo.id) {
-                otherIndices.push(i);
-            }
-        });
+        const merged = mergeComboLines(cart);
+        if (merged.length === cart.length) return;
     
-        if (otherIndices.length === 0) return;
-    
-        const otherLines = otherIndices.map(i => cart[i] as ComboCartLine);
-        const mergedQuantity = line.quantity + otherLines.reduce((s, l) => s + l.quantity, 0);
-    
-        const mergedItemSlots = line.itemSlots.map((slot, slotIdx) => {
-            const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
-            return {
-                ...slot,
-                requiredQuantity: perComboReq * mergedQuantity,
-                selectedQuantity: slot.selectedQuantity.map(q => {
-                    const sumFromOthers = otherLines.reduce((sum, ol) => {
-                        const found = ol.itemSlots[slotIdx].selectedQuantity.find(oq => oq.size === q.size);
-                        return sum + (found?.quantities ?? 0);
-                    }, 0);
-                    return { ...q, quantities: q.quantities + sumFromOthers };
-                }),
-            };
-        });
-    
-        const updatedCart = [...cart];
-        updatedCart[lineIndex] = { ...line, quantity: mergedQuantity, itemSlots: mergedItemSlots };
-        const finalCart = updatedCart.filter((_, i) => !otherIndices.includes(i));
-    
-        setCart(finalCart);
+        setCart(merged);
         dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã gộp combo cùng loại" }));
     };
 
