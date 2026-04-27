@@ -1,4 +1,4 @@
-
+// -- Request types ---------------------------------------------------------------
 export interface SaleComboItemRequest {
     productId: string;
     selectedSize: string;
@@ -26,9 +26,10 @@ export interface SaleOrderRequest {
     debtAmount: number;
     products: SaleProductRequest[];
     combos: SaleComboRequest[];
+    orderPromotionId: string;
 }
 
-// -- Response types ----------------------------------------------------------------
+// -- Response types --------------------------------------------------------------
 export interface ProductPromotionResponse {
     id: string;
     discountType: string;
@@ -37,12 +38,27 @@ export interface ProductPromotionResponse {
     promotionName: string;
 }
 
+export interface ComboItemResponse {
+    id: string;
+    productId: string;
+    product: unknown | null;
+    quantity: number;
+}
+
 export interface ComboPromotionResponse {
     id: string;
     comboName: string;
     comboPrice: number;
-    comboItems: string[];
+    comboItems: ComboItemResponse[];
     promotionId: string;
+}
+
+export interface OrderPromotionResponse {
+    id: string;
+    minValue: number;
+    discountType: string;
+    discountValue: number;
+    maxDiscount: number;
 }
 
 export interface SaleOrderDetailResponse {
@@ -65,6 +81,7 @@ export interface SaleOrderResponse {
     saleOrderId: string;
     customerId: string | null;
     customerName: string | null;
+    customerPhone?: string | null;
     createdBy: string;
     createdByName: string;
     paymentMethod: string;
@@ -73,6 +90,9 @@ export interface SaleOrderResponse {
     discount: number;
     totalPrice: number;
     totalProfit: number;
+    originalTotalPrice: number;
+    appliedOrderPromotionName: string | null;
+    appliedOrderPromotion: OrderPromotionResponse | null;
     details: SaleOrderDetailResponse[];
 }
 
@@ -81,6 +101,7 @@ export interface MappedComboPromotion {
     id: string;
     comboName: string;
     comboPrice: number;
+    quantity: number;          // how many times the combo is applied
     promotionId: string;
     items: SaleOrderDetailResponse[];
 }
@@ -90,6 +111,7 @@ export interface MappedSaleOrder {
     saleOrderId: string;
     customerId: string | null;
     customerName: string | null;
+    customerPhone?: string | null;
     createdBy: string;
     createdByName: string;
     paymentMethod: string;
@@ -98,14 +120,19 @@ export interface MappedSaleOrder {
     discount: number;
     totalPrice: number;
     totalProfit: number;
+    originalTotalPrice: number;
+    appliedOrderPromotionName: string | null;
+    appliedOrderPromotion: OrderPromotionResponse | null;
     products: SaleOrderDetailResponse[];
     combos: MappedComboPromotion[];
 }
 
+// -- Mapper ----------------------------------------------------------------------
 export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
     const comboMap = new Map<string, MappedComboPromotion>();
     const standaloneProducts: SaleOrderDetailResponse[] = [];
 
+    // Group details: combo lines into comboMap, standalone products into a list.
     for (const detail of response.details) {
         if (detail.comboPromotion) {
             const comboId = detail.comboPromotion.id;
@@ -116,7 +143,8 @@ export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
                     comboName: detail.comboPromotion.comboName,
                     comboPrice: detail.comboPromotion.comboPrice,
                     promotionId: detail.comboPromotion.promotionId,
-                    items: []
+                    quantity: 0,           // computed below
+                    items: [],
                 });
             }
 
@@ -126,9 +154,21 @@ export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
         }
     }
 
+    for (const combo of comboMap.values()) {
+        const ratios = combo.items.map((detail) => {
+            const member = detail.comboPromotion!.comboItems.find(
+                (ci) => ci.productId === detail.productId
+            );
+            if (!member || member.quantity <= 0) return detail.quantity;
+            return Math.floor(detail.quantity / member.quantity);
+        });
+        combo.quantity = ratios.length > 0 ? Math.min(...ratios) : 0;
+    }
+
     return {
         ...response,
         products: standaloneProducts,
-        combos: Array.from(comboMap.values())
+        combos: Array.from(comboMap.values()),
+        appliedOrderPromotion: response.appliedOrderPromotion ?? null,
     };
 }

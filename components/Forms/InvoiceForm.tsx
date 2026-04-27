@@ -48,7 +48,7 @@ interface InvoiceFormProps {
     onReset: () => void;
 }
 
-function mapCartToSaleOrderRequest(cartLines: CartLine[], customerId: string, userId: string, paymentMethod: PaymentMethod, debtAmount: number): SaleOrderRequest {
+function mapCartToSaleOrderRequest(cartLines: CartLine[], customerId: string, userId: string, paymentMethod: PaymentMethod, debtAmount: number, orderPromotionId: string): SaleOrderRequest {
     const products: SaleProductRequest[] = [];
     const combos: SaleComboRequest[] = [];
 
@@ -85,6 +85,7 @@ function mapCartToSaleOrderRequest(cartLines: CartLine[], customerId: string, us
         debtAmount,
         products,
         combos,
+        orderPromotionId
     }
 }
 
@@ -263,7 +264,8 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
             selectedCustomer ? selectedCustomer.id : "", 
             user.id, 
             form.paymentMethod, 
-            debtAmount
+            debtAmount,
+            appliedOrderPromotion ? appliedOrderPromotion.level.id : ""
         );
 
         createSaleOrderMutation.mutate(saleOrderRequest);

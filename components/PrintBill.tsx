@@ -52,6 +52,8 @@ export function PrintBill({ order }: PrintBillProps) {
                     .promo-label { font-style: italic; color: #555; font-size: 11px; padding-left: 8px; }
                     .promo-row td { padding-top: 0; padding-bottom: 6px; }
                     .combo-item-row td { padding-top: 2px; padding-bottom: 2px; }
+                    .total { font-weight: bold; font-size: 14px; }
+                    .divider { border: none; border-top: 1px dashed #000; margin: 8px 0; }
                 </style>
             </head>
             <body>${billRef.current.innerHTML}</body>
@@ -122,9 +124,8 @@ export function PrintBill({ order }: PrintBillProps) {
                                         <React.Fragment key={combo.id}>
                                             <tr>
                                                 <td>{index++}</td>
-                                                <td colSpan={2}>
-                                                    <span className="combo-name">{combo.comboName}</span>
-                                                </td>
+                                                <td><span className="combo-name">{combo.comboName}</span></td>
+                                                <td className="right">{combo.quantity}</td>
                                                 <td className="right">{formatThousands(combo.comboPrice)}</td>
                                             </tr>
                                             {combo.items.map((item) => (
@@ -146,16 +147,48 @@ export function PrintBill({ order }: PrintBillProps) {
                 </table>
 
                 <hr className="divider" />
-                <p className="total">Tổng: {formatThousands(order.totalPrice)} VND</p>
-                {order.debitMoney > 0 && (
-                    <p className="info">Còn nợ: {formatThousands(order.debitMoney)} VND</p>
+                {order.appliedOrderPromotion && (
+                    <>
+                        <p className="info" style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                            <span style={{ minWidth: 0 }}>Tổng tiền:</span>
+                            <span style={{ flexShrink: 0 }}>{formatThousands(order.originalTotalPrice)}</span>
+                        </p>
+                        <p className="info" style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                            <span style={{ minWidth: 0, wordBreak: "break-word" }}>KM ({order.appliedOrderPromotionName}):</span>
+                            <span style={{ flexShrink: 0 }}>-{formatThousands(
+                                order.appliedOrderPromotion.discountType === "Percent"
+                                    ? Math.min(
+                                        order.originalTotalPrice * (order.appliedOrderPromotion.discountValue / 100),
+                                        order.appliedOrderPromotion.maxDiscount > 0 ? order.appliedOrderPromotion.maxDiscount : Infinity
+                                    )
+                                    : order.appliedOrderPromotion.discountValue
+                            )}</span>
+                        </p>
+                        <hr className="divider" />
+                    </>
                 )}
-                <p className="info">Thanh toán: {
-                    order.paymentMethod === "Cash" ? "Tiền mặt" :
-                    order.paymentMethod === "Transfer" ? "Chuyển khoản" :
-                    order.paymentMethod === "Debit" ? "Ghi nợ" :
-                    order.paymentMethod
-                }</p>
+
+                <p className="total" style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                    <span style={{ minWidth: 0 }}>Thành tiền:</span>
+                    <span style={{ flexShrink: 0 }}>{formatThousands(order.totalPrice)} VNĐ</span>
+                </p>
+
+                {order.debitMoney > 0 && (
+                    <p className="info" style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                        <span style={{ minWidth: 0 }}>Còn nợ:</span>
+                        <span style={{ flexShrink: 0 }}>{formatThousands(order.debitMoney)}</span>
+                    </p>
+                )}
+
+                <p className="info" style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
+                    <span style={{ minWidth: 0 }}>Thanh toán:</span>
+                    <span style={{ flexShrink: 0 }}>{
+                        order.paymentMethod === "Cash" ? "Tiền mặt" :
+                        order.paymentMethod === "Transfer" ? "Chuyển khoản" :
+                        order.paymentMethod === "Debit" ? "Ghi nợ" :
+                        order.paymentMethod
+                    }</span>
+                </p>
             </div>
 
             <button
