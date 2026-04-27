@@ -16,9 +16,10 @@ import { Customer } from "@/types/customer";
 import { MappedSaleOrder, mapSaleOrder, SaleComboRequest, SaleOrderRequest, SaleProductRequest } from "@/types/saleOrder";
 import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
-// import { PrintBill } from "../PrintBill";
-import { CartLine } from "@/types/cart";
+import { CartLine, OrderPromotionLevelResponse, OrderPromotionResponse } from "@/types/cart";
 import { PrintBill } from "../PrintBill";
+import { FetchOrderPromotions } from "@/api/promotions/promotions";
+import { Tooltip } from "antd";
 
 const paymentOptions: { value: string, label: string }[] = [
     { value: PaymentMethod.CASH, label: "Tiền mặt" },
@@ -228,20 +229,13 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
         if (selectedMethod === PaymentMethod.CASH) {
             setField("customerMoney", 0)
         } else if (selectedMethod === PaymentMethod.TRANSFER) {
-            setField("customerMoney", totalAmount);
+            setField("customerMoney", finalAmount);
         } else if (selectedMethod === PaymentMethod.DEBIT) {
             setField("customerMoney", 0);
         }
     };
 
     const isDebt = form.paymentMethod === PaymentMethod.DEBIT;
-
-    const returnMoney = form.customerMoney > totalAmount ? form.customerMoney - totalAmount : 0;
-
-    const debtAmount = totalAmount > form.customerMoney ? totalAmount - form.customerMoney : 0;
-
-    const displayLabel = isDebt ? "Số tiền còn nợ" : "Số tiền hoàn trả";
-    const displayAmount = isDebt ? debtAmount : returnMoney;
 
     // -- Handle create sale order ------------------------------------------------------------
     const [completedOrder, setCompletedOrder] = useState<MappedSaleOrder | null>(null);
@@ -281,6 +275,49 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
         setForm(initialInvoiceFormState);
         onReset();
     }
+
+    // -- Fetch order promotions ----------------------------------------------------------------
+    const findBestOrderPromotion = (total: number, promotions: OrderPromotionResponse[]) : { promotion: OrderPromotionResponse; level: OrderPromotionLevelResponse } | null => {
+        let best: { promotion: OrderPromotionResponse, level: OrderPromotionLevelResponse, saving: number } | null = null;
+
+        for (const promotion of promotions) {
+            for (const level of promotion.levels) {
+                if (total < level.minValue) continue;
+
+                const saving = level.discountType === "Percent" 
+                    ? Math.min(total * (level.discountValue / 100), level.maxDiscount || Infinity)
+                    : level.discountValue;
+
+                if (!best || saving > best.saving) {
+                    best = { promotion, level, saving };
+                }
+            }
+        }
+
+        return best ? { promotion: best.promotion, level: best.level } : null;
+    }
+
+    const { data: orderPromotions } = useQuery({
+        queryKey: ["orderPromotions"],
+        queryFn: FetchOrderPromotions,
+        refetchOnWindowFocus: false
+    });
+
+    const appliedOrderPromotion = orderPromotions ? findBestOrderPromotion(totalAmount, orderPromotions) : null;
+
+    const orderDiscount = appliedOrderPromotion
+        ? appliedOrderPromotion.level.discountType === "Percent"
+            ? Math.min(totalAmount * (appliedOrderPromotion.level.discountValue / 100), appliedOrderPromotion.level.maxDiscount || Infinity)
+            : appliedOrderPromotion.level.discountValue
+        : 0;
+
+    const finalAmount = totalAmount - orderDiscount;
+
+    const returnMoney = form.customerMoney > finalAmount ? form.customerMoney - finalAmount : 0;
+    const debtAmount = finalAmount > form.customerMoney ? finalAmount - form.customerMoney : 0;
+
+    const displayLabel = isDebt ? "Số tiền còn nợ" : "Số tiền hoàn trả";
+    const displayAmount = isDebt ? debtAmount : returnMoney;
 
     // -- Render ------------------------------------------------------------------------------
 
@@ -374,7 +411,61 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
 
             <div className="flex flex-row justify-between items-center">
                 <div className="text-sm text-tgray9">Tổng tiền</div>
-                <div className="text-sm font-semibold">{formatThousands(totalAmount)} VND</div>
+                <div className="text-sm font-semibold">{formatThousands(totalAmount)} VNĐ</div>
+            </div>
+
+            {appliedOrderPromotion && (
+                <div className="flex flex-row justify-between items-center">
+                    <Tooltip
+                        title={
+                            <div className="flex flex-col gap-1 text-xs">
+                                <div className="flex justify-between gap-6">
+                                    <span className="text-white/60">Khuyến mãi</span>
+                                    <span>{appliedOrderPromotion.promotion.promotionName}</span>
+                                </div>
+                                <div className="flex justify-between gap-6">
+                                    <span className="text-white/60">Mã</span>
+                                    <span>{appliedOrderPromotion.promotion.promotionId}</span>
+                                </div>
+                                <div className="flex justify-between gap-6">
+                                    <span className="text-white/60">Đơn tối thiểu</span>
+                                    <span>{formatThousands(appliedOrderPromotion.level.minValue)} VNĐ</span>
+                                </div>
+                                <div className="flex justify-between gap-6 text-orange-400">
+                                    <span>
+                                        Giảm ({appliedOrderPromotion.level.discountType === "Percent"
+                                            ? `-${appliedOrderPromotion.level.discountValue}%`
+                                            : `-${formatThousands(appliedOrderPromotion.level.discountValue)} VNĐ`})
+                                    </span>
+                                    <span>-{formatThousands(orderDiscount)} VNĐ</span>
+                                </div>
+                                {appliedOrderPromotion.level.discountType === "Percent" && appliedOrderPromotion.level.maxDiscount > 0 && (
+                                    <div className="flex justify-between gap-6">
+                                        <span className="text-white/60">Giảm tối đa</span>
+                                        <span>{formatThousands(appliedOrderPromotion.level.maxDiscount)} VNĐ</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between gap-6 border-t border-white/30 pt-1 font-bold">
+                                    <span>Thành tiền</span>
+                                    <span>{formatThousands(finalAmount)} VNĐ</span>
+                                </div>
+                            </div>
+                        }
+                        placement="left"
+                    >
+                        <p className="text-sm text-tgray9 underline decoration-dashed cursor-help">
+                            Khuyến mãi đơn hàng
+                        </p>
+                    </Tooltip>
+                    <p className="text-sm font-semibold text-green-600">
+                        -{formatThousands(orderDiscount)} VNĐ
+                    </p>
+                </div>
+            )}
+
+            <div className="flex flex-row justify-between items-center">
+                <div className="text-sm text-tgray9">Thành tiền</div>
+                <div className="text-sm font-semibold text-purple">{formatThousands(finalAmount)} VNĐ</div>
             </div>
 
             <RadioInput
@@ -386,19 +477,23 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
                 disabled={isLocked || createSaleOrderMutation.isPending}
             />
 
-            <TextInput
-                label= "Số tiền khách đưa"
-                placeHolder="0" 
-                labelPosition="right"
-                value={formatThousands(form.customerMoney)} 
-                onChange={(e) => setField("customerMoney", parseFormattedNumber(e.target.value))} 
-                disabled={isLocked || createSaleOrderMutation.isPending}
-            />
+            <div className="flex flex-row justify-between items-center">
+                <p className="text-sm text-tgray9">Số tiền khách đưa</p>
+                <div className="w-30">
+                    <TextInput
+                        label= ""
+                        placeHolder="0" 
+                        value={formatThousands(form.customerMoney)} 
+                        onChange={(e) => setField("customerMoney", parseFormattedNumber(e.target.value))} 
+                        disabled={isLocked || createSaleOrderMutation.isPending}
+                    />
+                </div>
+            </div>
             
             {/* --- CẬP NHẬT HIỂN THỊ LABEL VÀ AMOUNT --- */}
             <div className="flex flex-row justify-between items-center">
                 <div className="text-sm text-tgray9">{displayLabel}</div>
-                <div className="text-sm font-semibold">{formatThousands(displayAmount)} VND</div>
+                <div className="text-sm font-semibold">{formatThousands(displayAmount)} VNĐ</div>
             </div>
 
             {completedOrder ? (

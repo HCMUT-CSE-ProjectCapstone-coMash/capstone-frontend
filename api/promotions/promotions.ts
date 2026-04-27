@@ -85,3 +85,12 @@ export async function GetPromotionsByProductId(productId: string) {
 
     return response.data;
 }
+
+export async function FetchOrderPromotions() {
+    const response = await axiosClient.get(
+        "/promotions/get-order-promotions",
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

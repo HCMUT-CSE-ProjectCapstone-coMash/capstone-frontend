@@ -1,5 +1,5 @@
 import { Product, ProductQuantity } from "./product";
-import { ComboDeal, ComboItem, ComboPromotion, DiscountType, ProductPromotion } from "./promotion";
+import { ComboDeal, ComboItem, ComboPromotion, DiscountType, OrderPromotion, ProductPromotion, PromotionLevel } from "./promotion";
 
 // -- Promotion API response types ----------------------------------------------------------------
 
@@ -26,6 +26,14 @@ export interface ComboPromotionResponse extends Omit<ComboPromotion, "combos"> {
 export interface PromotionsResponse {
     productPromotions: ProductPromotionResponse[];
     comboPromotions: ComboPromotionResponse[];
+}
+
+export interface OrderPromotionLevelResponse extends PromotionLevel {
+    id: string;
+}
+
+export interface OrderPromotionResponse extends Omit<OrderPromotion, "levels"> {
+    levels: OrderPromotionLevelResponse[];
 }
 
 // -- Cart types --------------------------------------------------------------------------------
