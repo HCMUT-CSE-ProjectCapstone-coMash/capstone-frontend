@@ -132,11 +132,24 @@ export function SalePageContent() {
         return Array.from(pool.values());
     };
 
-    const getComboSavings = (combo: ComboDealResponse): number => {
-        const original = combo.comboItems.reduce((sum, item) => sum + item.product.salePrice * item.quantity, 0);
-        return original - combo.comboPrice;
+    // -- Effective price helper ------------------------------------------------------------------
+    const getEffectivePrice = (product: Product, promotionRegistry: Map<string, AppliedProductDiscount>): number => {
+        const promotion = promotionRegistry.get(product.id);
+        if (!promotion) return product.salePrice;
+        if (promotion.discountType === "Percent") {
+            return product.salePrice * (1 - promotion.discountValue / 100);
+        }
+        return product.salePrice - promotion.discountValue;
     };
 
+    const getComboSavings = (combo: ComboDealResponse, promotionRegistry: Map<string, AppliedProductDiscount>): number => {
+        const effectiveTotal = combo.comboItems.reduce(
+            (sum, item) => sum + getEffectivePrice(item.product, promotionRegistry) * item.quantity,
+            0
+        );
+        return effectiveTotal - combo.comboPrice; 
+    };
+    
     const optimizeCombos = (currentCart: CartLine[], allCombos: ComboDealResponse[], knownCombosMap: Map<string, ComboDealResponse>, promotionRegistry: Map<string, AppliedProductDiscount>): CartLine[] => {
         const pool = flattenToProducts(currentCart);
 
@@ -151,7 +164,7 @@ export function SalePageContent() {
         const bestResult = { savings: 0, combos: [] as ComboDealResponse[] };
 
         const trySubsets = (index: number, chosen: ComboDealResponse[], remaining: ProductCartLine[]) => {
-            const savings = chosen.reduce((sum, c) => sum + getComboSavings(c), 0);
+            const savings = chosen.reduce((sum, c) => sum + getComboSavings(c, promotionRegistry), 0);
             if (savings > bestResult.savings) {
                 bestResult.savings = savings;
                 bestResult.combos = [...chosen];
@@ -384,7 +397,7 @@ export function SalePageContent() {
         dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã đổi size thành ${newSize}` }));
     };
 
-    const ApplyCombo = (lineIndex: number, combo: ComboDealResponse) => {
+    const ApplyCombo = async (lineIndex: number, combo: ComboDealResponse) => {
         const updatedCart = [...cart];
         updatedCart[lineIndex] = {
             kind: "combo",
@@ -396,6 +409,27 @@ export function SalePageContent() {
                 selectedQuantity: buildInitialSlotQuantities(item.product),
             })),
         };
+
+        const updatedPromotionRegistry = new Map(promotionRegistry);
+        const updatedKnownCombos = new Map(knownCombos);
+        updatedKnownCombos.set(combo.id, combo);
+    
+        for (const item of combo.comboItems) {
+            if (updatedPromotionRegistry.has(item.product.id)) continue;
+            try {
+                const promotionsData = await searchPromotionsMutation.mutateAsync(item.product.id);
+                const bestPromotion = findBestProductPromotion(promotionsData, item.product);
+                const availableCombos = findAvailableCombos(promotionsData, item.product);
+    
+                if (bestPromotion) updatedPromotionRegistry.set(item.product.id, bestPromotion);
+                for (const c of availableCombos) updatedKnownCombos.set(c.id, c);
+            } catch {
+                // silently skip — product will just have no promotion if it exits the combo later
+            }
+        }
+    
+        setPromotionRegistry(updatedPromotionRegistry);
+        setKnownCombos(updatedKnownCombos);
         setCart(updatedCart);
     };
     
