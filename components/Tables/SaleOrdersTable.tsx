@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Column } from "@/types/UIType";
@@ -10,6 +10,8 @@ import { formatThousands } from "@/utilities/numberFormat";
 import { PaymentMethod } from "@/const/PaymentMethod";
 import { useQuery } from "@tanstack/react-query";
 import { FetchAllSaleOrders } from "@/api/saleOrders.ts/saleOrders";
+import { useRouter } from "next/navigation";
+import { OwnerSaleOrdersByIdPageRoute } from "@/const/routes";
 
 const timeFilters = [
     { label: "Xem tất cả", value: "" },
@@ -40,6 +42,8 @@ export function SaleOrdersTable() {
         setSelectedTimeFilter(filter);
     };
 
+    const router = useRouter();
+
     const { data, isLoading } = useQuery({
         queryKey: ["saleOrders", selectedTimeFilter, effectiveSearch],
         queryFn: () => FetchAllSaleOrders(currentPage, pageSize, selectedTimeFilter, effectiveSearch)
@@ -48,7 +52,7 @@ export function SaleOrdersTable() {
     const saleOrders = data?.items ?? [];
     const total = data?.total ?? 0;
 
-    const columns: Column<SaleOrderResponse>[] = useMemo(() => [
+    const columns: Column<SaleOrderResponse>[] = [
         { title: "Mã đơn hàng", key: "orderId", render: (row) => <span>{row.saleOrderId}</span>},
         { title: "Tên khách hàng", key: "customerName", render: (row) => <span>{row.customerName}</span>},
         { title: "Thời gian xuất", key: "createdAt", render: (row) => <span>{new Date(row.createdAt).toLocaleString()}</span>},
@@ -60,7 +64,20 @@ export function SaleOrdersTable() {
             </span>
         )},
         { title: "Số tiền nợ", key: "debtAmount", render: (row) => <span>{formatThousands(row.debitMoney)} VNĐ</span>},
-    ], []);
+        
+        {
+            title: "",
+            key: "action",
+            render: (row) => (
+                <button
+                    onClick={() => router.push(OwnerSaleOrdersByIdPageRoute(row.saleOrderId))}
+                    className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
+                >
+                    Xem
+                </button>
+            )
+        }
+    ];
 
     return (
         <div className="flex flex-col gap-5">

@@ -74,3 +74,4 @@ export const OwnerSaleByIdPageRoute = (promotionId: string) => `${OwnerSalePageR
 // Link đơn hàng ----------------------------------------------
 
 export const OwnerOrderPageRoute = `${OwnerBaseRoute}/don-hang`;
+export const OwnerSaleOrdersByIdPageRoute = (saleOrderId: string) => `${OwnerOrderPageRoute}/chi-tiet/${saleOrderId}`;
