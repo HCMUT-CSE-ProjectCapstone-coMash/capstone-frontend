@@ -13,11 +13,12 @@ import { PaymentMethod } from "@/const/PaymentMethod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
 import { Customer } from "@/types/customer";
-import { SaleComboRequest, SaleOrderRequest, SaleProductRequest } from "@/types/saleOrder";
+import { MappedSaleOrder, mapSaleOrder, SaleComboRequest, SaleOrderRequest, SaleProductRequest } from "@/types/saleOrder";
 import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 // import { PrintBill } from "../PrintBill";
 import { CartLine } from "@/types/cart";
+import { PrintBill } from "../PrintBill";
 
 const paymentOptions: { value: string, label: string }[] = [
     { value: PaymentMethod.CASH, label: "Tiền mặt" },
@@ -41,6 +42,9 @@ const initialInvoiceFormState: InvoiceFormState = {
 
 interface InvoiceFormProps {
     cart: CartLine[];
+    isLocked: boolean;
+    onOrderComplete: () => void;
+    onReset: () => void;
 }
 
 function mapCartToSaleOrderRequest(cartLines: CartLine[], customerId: string, userId: string, paymentMethod: PaymentMethod, debtAmount: number): SaleOrderRequest {
@@ -83,7 +87,7 @@ function mapCartToSaleOrderRequest(cartLines: CartLine[], customerId: string, us
     }
 }
 
-export function InvoiceForm({ cart }: InvoiceFormProps) {
+export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: InvoiceFormProps) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
 
@@ -240,10 +244,15 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
     const displayAmount = isDebt ? debtAmount : returnMoney;
 
     // -- Handle create sale order ------------------------------------------------------------
+    const [completedOrder, setCompletedOrder] = useState<MappedSaleOrder | null>(null);
+
     const createSaleOrderMutation = useMutation({
         mutationFn: (saleOrderRequest: SaleOrderRequest) => CreateSaleOrder(saleOrderRequest),
         onSuccess: (data) => {
-            console.log(data);
+            onOrderComplete();
+            const mapped = mapSaleOrder(data);
+            setCompletedOrder(mapped);
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công" }));
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo hóa đơn bán hàng" }));
@@ -264,6 +273,13 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
         );
 
         createSaleOrderMutation.mutate(saleOrderRequest);
+    }
+
+    const handleReset = () => {
+        setCompletedOrder(null);
+        setSelectedCustomer(null);
+        setForm(initialInvoiceFormState);
+        onReset();
     }
 
     // -- Render ------------------------------------------------------------------------------
@@ -301,6 +317,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                                 setField("customerName", "");
                                 setField("customerPhone", "");
                             }}
+                            disabled={isLocked || createSaleOrderMutation.isPending}
                         >
                             Đổi khách hàng
                         </button>
@@ -322,6 +339,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                                 <p>{item.label} - {item.data.customerPhone}</p>
                             </div>
                         )}
+                        disabled={isLocked || createSaleOrderMutation.isPending}
                     />
 
                     <SearchInput<Customer>
@@ -338,6 +356,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                                 <p>{item.label} - {item.data.customerName}</p>
                             </div>
                         )}
+                        disabled={isLocked || createSaleOrderMutation.isPending}
                     />
 
                     <div className="flex justify-end">
@@ -345,6 +364,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                             type="button"
                             className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             onClick={handleCreateCustomer}
+                            disabled={isLocked || createSaleOrderMutation.isPending}
                         >
                             Tạo khách hàng mới
                         </button>
@@ -363,6 +383,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                 options={paymentOptions}
                 value={form.paymentMethod}
                 onChange={handlePaymentMethodChange} 
+                disabled={isLocked || createSaleOrderMutation.isPending}
             />
 
             <TextInput
@@ -371,6 +392,7 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                 labelPosition="right"
                 value={formatThousands(form.customerMoney)} 
                 onChange={(e) => setField("customerMoney", parseFormattedNumber(e.target.value))} 
+                disabled={isLocked || createSaleOrderMutation.isPending}
             />
             
             {/* --- CẬP NHẬT HIỂN THỊ LABEL VÀ AMOUNT --- */}
@@ -379,14 +401,27 @@ export function InvoiceForm({ cart }: InvoiceFormProps) {
                 <div className="text-sm font-semibold">{formatThousands(displayAmount)} VND</div>
             </div>
 
-            <button
-                type="submit"
-                onClick={handleSubmit}
-                disabled={createSaleOrderMutation.isPending}
-                className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Xuất hóa đơn"}
-            </button>
+            {completedOrder ? (
+                <div className="flex gap-3 self-center">
+                    <PrintBill order={completedOrder}/>
+                    <button
+                        type="button"
+                        onClick={handleReset}
+                        className="p-2.5 w-45 rounded-lg text-purple font-semibold border border-purple text-base cursor-pointer hover:bg-purple/10 transition-all"
+                    >
+                        Tạo đơn mới
+                    </button>
+                </div>
+            ) : (
+                <button
+                    type="submit"
+                    onClick={handleSubmit}
+                    disabled={createSaleOrderMutation.isPending}
+                    className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Xuất hóa đơn"}
+                </button>
+            )}
         </form>
     );
 }

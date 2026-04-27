@@ -21,6 +21,16 @@ export function SalePageContent() {
     const [cart, setCart] = useState<CartLine[]>([]);
     const [knownCombos, setKnownCombos] = useState<Map<string, ComboDealResponse>>(new Map());
 
+    const [isOrderComplete, setIsOrderComplete] = useState(false);
+
+    const handleOrderComplete = () => setIsOrderComplete(true);
+
+    const handleReset = () => {
+        setCart([]);
+        setKnownCombos(new Map());
+        setIsOrderComplete(false);
+    };
+
     // -- Search product ----------------------------------------------------------------------
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedName = useDebounce(searchTerm, 500);
@@ -629,12 +639,14 @@ export function SalePageContent() {
                             </div>
                         )}
                         onKeyDown={handleSearchKeyDown}
+                        disabled={isOrderComplete}
                     />
                 </div>
 
                 <div className="col-span-5">
                     <SaleProductsTable
                         cart={cart}
+                        isLocked={isOrderComplete}
                         onQuantityChange={UpdateQuantity}
                         onRemove={RemoveFromCart}
                         onDiscountChange={UpdateDiscount}
@@ -648,6 +660,9 @@ export function SalePageContent() {
                 <div className="col-span-2">
                     <InvoiceForm
                         cart={cart}
+                        isLocked={isOrderComplete}
+                        onOrderComplete={handleOrderComplete}
+                        onReset={handleReset}                    
                     />
                 </div>
             </div>

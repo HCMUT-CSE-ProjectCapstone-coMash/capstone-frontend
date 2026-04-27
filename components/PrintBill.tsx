@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import JsBarcode from "jsbarcode";
-import { SaleOrderResponse } from "@/types/saleOrder";
+import { MappedSaleOrder } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 
 interface PrintBillProps {
-    order: SaleOrderResponse;
+    order: MappedSaleOrder;
 }
 
 export function PrintBill({ order }: PrintBillProps) {
@@ -27,7 +27,6 @@ export function PrintBill({ order }: PrintBillProps) {
 
     const handlePrint = () => {
         if (!billRef.current) return;
-
         const printWindow = window.open("", "_blank");
         if (!printWindow) return;
 
@@ -36,22 +35,23 @@ export function PrintBill({ order }: PrintBillProps) {
             <head>
                 <title>Hóa đơn #${order.saleOrderId}</title>
                 <style>
-                    body {
-                        font-family: 'Courier New', monospace;
-                        width: 300px;
-                        margin: 0 auto;
-                        padding: 20px;
-                        font-size: 13px;
-                    }
+                    body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 20px; font-size: 13px; }
                     h3 { text-align: center; margin-bottom: 8px; }
                     .info { margin: 4px 0; }
                     .barcode-wrapper { text-align: center; margin: 12px 0; }
                     .barcode-id { font-size: 10px; text-align: center; word-break: break-all; }
                     table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-                    th, td { text-align: left; padding: 4px 0; font-size: 12px; }
+                    th { text-align: left; padding: 4px 0 8px 0; font-size: 12px; }
+                    td { text-align: left; padding: 6px 0; font-size: 12px; }
+                    th:first-child, td:first-child { padding-right: 6px; width: 12px; }
                     .right { text-align: right; }
                     .divider { border: none; border-top: 1px dashed #000; margin: 8px 0; }
                     .total { font-weight: bold; font-size: 14px; }
+                    .combo-name { font-size: 12px; }
+                    .combo-item { font-style: italic; color: #555; font-size: 11px; padding-left: 8px; }
+                    .promo-label { font-style: italic; color: #555; font-size: 11px; padding-left: 8px; }
+                    .promo-row td { padding-top: 0; padding-bottom: 6px; }
+                    .combo-item-row td { padding-top: 2px; padding-bottom: 2px; }
                 </style>
             </head>
             <body>${billRef.current.innerHTML}</body>
@@ -81,25 +81,81 @@ export function PrintBill({ order }: PrintBillProps) {
                 <table>
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th>Sản phẩm</th>
                             <th className="right">SL</th>
                             <th className="right">Thành tiền</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {order.details.map((d) => (
-                            <tr key={d.id}>
-                                <td>{d.productName} ({d.selectedSize})</td>
-                                <td className="right">{d.quantity}</td>
-                                <td className="right">{formatThousands(d.subTotal)}</td>
-                            </tr>
-                        ))}
+                        {(() => {
+                            let index = 1;
+                            return (
+                                <>
+                                    {order.products.map((p) => (
+                                        <React.Fragment key={p.id}>
+                                            <tr>
+                                                <td>{index++}</td>
+                                                <td>{p.productName} ({p.selectedSize})</td>
+                                                <td className="right">{p.quantity}</td>
+                                                <td className="right">{formatThousands(p.subTotal)}</td>
+                                            </tr>
+                                            {(p.productPromotion || p.discount > 0) && (
+                                                <tr className="promo-row">
+                                                    <td></td>
+                                                    <td colSpan={3}>
+                                                        {p.productPromotion && (
+                                                            <div className="promo-label">
+                                                                ↳ {p.productPromotion.promotionName}: {p.productPromotion.discountValue}{p.productPromotion.discountType === "Percent" ? "%" : "đ"}
+                                                            </div>
+                                                        )}
+                                                        {p.discount > 0 && (
+                                                            <div className="promo-label">↳ Chiết khấu: {p.discount}%</div>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+
+                                    {order.combos.map((combo) => (
+                                        <React.Fragment key={combo.id}>
+                                            <tr>
+                                                <td>{index++}</td>
+                                                <td colSpan={2}>
+                                                    <span className="combo-name">{combo.comboName}</span>
+                                                </td>
+                                                <td className="right">{formatThousands(combo.comboPrice)}</td>
+                                            </tr>
+                                            {combo.items.map((item) => (
+                                                <tr key={item.id} className="combo-item-row">
+                                                    <td></td>
+                                                    <td className="combo-item">
+                                                        ↳ {item.productName} ({item.selectedSize})
+                                                    </td>
+                                                    <td className="right">{item.quantity}</td>
+                                                    <td className="right"></td>
+                                                </tr>
+                                            ))}
+                                        </React.Fragment>
+                                    ))}
+                                </>
+                            );
+                        })()}
                     </tbody>
                 </table>
 
                 <hr className="divider" />
                 <p className="total">Tổng: {formatThousands(order.totalPrice)} VND</p>
-                <p className="info">Thanh toán: {order.paymentMethod}</p>
+                {order.debitMoney > 0 && (
+                    <p className="info">Còn nợ: {formatThousands(order.debitMoney)} VND</p>
+                )}
+                <p className="info">Thanh toán: {
+                    order.paymentMethod === "Cash" ? "Tiền mặt" :
+                    order.paymentMethod === "Transfer" ? "Chuyển khoản" :
+                    order.paymentMethod === "Debit" ? "Ghi nợ" :
+                    order.paymentMethod
+                }</p>
             </div>
 
             <button

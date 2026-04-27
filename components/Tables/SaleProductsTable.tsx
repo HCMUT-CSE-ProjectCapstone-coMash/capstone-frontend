@@ -21,6 +21,7 @@ import { Product } from "@/types/product";
 
 interface SaleProductsTableProps {
     cart: CartLine[];
+    isLocked: boolean;
     onQuantityChange: ( lineIndex: number, newQuantity: number ) => void;
     onRemove: ( lineIndex: number ) => void;
     onDiscountChange: ( lineIndex: number, newDiscount: number ) => void;
@@ -42,7 +43,7 @@ const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => 
     });
 };
 
-export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo, onComboSlotQuantityChange, onComboSizeModalClose } : SaleProductsTableProps) {
+export function SaleProductsTable({ cart, isLocked, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo, onComboSlotQuantityChange, onComboSizeModalClose } : SaleProductsTableProps) {
     const dispatch = useDispatch();
     
     const getAvailableQuantity = (line: CartLine): number => {
@@ -101,6 +102,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                     setSelectedComboLineIndex(index);
                     setIsComboSizeModalOpen(true);
                 }}
+                isLocked={isLocked}
             />
         )},
         { title: "Đơn giá", key: "unitPrice", render: (line) => (
@@ -113,6 +115,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 availableQuantity={getAvailableQuantity(line)} 
                 onQuantityChange={onQuantityChange}
                 dispatch={dispatch}
+                isLocked={isLocked}
             />
         )},
         { title: "Tồn kho", key: "available", render: (line) => (
@@ -124,6 +127,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 lineIndex={index} 
                 onDiscountChange={onDiscountChange} 
                 dispatch={dispatch}
+                isLocked={isLocked}
             />
         )},
         { title: "Khuyến mãi", key: "promotion", render: (line) => (
@@ -133,6 +137,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                     setSelectedPromotionLine(line);
                     setIsPromotionModalOpen(true);
                 }} 
+                isLocked={isLocked}
             />
         )},
         { title: "Xoá", key: "delete", render: (line, index) => (
@@ -141,6 +146,7 @@ export function SaleProductsTable({ cart, onQuantityChange, onRemove, onDiscount
                 lineIndex={index} 
                 onRemove={onRemove} 
                 dispatch={dispatch}
+                isLocked={isLocked}
             />
         )}
     ];
@@ -223,9 +229,10 @@ interface SizeCellProps {
     onSizeChange: (lineIndex: number, newSize: string) => void;
     lineIndex: number;
     onOpenComboSize: () => void;
+    isLocked: boolean;
 }
 
-function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize }: SizeCellProps) {
+function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize, isLocked }: SizeCellProps) {
     if (line.kind === "product") {
         return (
             <div className="w-16 mx-auto">
@@ -235,6 +242,7 @@ function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize }: SizeCellPr
                     value={line.selectedSize}
                     onChange={(value) => onSizeChange(lineIndex, value)}
                     noDefaultOption={true}
+                    disabled={isLocked}
                 />
             </div>
         );
@@ -249,9 +257,10 @@ function SizeCell({ line, onSizeChange, lineIndex, onOpenComboSize }: SizeCellPr
     return (
         <Badge count={missingCount}>
             <button
-                className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+                className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
                 type="button"
                 onClick={onOpenComboSize}
+                disabled={isLocked}
             >
                 Xem
             </button>
@@ -266,9 +275,10 @@ interface QuantityCellProps {
     availableQuantity: number;
     onQuantityChange: (lineIndex: number, newQuantity: number) => void;
     dispatch: ReturnType<typeof useDispatch>;
+    isLocked: boolean;
 }
 
-function QuantityCell({ line, lineIndex, availableQuantity, onQuantityChange, dispatch }: QuantityCellProps) {
+function QuantityCell({ line, lineIndex, availableQuantity, onQuantityChange, dispatch, isLocked }: QuantityCellProps) {
     return (
         <div className="flex items-center justify-center gap-4">
             <button
@@ -281,6 +291,7 @@ function QuantityCell({ line, lineIndex, availableQuantity, onQuantityChange, di
                         dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã giảm số lượng" }));
                     }
                 }}
+                disabled={isLocked}
             >
                 <MinusIcon width={24} height={24} className=""/>
             </button>
@@ -295,6 +306,7 @@ function QuantityCell({ line, lineIndex, availableQuantity, onQuantityChange, di
                         dispatch(addAlert({ type: AlertType.WARNING, message: `Số lượng tối đa là ${availableQuantity}` }));
                     }
                 }}
+                disabled={isLocked}
             >
                 <AddIcon width={24} height={24} className=""/>
             </button>
@@ -459,9 +471,10 @@ type DiscountCellProps = {
     lineIndex: number;
     onDiscountChange: (lineIndex: number, discount: number) => void;
     dispatch: ReturnType<typeof useDispatch>;
+    isLocked: boolean;
 }
 
-function DiscountCell({ line, lineIndex, onDiscountChange, dispatch }: DiscountCellProps) {
+function DiscountCell({ line, lineIndex, onDiscountChange, dispatch, isLocked }: DiscountCellProps) {
     if (line.kind !== "product") return <div></div>;
 
     return (
@@ -476,12 +489,13 @@ function DiscountCell({ line, lineIndex, onDiscountChange, dispatch }: DiscountC
                 onDiscountChange(lineIndex, value);
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã cập nhật chiết khấu thành ${value}%` }));
             }}
+            disabled={isLocked}
         />
     );
 }
 
 // -- Component for rendering promotion button --
-function PromotionCell({ line, onOpen }: { line: CartLine; onOpen: (line: CartLine) => void; }) {
+function PromotionCell({ line, onOpen, isLocked }: { line: CartLine; onOpen: (line: CartLine) => void; isLocked: boolean }) {
     if (line.kind === "combo") {
         return <span className="text-purple font-semibold">{line.appliedCombo.comboName}</span>;
     }
@@ -489,9 +503,10 @@ function PromotionCell({ line, onOpen }: { line: CartLine; onOpen: (line: CartLi
     return (
         <Badge count={line.availableCombos.length}>
             <button
-                className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer"
+                className="py-2 px-5 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/20 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-70"
                 type="button"
                 onClick={() => onOpen(line)}
+                disabled={isLocked}
             >
                 Xem
             </button>
@@ -505,9 +520,10 @@ type DeleteCellProps = {
     lineIndex: number;
     onRemove: (lineIndex: number) => void;
     dispatch: ReturnType<typeof useDispatch>;
+    isLocked: boolean;
 }
 
-function DeleteCell({ line, lineIndex, onRemove, dispatch }: DeleteCellProps) {
+function DeleteCell({ line, lineIndex, onRemove, dispatch, isLocked }: DeleteCellProps) {
 
     return (
         <button
@@ -517,6 +533,7 @@ function DeleteCell({ line, lineIndex, onRemove, dispatch }: DeleteCellProps) {
                 const name = line.kind === "product" ? line.product.productName : line.appliedCombo.comboName;
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã xoá "${name}" khỏi giỏ hàng` }));
             }}
+            disabled={isLocked}
         >
             <TrashIcon width={24} height={24} className={"text-red-500"}/>
         </button>
