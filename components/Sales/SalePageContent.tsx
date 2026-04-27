@@ -20,6 +20,7 @@ export function SalePageContent() {
 
     const [cart, setCart] = useState<CartLine[]>([]);
     const [knownCombos, setKnownCombos] = useState<Map<string, ComboDealResponse>>(new Map());
+    const [promotionRegistry, setPromotionRegistry] = useState<Map<string, AppliedProductDiscount>>(new Map());
 
     const [isOrderComplete, setIsOrderComplete] = useState(false);
 
@@ -136,7 +137,7 @@ export function SalePageContent() {
         return original - combo.comboPrice;
     };
 
-    const optimizeCombos = (currentCart: CartLine[], allCombos: ComboDealResponse[], knownCombosMap: Map<string, ComboDealResponse>): CartLine[] => {
+    const optimizeCombos = (currentCart: CartLine[], allCombos: ComboDealResponse[], knownCombosMap: Map<string, ComboDealResponse>, promotionRegistry: Map<string, AppliedProductDiscount>): CartLine[] => {
         const pool = flattenToProducts(currentCart);
 
         const existingComboQueues = new Map<string, ComboCartLine[]>();
@@ -220,9 +221,13 @@ export function SalePageContent() {
                 const availableCombos = [...knownCombosMap.values()].filter(combo =>
                     combo.comboItems.some(item => item.product.id === p.product.id)
                 );
-                resultCart.push({ ...p, availableCombos });
+                resultCart.push({
+                    ...p,
+                    availableCombos,
+                    appliedPromotion: promotionRegistry.get(p.product.id),
+                });
             }
-        }
+        }    
     
         return resultCart;    
     };
@@ -257,9 +262,15 @@ export function SalePageContent() {
         for (const combo of availableCombos) updatedKnownCombos.set(combo.id, combo);
         setKnownCombos(updatedKnownCombos);
 
+        const updatedPromotionRegistry = new Map(promotionRegistry);
+        if (appliedPromotion) {
+            updatedPromotionRegistry.set(product.id, appliedPromotion);
+            setPromotionRegistry(updatedPromotionRegistry);
+        }
+
         // Tối ưu hóa combo mỗi khi có sự thay đổi trong giỏ hàng, dựa trên tất cả combo đã biết
         const allCombos = [...updatedKnownCombos.values()];
-        const finalCart = allCombos.length > 0 ? optimizeCombos(newCart, allCombos, updatedKnownCombos) : newCart;
+        const finalCart = allCombos.length > 0 ? optimizeCombos(newCart, allCombos, updatedKnownCombos, updatedPromotionRegistry) : newCart;
 
         // Notify if a new combo was applied
         const prevComboIds = cart.filter(l => l.kind === "combo").map(l => (l as ComboCartLine).appliedCombo.id);
@@ -313,7 +324,7 @@ export function SalePageContent() {
         }
     
         const allCombos = [...knownCombos.values()];
-        const finalCart = (!skipOptimize && allCombos.length > 0) ? optimizeCombos(newCart, allCombos, knownCombos) : newCart;
+        const finalCart = (!skipOptimize && allCombos.length > 0) ? optimizeCombos(newCart, allCombos, knownCombos, promotionRegistry) : newCart;
 
         setCart(finalCart);
     };
