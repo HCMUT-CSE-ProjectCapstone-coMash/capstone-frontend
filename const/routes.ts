@@ -56,6 +56,7 @@ export const OwnerAddEmployeePageRoute = `${OwnerEmployeeManagementPageRoute}/th
 // Link khách hàng ----------------------------------------------
 
 export const OwnerCustomerPageRoute = `${OwnerBaseRoute}/khach-hang`;
+export const OwnerCustomerByIdPageRoute = (customerId: string) => `${OwnerCustomerPageRoute}/chi-tiet/${customerId}`;
 
 // Link bán hàng ----------------------------------------------
 
