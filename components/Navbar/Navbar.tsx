@@ -24,7 +24,7 @@ const ownerNavItems: NavItem[] = [
     { label: "Bán hàng", href: OwnerSellPageRoute },
     { label: "Khuyến mãi", href: OwnerSalePageRoute, matchNested: true },
     { label: "Đơn hàng", href: OwnerOrderPageRoute, matchNested: true  },
-    { label: "Khách hàng", href: OwnerCustomerPageRoute },
+    { label: "Khách hàng", href: OwnerCustomerPageRoute, matchNested: true  },
 ];
 
 const navItemsMap: Record<string, NavItem[]> = {
