@@ -13,6 +13,7 @@ import {
 } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { PaymentMethod } from "@/const/PaymentMethod";
+import { Tooltip } from "antd";
 
 // ===================== HELPERS =====================
 
@@ -128,6 +129,82 @@ function PromotionCell({ row }: { row: TableRow }) {
     return <span></span>;
 }
 
+function ProfitCell({ row }: { row: TableRow }) {
+    if (row.kind === "combo") {
+        const comboProfit = row.combo.items.reduce((sum, item) => sum + item.profit, 0);
+ 
+        const tooltipContent = (
+            <div className="flex flex-col gap-1 text-xs">
+                {row.combo.items.map((item) => (
+                    <div key={item.id} className="flex justify-between gap-6">
+                        <span className="text-white/60 truncate max-w-35">{item.productName}</span>
+                        <span className={item.profit >= 0 ? "text-green-500" : "text-red"}>
+                            {formatThousands(item.profit)} VNĐ
+                        </span>
+                    </div>
+                ))}
+                <div className="flex justify-between gap-6 border-t border-white/30 pt-1 font-bold">
+                    <span>Tổng lợi nhuận</span>
+                    <span className={comboProfit >= 0 ? "text-green-500" : "text-red"}>
+                        {formatThousands(comboProfit)} VNĐ
+                    </span>
+                </div>
+            </div>
+        );
+ 
+        return (
+            <Tooltip title={tooltipContent}>
+                <span className={`font-semibold cursor-default ${comboProfit >= 0 ? "text-green-600" : "text-red"}`}>
+                    {formatThousands(comboProfit)} VNĐ
+                </span>
+            </Tooltip>
+        );
+    }
+ 
+    // Sản phẩm đơn lẻ
+    const { unitPrice, quantity, subTotal, profit } = row.detail;
+    const baseTotal = unitPrice * quantity;
+    const hasDiscount = baseTotal !== subTotal;
+ 
+    const tooltipContent = (
+        <div className="flex flex-col gap-1 text-xs">
+            <div className="flex justify-between gap-6">
+                <span className="text-white/60">Doanh thu gốc</span>
+                <span className={hasDiscount ? "line-through text-white/40" : ""}>
+                    {formatThousands(baseTotal)} VNĐ
+                </span>
+            </div>
+            {hasDiscount && (
+                <>
+                    <div className="flex justify-between gap-6 text-orange-400">
+                        <span>Giảm giá</span>
+                        <span>- {formatThousands(baseTotal - subTotal)} VNĐ</span>
+                    </div>
+                    <div className="flex justify-between gap-6">
+                        <span className="text-white/60">Doanh thu thực</span>
+                        <span>{formatThousands(subTotal)} VNĐ</span>
+                    </div>
+                </>
+            )}
+            <div className="flex justify-between gap-6 border-t border-white/30 pt-1 font-bold">
+                <span>Lợi nhuận</span>
+                <span className={profit >= 0 ? "text-green-400" : "text-red-400"}>
+                    {profit >= 0 ? "" : "- "}
+                    {formatThousands(profit)} VNĐ
+                </span>
+            </div>
+        </div>
+    );
+ 
+    return (
+        <Tooltip title={tooltipContent}>
+            <span className={`font-semibold cursor-default ${profit >= 0 ? "text-green-600" : "text-red-500"}`}>
+                {formatThousands(profit)} VNĐ
+            </span>
+        </Tooltip>
+    );
+}
+
 // ===================== DETAILS TABLE =====================
 
 function DetailsTable({ mapped }: { mapped: MappedSaleOrder }) {
@@ -171,6 +248,11 @@ function DetailsTable({ mapped }: { mapped: MappedSaleOrder }) {
             title: "Khuyến mãi",
             key: "promotion",
             render: (row) => <PromotionCell row={row} />,
+        },
+        {
+            title: "Lợi nhuận",
+            key: "profit",
+            render: (row) => <ProfitCell row={row} />,
         },
     ];
 
