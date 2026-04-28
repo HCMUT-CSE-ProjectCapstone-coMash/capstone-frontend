@@ -382,13 +382,13 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
 
             {/* ── CHI TIẾT SẢN PHẨM ── */}
             <div>
-                <p className="text-sm mb-2">Chi tiết sản phẩm</p>
+                <p className="mb-2">Chi tiết sản phẩm</p>
                 <DetailsTable mapped={mapped} />
             </div>
 
             {/* ── TỔNG KẾT ── */}
             <div>
-                <p className="text-sm mb-2">Tổng kết</p>
+                <p className="mb-2">Tổng kết</p>
                 <div>
                     <div className="flex justify-between px-4 py-3">
                         <span>Tổng tiền</span>
