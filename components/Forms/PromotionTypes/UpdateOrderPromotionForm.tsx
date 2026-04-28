@@ -3,11 +3,12 @@ import { OrderPromotion, PromotionLevel, UpdateOrderPromotionPayload } from "@/t
 import { AddIcon } from "@/public/assets/Icons";
 import { useMemo, useState } from "react";
 import { SharedPromotionFields } from "./SharedPromotionFields";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { UpdateOrderPromotion } from "@/api/promotions/promotions";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { RootState } from "@/utilities/store";
 
 interface UpdateOrderPromotionFormProps {
     promotion: OrderPromotion;
@@ -22,6 +23,7 @@ interface FormState {
 }
 
 export function UpdateOrderPromotionForm({ promotion } : UpdateOrderPromotionFormProps) {
+    const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
 
@@ -159,11 +161,11 @@ export function UpdateOrderPromotionForm({ promotion } : UpdateOrderPromotionFor
                 levels={formState.levels} 
                 onUpdateLevel={updateLevel} 
                 onRemoveLevel={removeLevel} 
-                isEditable={promotion.promotionPhase === "Upcoming"}
+                isEditable={promotion.promotionPhase === "Upcoming" && user.role === "owner"}
             />
 
             <div className="flex justify-end mt-3">
-                {promotion.promotionPhase === "Upcoming" && (
+                {promotion.promotionPhase === "Upcoming" && user.role === "owner" && (
                     <button 
                         type="button"
                         className="flex items-center gap-1 text-sm text-pink-500 font-medium hover:text-pink-600 cursor-pointer transition-colors"
@@ -175,7 +177,7 @@ export function UpdateOrderPromotionForm({ promotion } : UpdateOrderPromotionFor
                 )}
             </div>
 
-            {promotion.promotionPhase === "Upcoming" && (
+            {promotion.promotionPhase === "Upcoming" && user.role === "owner" && (
                 <div className="flex justify-end">
                     <button
                         type="submit"

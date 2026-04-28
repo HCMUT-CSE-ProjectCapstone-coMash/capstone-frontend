@@ -11,9 +11,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { SharedPromotionFields } from "./SharedPromotionFields";
 import { UpdateProductPromotion } from "@/api/promotions/promotions";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
+import { RootState } from "@/utilities/store";
 
 interface UpdateProductPromotionFormProps {
     promotion: ProductPromotion
@@ -28,6 +29,7 @@ interface FormState {
 }
 
 export function UpdateProductPromotionForm({ promotion } : UpdateProductPromotionFormProps) {
+    const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
 
@@ -202,7 +204,7 @@ export function UpdateProductPromotionForm({ promotion } : UpdateProductPromotio
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
-                        disabled={promotion.promotionPhase !== "Upcoming"}
+                        disabled={promotion.promotionPhase !== "Upcoming" || user.role !== "owner"}
                     />
                 </div>
             </div>
@@ -211,10 +213,10 @@ export function UpdateProductPromotionForm({ promotion } : UpdateProductPromotio
                 productDiscounts={formState.productDiscounts}
                 onUpdate={updateProduct}
                 onRemove={removeProduct}
-                isEditable={promotion.promotionPhase === "Upcoming"}
+                isEditable={promotion.promotionPhase === "Upcoming" && user.role === "owner"}
             />
 
-            {promotion.promotionPhase === "Upcoming" && (
+            {promotion.promotionPhase === "Upcoming" && user.role === "owner" && (
                 <div className="flex justify-end">
                     <button
                         type="submit"

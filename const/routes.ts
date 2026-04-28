@@ -25,6 +25,7 @@ export const EmployeeSellPageRoute = `${EmployeeBaseRoute}/ban-hang`;
 // Link khuyến mãi ----------------------------------------------
 
 export const EmployeeSalePageRoute = `${EmployeeBaseRoute}/khuyen-mai`;
+export const EmployeeSaleByIdPageRoute = (promotionId: string) => `${EmployeeSalePageRoute}/chi-tiet/${promotionId}`;
 
 // Link đơn hàng ----------------------------------------------
 
