@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { FetchCustomerById } from "@/api/customers/customers";
-// import { SaleOrderDetail } from "@/components/SaleOrder/SaleOrderDetail";
+import { CustomerDetail } from "./CustomerDetail";
 
 export function CustomerDetailPageContent() {
     const router = useRouter();
@@ -38,7 +38,7 @@ export function CustomerDetailPageContent() {
                 </div>
             )}
 
-            {/* {customer && <SaleOrderDetail saleOrder={saleOrders} />} */}
+            {customer && <CustomerDetail customer={customer} />}
         </main>
     );
 }
