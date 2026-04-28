@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { FetchCustomerById } from "@/api/customers/customers";
 import { CustomerDetail } from "./CustomerDetail";
+import { CustomerSaleOrderTable } from "../Tables/CustomerSaleOrderTable";
 
 export function CustomerDetailPageContent() {
     const router = useRouter();
@@ -39,6 +40,10 @@ export function CustomerDetailPageContent() {
             )}
 
             {customer && <CustomerDetail customer={customer} />}
+            <div className="mt-5">
+                <p className="text-lg text-purple font-semibold">Danh sách đơn hàng</p>
+                <CustomerSaleOrderTable />
+            </div>
         </main>
     );
 }
