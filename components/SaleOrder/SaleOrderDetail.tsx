@@ -266,13 +266,9 @@ interface SaleOrderDetailProps {
 export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
     const mapped = mapSaleOrder(saleOrder);
 
-    // Tổng trước khi giảm = unitPrice * quantity của tất cả details
-    const totalBeforeDiscount = saleOrder.details.reduce(
-        (sum, item) => sum + item.unitPrice * item.quantity, 0
-    );
  
     // Số tiền khuyến mãi = tổng trước - tổng sau (totalPrice đã bao gồm tất cả giảm giá)
-    const totalSaved = totalBeforeDiscount - saleOrder.totalPrice;
+    const totalSaved = saleOrder.originalTotalPrice - saleOrder.totalPrice;
 
     return (
         <div className="flex flex-col gap-8">
@@ -322,7 +318,7 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
                             disabled
                             label="Số điện thoại"
                             placeHolder=""
-                            value={""}
+                            value={saleOrder.customerPhone ?? ""}
                             onChange={() => {}}
                         />
                     </div>
@@ -341,20 +337,20 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
                 <div className="text-sm">
                     <div className="flex justify-between px-4 py-3">
                         <span>Tổng tiền</span>
-                        <span className="font-semibold">{formatThousands(saleOrder.totalPrice)} VNĐ</span>
+                        <span className="font-semibold">{formatThousands(saleOrder.originalTotalPrice)} VNĐ</span>
                     </div>
 
                     <div className="flex justify-between px-4 py-3">
-                        <span>Lợi nhuận</span>
-                        <span className="text-purple font-semibold">
-                            {formatThousands(saleOrder.totalProfit)} VNĐ
+                        <span>Khuyến mãi</span>
+                        <span className="text-green-600 font-semibold">
+                           - {formatThousands(totalSaved)} VNĐ
                         </span>
                     </div>
 
                     <div className="flex justify-between px-4 py-3">
                         <span>Thành tiền</span>
                         <span className="text-purple font-semibold">
-                            {formatThousands(totalSaved)} VNĐ
+                            {formatThousands(saleOrder.totalPrice)} VNĐ
                         </span>
                     </div>
 
