@@ -139,6 +139,7 @@ function ProfitCell({ row }: { row: TableRow }) {
                     <div key={item.id} className="flex justify-between gap-6">
                         <span className="text-white/60 truncate max-w-35">{item.productName}</span>
                         <span className={item.profit >= 0 ? "text-green-500" : "text-red"}>
+                            {item.profit >= 0 ? "" : "- "}
                             {formatThousands(item.profit)} VNĐ
                         </span>
                     </div>
@@ -146,6 +147,7 @@ function ProfitCell({ row }: { row: TableRow }) {
                 <div className="flex justify-between gap-6 border-t border-white/30 pt-1 font-bold">
                     <span>Tổng lợi nhuận</span>
                     <span className={comboProfit >= 0 ? "text-green-500" : "text-red"}>
+                        {comboProfit >= 0 ? "" : "- "}
                         {formatThousands(comboProfit)} VNĐ
                     </span>
                 </div>
@@ -155,6 +157,7 @@ function ProfitCell({ row }: { row: TableRow }) {
         return (
             <Tooltip title={tooltipContent}>
                 <span className={`font-semibold cursor-default ${comboProfit >= 0 ? "text-green-600" : "text-red"}`}>
+                    {comboProfit >= 0 ? "" : "- "}
                     {formatThousands(comboProfit)} VNĐ
                 </span>
             </Tooltip>
@@ -188,7 +191,7 @@ function ProfitCell({ row }: { row: TableRow }) {
             )}
             <div className="flex justify-between gap-6 border-t border-white/30 pt-1 font-bold">
                 <span>Lợi nhuận</span>
-                <span className={profit >= 0 ? "text-green-400" : "text-red-400"}>
+                <span className={profit >= 0 ? "text-green-400" : "text-red"}>
                     {profit >= 0 ? "" : "- "}
                     {formatThousands(profit)} VNĐ
                 </span>
@@ -198,7 +201,8 @@ function ProfitCell({ row }: { row: TableRow }) {
  
     return (
         <Tooltip title={tooltipContent}>
-            <span className={`font-semibold cursor-default ${profit >= 0 ? "text-green-600" : "text-red-500"}`}>
+            <span className={`font-semibold cursor-default ${profit >= 0 ? "text-green-600" : "text-red"}`}>
+                {profit >= 0 ? "" : "- "}
                 {formatThousands(profit)} VNĐ
             </span>
         </Tooltip>
