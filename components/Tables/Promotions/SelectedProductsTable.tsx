@@ -6,8 +6,9 @@ import { DiscountType, ProductDiscountItem } from "@/types/promotion";
 import { SelectOption } from "@/types/UIType";
 import { addAlert } from "@/utilities/alertStore";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { RootState } from "@/utilities/store";
 import Image from "next/image";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 const DISCOUNT_TYPE_OPTIONS: SelectOption[] = [
     { label: "Phần trăm (%)",   value: "Percent" },
@@ -33,6 +34,7 @@ interface SelectedProductsTableProps {
 }
 
 export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove, isEditable } : SelectedProductsTableProps) {
+    const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
 
     const handleDiscountValueChange = (item: ProductDiscountItem, rawValue: string) => {
@@ -122,7 +124,9 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove, is
                                                 </div>
 
                                                 <div className="mt-1 flex gap-4 text-tgray9">
-                                                    <span>Giá nhập: {formatThousands(product.importPrice)} VNĐ</span>
+                                                    {user.role === "owner" && (
+                                                        <span>Giá nhập: {formatThousands(product.importPrice)} VNĐ</span>
+                                                    )}
                                                     <span>Giá bán: {formatThousands(product.salePrice)} VNĐ</span>
                                                 </div>
                                             </div>

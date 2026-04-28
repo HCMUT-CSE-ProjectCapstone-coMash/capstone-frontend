@@ -8,7 +8,7 @@ import { RootState } from "@/utilities/store";
 import { useState } from "react";
 import { PromotionType, Promotion, PromotionPhase } from "@/types/promotion";
 import { useRouter } from "next/navigation";
-import { OwnerCreateSalePageRoute, OwnerSaleByIdPageRoute } from "@/const/routes";
+import { EmployeeSaleByIdPageRoute, OwnerCreateSalePageRoute, OwnerSaleByIdPageRoute } from "@/const/routes";
 import { useDebounce } from "@/hooks/useDebounce";
 import { FetchPromotions } from "@/api/promotions/promotions";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
@@ -95,7 +95,11 @@ export function PromotionTable() {
             render: (row) => (
                 <button
                     onClick={() => {
-                        router.push(OwnerSaleByIdPageRoute(row.id));
+                        if (user.role === "owner") {
+                            router.push(OwnerSaleByIdPageRoute(row.id));
+                        } else {
+                            router.push(EmployeeSaleByIdPageRoute(row.id));
+                        }
                         router.refresh();
                     }}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
