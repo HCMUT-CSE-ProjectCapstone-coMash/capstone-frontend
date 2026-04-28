@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-// import { FetchSaleOrdersById } from "@/api/saleOrders.ts/saleOrders";
+import { FetchCustomerById } from "@/api/customers/customers";
 // import { SaleOrderDetail } from "@/components/SaleOrder/SaleOrderDetail";
 
 export function CustomerDetailPageContent() {
@@ -11,7 +11,7 @@ export function CustomerDetailPageContent() {
 
     const { data: customer, isLoading, isError } = useQuery({
         queryKey: ["customer", customerId],
-        // queryFn: () => FetchSaleOrdersById(customerId as string),
+        queryFn: () => FetchCustomerById(customerId as string),
         enabled: !!customerId,
         refetchOnWindowFocus: false,
     });
