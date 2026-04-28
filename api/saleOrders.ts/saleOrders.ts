@@ -30,7 +30,15 @@ export async function FetchAllSaleOrders(currentPage: number, pageSize: number, 
 
 export async function FetchSaleOrdersById(saleOrderId: string) {
     const response = await axiosClient.get(
-        `sale-orders/${saleOrderId}`,
+        `/sale-orders/${saleOrderId}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function FetchSaleOrdersById(saleOrderId: string) {
+    const response = await axiosClient.get(
+        `/sale-orders/${saleOrderId}`,
         { withCredentials: true }
     );
     return response.data;
