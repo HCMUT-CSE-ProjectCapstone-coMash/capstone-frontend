@@ -34,6 +34,19 @@ function formatDateTime(isoString: string): string {
     });
 }
 
+function groupComboItemsByProduct(items: SaleOrderDetailResponse[]) : SaleOrderDetailResponse[][] {
+    const groups = new Map<string, SaleOrderDetailResponse[]>();
+    for (const item of items) {
+        const list = groups.get(item.productId);
+        if (list) {
+            list.push(item);
+        } else {
+            groups.set(item.productId, [item]);
+        }
+    }
+    return Array.from(groups.values());
+}
+
 // ===================== ROW TYPE =====================
 
 type ProductRow = { kind: "product"; detail: SaleOrderDetailResponse };
@@ -62,24 +75,32 @@ function ProductNameCell({ row }: { row: TableRow }) {
         );
     }
 
+    const productGroups = groupComboItemsByProduct(row.combo.items);
+
     return (
-        <div className="flex flex-col items-center gap-2">
-            {row.combo.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-4 w-full max-w-fit">
-                    <div className="relative w-12 h-12 shrink-0">
-                        <Image
-                            src={item.imageUrl}
-                            placeholder="blur"
-                            blurDataURL="/assets/image/light-pink.png"
-                            alt=""
-                            fill
-                            className="object-cover"
-                            unoptimized
-                        />
+        <div className="flex flex-col items-center gap-4">
+            {productGroups.map((group) => {
+                const first = group[0];
+                return (
+                    <div
+                        key={first.productId}
+                        className="flex items-center gap-4 w-full max-w-fit"
+                    >
+                        <div className="relative w-12 h-12 shrink-0">
+                            <Image
+                                src={first.imageUrl}
+                                placeholder="blur"
+                                blurDataURL="/assets/image/light-pink.png"
+                                alt=""
+                                fill
+                                className="object-cover"
+                                unoptimized
+                            />
+                        </div>
+                        <p className="min-w-25 text-left">{first.productName}</p>
                     </div>
-                    <p className="min-w-25 text-left">{item.productName}</p>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }
@@ -89,12 +110,21 @@ function SizeCell({ row }: { row: TableRow}) {
         return <span className="text-purple font-semibold">{row.detail.selectedSize}</span>;
     }
 
+    const productGroups = groupComboItemsByProduct(row.combo.items);
+
     return (
-        <div className="flex flex-col items-center gap-8">
-            {row.combo.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-2">
-                    <p>{item.selectedSize}:</p>
-                    <p className="text-purple font-semibold">{item.quantity}</p>
+        <div className="flex flex-col items-center gap-4">
+            {productGroups.map((group) => (
+                <div
+                    key={group[0].productId}
+                    className="flex flex-col items-center justify-center min-h-12 gap-1"
+                >
+                    {group.map((item) => (
+                        <div key={item.id} className="flex items-center gap-2">
+                            <p>{item.selectedSize}:</p>
+                            <p className="text-purple font-semibold">{item.quantity}</p>
+                        </div>
+                    ))}
                 </div>
             ))}
         </div>
@@ -131,19 +161,34 @@ function PromotionCell({ row }: { row: TableRow }) {
 
 function ProfitCell({ row }: { row: TableRow }) {
     if (row.kind === "combo") {
+        const productGroups = groupComboItemsByProduct(row.combo.items);
         const comboProfit = row.combo.items.reduce((sum, item) => sum + item.profit, 0);
- 
+
         const tooltipContent = (
             <div className="flex flex-col gap-1 text-xs">
-                {row.combo.items.map((item) => (
-                    <div key={item.id} className="flex justify-between gap-6">
-                        <span className="text-white/60 truncate max-w-35">{item.productName}</span>
-                        <span className={item.profit >= 0 ? "text-green-500" : "text-red"}>
-                            {item.profit >= 0 ? "" : "- "}
-                            {formatThousands(item.profit)} VNĐ
-                        </span>
-                    </div>
-                ))}
+                {productGroups.map((group) => {
+                    const productProfit = group.reduce((sum, item) => sum + item.profit, 0);
+                    const unitProfit = group[0].profit;
+                    const allEqual = group.every((item) => item.profit === unitProfit);
+                    const showMultiplication = allEqual && group.length > 1;
+
+                    return (
+                        <div key={group[0].productId} className="flex justify-between gap-6">
+                            <span className="text-white truncate max-w-35">
+                                {group[0].productName}
+                            </span>
+                            <span className={productProfit >= 0 ? "text-green-500" : "text-red"}>
+                                {showMultiplication && (
+                                    <span className="text-white mr-1 font-normal">
+                                        {formatThousands(unitProfit)} × {group.length} =
+                                    </span>
+                                )}
+                                {productProfit >= 0 ? "" : "- "}
+                                {formatThousands(productProfit)} VNĐ
+                            </span>
+                        </div>
+                    );
+                })}
                 <div className="flex justify-between gap-6 border-t border-white/30 pt-1 font-bold">
                     <span>Tổng lợi nhuận</span>
                     <span className={comboProfit >= 0 ? "text-green-500" : "text-red"}>
@@ -153,7 +198,7 @@ function ProfitCell({ row }: { row: TableRow }) {
                 </div>
             </div>
         );
- 
+
         return (
             <Tooltip title={tooltipContent}>
                 <span className={`font-semibold cursor-default ${comboProfit >= 0 ? "text-green-600" : "text-red"}`}>
