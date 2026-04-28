@@ -109,7 +109,7 @@ function UnitPriceCell({ row }: { row: TableRow }) {
 }
 
 function QuantityCell({ row }: { row: TableRow }) {
-    if (row.kind === "combo") return <span>1</span>;
+    if (row.kind === "combo") return <span>{row.combo.quantity}</span>;
     return <span>{row.detail.quantity}</span>;
 }
 
@@ -162,7 +162,7 @@ function ProfitCell({ row }: { row: TableRow }) {
     }
  
     // Sản phẩm đơn lẻ
-    const { unitPrice, quantity, subTotal, profit } = row.detail;
+    const {unitPrice, quantity, subTotal, profit} = row.detail;
     const baseTotal = unitPrice * quantity;
     const hasDiscount = baseTotal !== subTotal;
  
