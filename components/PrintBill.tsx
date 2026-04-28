@@ -176,7 +176,7 @@ export function PrintBill({ order }: PrintBillProps) {
                 {order.debitMoney > 0 && (
                     <p className="info" style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                         <span style={{ minWidth: 0 }}>Còn nợ:</span>
-                        <span style={{ flexShrink: 0 }}>{formatThousands(order.debitMoney)}</span>
+                        <span style={{ flexShrink: 0 }}>{formatThousands(order.debitMoney)} VNĐ</span>
                     </p>
                 )}
 
