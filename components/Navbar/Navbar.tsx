@@ -12,8 +12,8 @@ const employeeNavItems: NavItem[] = [
     { label: "Sản phẩm", href: EmployeeProductPageRoute },
     { label: "Nhập hàng", href: EmployeeImportPageRoute },
     { label: "Bán hàng", href: EmployeeSellPageRoute },
-    { label: "Khuyến mãi", href: EmployeeSalePageRoute },
-    { label: "Đơn hàng", href: EmployeeOrderPageRoute },
+    { label: "Khuyến mãi", href: EmployeeSalePageRoute, matchNested: true },
+    { label: "Đơn hàng", href: EmployeeOrderPageRoute, matchNested: true },
 ];
 
 const ownerNavItems: NavItem[] = [

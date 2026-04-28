@@ -11,6 +11,8 @@ import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { TextInput } from "@/components/FormInputs/TextInput";
 import { TrashIcon } from "@/public/assets/Icons";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 
 interface ComboTableProps {
     combo: ComboDeal;
@@ -21,6 +23,7 @@ interface ComboTableProps {
 }
 
 export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: ComboTableProps) {
+    const user = useSelector((state: RootState) => state.user);
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebounce(search, 500);
 
@@ -198,7 +201,9 @@ export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: Com
                                                     </div>
 
                                                     <div className="mt-1 flex gap-4 text-tgray9">
-                                                        <span>Giá nhập: {formatThousands(product.importPrice)} VNĐ</span>
+                                                        {user.role === "owner" && (
+                                                            <span>Giá nhập: {formatThousands(product.importPrice)} VNĐ</span>
+                                                        )}
                                                         <span>Giá bán: {formatThousands(product.salePrice)} VNĐ</span>
                                                     </div>
                                                 </div>
@@ -248,12 +253,14 @@ export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: Com
             {/* Combo pricing */}
             {combo.comboItems.length > 0 && (
                 <div className="flex items-center justify-between gap-4 px-8 py-3 border-t border-tgray5 bg-gray-50">
-                    <div>
-                        <p className="text-sm text-tgray9 mb-1">Tổng giá nhập</p>
-                        <div className="py-2 text-sm font-medium">
-                            {formatThousands(importTotal)} VNĐ
+                    {user.role === "owner" && (
+                        <div>
+                            <p className="text-sm text-tgray9 mb-1">Tổng giá nhập</p>
+                            <div className="py-2 text-sm font-medium">
+                                {formatThousands(importTotal)} VNĐ
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div>
                         <p className="text-sm text-tgray9 mb-1">Tổng giá bán</p>

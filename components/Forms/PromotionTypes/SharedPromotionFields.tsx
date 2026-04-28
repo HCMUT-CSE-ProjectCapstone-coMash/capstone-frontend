@@ -6,6 +6,8 @@ import { SelectInput } from "@/components/FormInputs/SelectInput";
 import { DatePickerInput } from "@/components/FormInputs/DatePickerInput";
 import { SelectOption } from "@/types/UIType";
 import { Promotion } from "@/types/promotion";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 
 const PROMOTION_TYPE_OPTIONS: SelectOption[] = [
     { label: "KM sản phẩm", value: "Product" },
@@ -27,7 +29,8 @@ interface SharedPromotionFieldsProps {
 }
 
 export function SharedPromotionFields({ promotion, values, onChange }: SharedPromotionFieldsProps) {
-    const isEditable = promotion.promotionPhase === "Upcoming";
+    const user = useSelector((state: RootState) => state.user);
+    const isEditable = promotion.promotionPhase === "Upcoming" && user.role === "owner";
 
     return (
         <>

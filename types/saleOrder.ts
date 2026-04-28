@@ -155,13 +155,26 @@ export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
     }
 
     for (const combo of comboMap.values()) {
-        const ratios = combo.items.map((detail) => {
-            const member = detail.comboPromotion!.comboItems.find(
-                (ci) => ci.productId === detail.productId
+        // 1. Aggregate quantities per product across all size variants
+        const totalsByProduct = new Map<string, number>();
+        for (const detail of combo.items) {
+            totalsByProduct.set(
+                detail.productId,
+                (totalsByProduct.get(detail.productId) ?? 0) + detail.quantity
             );
-            if (!member || member.quantity <= 0) return detail.quantity;
-            return Math.floor(detail.quantity / member.quantity);
+        }
+    
+        // 2. For each member of the combo definition, compute how many
+        //    full combos that product's total covers
+        const comboMembers = combo.items[0]?.comboPromotion?.comboItems ?? [];
+    
+        const ratios = comboMembers.map((member) => {
+            if (member.quantity <= 0) return 0;
+            const total = totalsByProduct.get(member.productId) ?? 0;
+            return Math.floor(total / member.quantity);
         });
+    
+        // 3. The combo count is limited by whichever member has the fewest
         combo.quantity = ratios.length > 0 ? Math.min(...ratios) : 0;
     }
 

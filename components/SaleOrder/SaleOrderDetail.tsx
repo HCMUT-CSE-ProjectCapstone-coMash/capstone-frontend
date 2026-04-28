@@ -266,6 +266,8 @@ interface SaleOrderDetailProps {
 export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
     const mapped = mapSaleOrder(saleOrder);
 
+    console.log(mapped)
+
     // Tổng trước khi giảm = unitPrice * quantity của tất cả details
     const totalBeforeDiscount = saleOrder.details.reduce(
         (sum, item) => sum + item.unitPrice * item.quantity, 0

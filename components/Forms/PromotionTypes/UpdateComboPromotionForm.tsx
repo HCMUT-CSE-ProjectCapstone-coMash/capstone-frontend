@@ -4,11 +4,12 @@ import { ComboDeal, ComboPromotion, UpdateComboPromotionPayload } from "@/types/
 import { ComboTable } from "../../Tables/Promotions/ComboTable";
 import { useMemo, useState } from "react";
 import { SharedPromotionFields } from "./SharedPromotionFields";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
 import { UpdateComboPromotion } from "@/api/promotions/promotions";
+import { RootState } from "@/utilities/store";
 
 interface UpdateComboPromotionFormProps {
     promotion: ComboPromotion;
@@ -23,6 +24,7 @@ interface FormState {
 }
 
 export function UpdateComboPromotionForm({ promotion } : UpdateComboPromotionFormProps) {
+    const user = useSelector((state: RootState) => state.user);
     const dispatch = useDispatch();
     const queryClient = useQueryClient();
 
@@ -164,7 +166,7 @@ export function UpdateComboPromotionForm({ promotion } : UpdateComboPromotionFor
             <div className="flex items-center justify-between">
                 <p className="text-sm font-normal text-tgray9">Combo áp dụng</p>
 
-                {promotion.promotionPhase === "Upcoming" && (
+                {promotion.promotionPhase === "Upcoming" && user.role === "owner" && (
                     <button
                         type="button"
                         onClick={addCombo}
@@ -184,7 +186,7 @@ export function UpdateComboPromotionForm({ promotion } : UpdateComboPromotionFor
                             index={index}
                             onUpdate={(patch) => updateCombo(index, patch)}
                             onRemove={() => removeCombo(index)}
-                            isEditable={promotion.promotionPhase === "Upcoming"}
+                            isEditable={promotion.promotionPhase === "Upcoming" && user.role === "owner"}
                         />
                     ))}
                 </div>
@@ -194,7 +196,7 @@ export function UpdateComboPromotionForm({ promotion } : UpdateComboPromotionFor
                 </div>
             )}
 
-            {promotion.promotionPhase === "Upcoming" && (
+            {promotion.promotionPhase === "Upcoming" && user.role === "owner" && (
                 <div className="flex justify-end">
                     <button
                         type="submit"
