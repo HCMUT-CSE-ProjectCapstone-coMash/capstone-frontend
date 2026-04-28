@@ -44,8 +44,8 @@ type TableRow   = ProductRow | ComboRow;
 function ProductNameCell({ row }: { row: TableRow }) {
     if (row.kind === "product") {
         return (
-            <div className="flex items-center gap-4">
-                <div className="relative w-12 h-12">
+            <div className="flex items-center justify-center gap-4">
+                <div className="relative w-12 h-12 shrink-0">
                     <Image
                         src={row.detail.imageUrl}
                         placeholder="blur"
@@ -56,15 +56,15 @@ function ProductNameCell({ row }: { row: TableRow }) {
                         unoptimized
                     />
                 </div>
-                <p>{row.detail.productName}</p>
+                <p className="min-w-25 text-left">{row.detail.productName}</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col  gap-2">
+        <div className="flex flex-col items-center gap-2">
             {row.combo.items.map((item) => (
-                <div key={item.id} className="flex items-center gap-4">
+                <div key={item.id} className="flex items-center gap-4 w-full max-w-fit">
                     <div className="relative w-12 h-12 shrink-0">
                         <Image
                             src={item.imageUrl}
@@ -76,7 +76,7 @@ function ProductNameCell({ row }: { row: TableRow }) {
                             unoptimized
                         />
                     </div>
-                    <p>{item.productName}</p>
+                    <p className="min-w-25 text-left">{item.productName}</p>
                 </div>
             ))}
         </div>
