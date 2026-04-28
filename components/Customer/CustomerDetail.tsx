@@ -3,6 +3,7 @@
 import { TextInput } from "../FormInputs/TextInput";
 import { Customer } from "@/types/customer";
 import { formatThousands } from "@/utilities/numberFormat";
+import { FetchCustomerSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 
 
 // ===================== MAIN COMPONENT =====================
@@ -66,6 +67,8 @@ export function CustomerDetail({ customer }: CustomerDetailProps) {
                     </div>
                 </div>
             </div>
+            <p className="text-lg text-purple font-semibold mt-5">Danh sách đơn hàng</p>
+            
         </div>
     );
 }

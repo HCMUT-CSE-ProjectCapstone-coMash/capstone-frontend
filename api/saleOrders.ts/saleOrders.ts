@@ -36,9 +36,9 @@ export async function FetchSaleOrdersById(saleOrderId: string) {
     return response.data;
 }
 
-export async function FetchSaleOrdersById(saleOrderId: string) {
-    const response = await axiosClient.get(
-        `/sale-orders/${saleOrderId}`,
+export async function FetchCustomerSaleOrder(customerId: string) {
+    const response = await axiosClient.get (
+        `/sale-orders/fetch-all-by-customer/${customerId}`,
         { withCredentials: true }
     );
     return response.data;
