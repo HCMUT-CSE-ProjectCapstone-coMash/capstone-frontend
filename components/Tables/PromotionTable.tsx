@@ -162,7 +162,7 @@ export function PromotionTable() {
                     <NormalSearchInput
                         value={searchTerm} 
                         onChange={(e) => setSearchTerm(e.target.value)} 
-                        placeholder={"Tìm theo mã hoặc tên khuyến mãi..."}
+                        placeholder={"Tìm theo mã hoặc tên khuyến mãi"}
                         className="w-2xs"
                     />
 
