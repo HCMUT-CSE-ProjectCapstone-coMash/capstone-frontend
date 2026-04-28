@@ -77,16 +77,18 @@ export default function CustomerTable() {
     const customers = data?.items ?? [];
     const total = data?.total ?? 0;
 
+    const handleSearch = (value: string) => {
+        setSearchQuery(value);
+        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    };
+
     return (
         <div className="space-y-6">
             {/* Action Bar */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button 
-                        onClick={() => {
-                            setSearchQuery("");
-                            setCurrentPage(1); 
-                        }}
+                        onClick={() => handleSearch("")}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                             searchQuery === "" 
                             ? "bg-pink text-white shadow-sm" 
@@ -96,7 +98,7 @@ export default function CustomerTable() {
                         Xem tất cả
                     </button>
                     <button 
-                        onClick={() => {}} 
+                        onClick={() => handleSearch("debitMoney")}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                             searchQuery === "debitMoney" 
                             ? "bg-pink text-white shadow-sm" 
