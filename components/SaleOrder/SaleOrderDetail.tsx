@@ -259,11 +259,11 @@ function DetailsTable({ mapped }: { mapped: MappedSaleOrder }) {
 
 // ===================== MAIN COMPONENT =====================
 
-interface DetailSaleOrderFormProps {
+interface SaleOrderDetailProps {
     saleOrder: SaleOrderResponse;
 }
 
-export function DetailSaleOrderForm({ saleOrder }: DetailSaleOrderFormProps) {
+export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
     const mapped = mapSaleOrder(saleOrder);
 
     // Tổng trước khi giảm = unitPrice * quantity của tất cả details

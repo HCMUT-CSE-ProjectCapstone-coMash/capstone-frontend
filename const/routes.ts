@@ -29,6 +29,7 @@ export const EmployeeSalePageRoute = `${EmployeeBaseRoute}/khuyen-mai`;
 // Link đơn hàng ----------------------------------------------
 
 export const EmployeeOrderPageRoute = `${EmployeeBaseRoute}/don-hang`;
+export const EmployeeSaleOrdersByIdPageRoute = (promotionId: string) => `${EmployeeOrderPageRoute}/chi-tiet/${promotionId}`;
 
 // Owner routes
 export const OwnerHomePageRoute = OwnerBaseRoute;

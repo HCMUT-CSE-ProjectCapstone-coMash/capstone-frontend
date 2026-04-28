@@ -11,7 +11,9 @@ import { PaymentMethod } from "@/const/PaymentMethod";
 import { useQuery } from "@tanstack/react-query";
 import { FetchAllSaleOrders } from "@/api/saleOrders.ts/saleOrders";
 import { useRouter } from "next/navigation";
-import { OwnerSaleOrdersByIdPageRoute } from "@/const/routes";
+import { EmployeeSaleOrdersByIdPageRoute, OwnerSaleOrdersByIdPageRoute } from "@/const/routes";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 
 const timeFilters = [
     { label: "Xem tất cả", value: "" },
@@ -28,6 +30,8 @@ const paymentOptions: { value: string, label: string }[] = [
 ];
 
 export function SaleOrdersTable() {
+    const user = useSelector((state: RootState) => state.user);
+
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
 
@@ -70,7 +74,13 @@ export function SaleOrdersTable() {
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => router.push(OwnerSaleOrdersByIdPageRoute(row.id))}
+                    onClick={() => {
+                        if (user.role === "owner") {
+                            router.push(OwnerSaleOrdersByIdPageRoute(row.id));
+                        } else {
+                            router.push(EmployeeSaleOrdersByIdPageRoute(row.id));
+                        }
+                    }}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
