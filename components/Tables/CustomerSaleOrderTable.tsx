@@ -6,12 +6,10 @@ import { Table } from "./Table";
 import { SaleOrderResponse } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useParams, useRouter } from "next/navigation";
-// import { useSelector } from "react-redux";
-// import { RootState } from "@/utilities/store";
 import { FetchCustomerSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-// import { OwerEmployeeSaleOrderDetail } from "@/const/routes";
+import { OwnerCustomerSaleOrderPageRoute } from "@/const/routes";
 
 
 export function CustomerSaleOrderTable () {
