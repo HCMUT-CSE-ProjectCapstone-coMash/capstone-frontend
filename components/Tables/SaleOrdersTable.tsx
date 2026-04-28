@@ -58,7 +58,7 @@ export function SaleOrdersTable() {
 
     const columns: Column<SaleOrderResponse>[] = [
         { title: "Mã đơn hàng", key: "orderId", render: (row) => <span>{row.saleOrderId}</span>},
-        { title: "Tên khách hàng", key: "customerName", render: (row) => <span>{row.customerName}</span>},
+        { title: "Tên khách hàng", key: "customerName", render: (row) => <span>{row.customerName?? "Khách vãng lai"}</span>},
         { title: "Thời gian xuất", key: "createdAt", render: (row) => <span>{new Date(row.createdAt).toLocaleString()}</span>},
         { title: "Thành tiền", key: "totalAmount", render: (row) => <span>{formatThousands(row.totalPrice)} VNĐ</span>},
         { title: "Lợi nhuận", key: "profit", render: (row) => <span>{formatThousands(row.totalProfit)} VNĐ</span>},
