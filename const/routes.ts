@@ -59,7 +59,7 @@ export const OwnerAddEmployeePageRoute = `${OwnerEmployeeManagementPageRoute}/th
 
 export const OwnerCustomerPageRoute = `${OwnerBaseRoute}/khach-hang`;
 export const OwnerCustomerByIdPageRoute = (customerId: string) => `${OwnerCustomerPageRoute}/chi-tiet/${customerId}`;
-export const OwnerCustomerSaleOrderPageRoute = (saleOrderId: string) => `${OwnerCustomerByIdPageRoute}/chi-tiet/${saleOrderId}`;
+export const OwnerCustomerSaleOrderPageRoute = (customerId: string, saleOrderId: string) => `${OwnerCustomerByIdPageRoute(customerId)}/don-hang/${saleOrderId}`;
 
 // Link bán hàng ----------------------------------------------
 

@@ -36,7 +36,7 @@ export function CustomerSaleOrderTable () {
             key: "action",
             render: (row) => (
                 <button
-                    // onClick={() => router.push(OwerEmployeeSaleOrderDetail(employeeId, row.id))}
+                    onClick={() => router.push(OwnerCustomerSaleOrderPageRoute (customerId, row.id))}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
