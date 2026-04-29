@@ -366,7 +366,7 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
                 <>
                     <SearchInput<Customer>
                         label={"Tên khách hàng"}
-                        placeHolder="Nhập tên khách hàng để tìm kiếm hoặc tạo mới"
+                        placeHolder="Tìm kiếm hoặc tạo mới"
                         value={form.customerName}
                         onChange={(e) => setField("customerName", e.target.value)}
                         suggestions={nameSuggestions}
@@ -383,7 +383,7 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
 
                     <SearchInput<Customer>
                         label={"Số điện thoại khách hàng"}
-                        placeHolder="Nhập số điện thoại để tìm kiếm hoặc tạo mới"
+                        placeHolder="Tìm kiếm hoặc tạo mới"
                         value={form.customerPhone}
                         onChange={(e) => setField("customerPhone", e.target.value)}
                         suggestions={phoneSuggestions}

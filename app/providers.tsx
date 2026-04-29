@@ -27,6 +27,8 @@ export function Providers({ children } : { children : React.ReactNode }) {
                         colorPrimary: "#6420AA",
                         colorPrimaryBorder: "#6420AA",
                         colorPrimaryHover: "#6420AA",
+                        colorBgContainerDisabled: "#FFFFFF",
+                        colorTextDisabled: "000000",
                     },
                     Tooltip: {
                         maxWidth: 280

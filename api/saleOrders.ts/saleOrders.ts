@@ -35,3 +35,11 @@ export async function FetchSaleOrdersById(saleOrderId: string) {
     );
     return response.data;
 }
+
+export async function FetchEmployeeSaleOrder(id: string) {
+    const response = await axiosClient.get (
+        `/sale-orders/fetch-all-by-employee/${id}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}

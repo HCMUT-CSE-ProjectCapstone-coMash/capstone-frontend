@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { DetailEmployeeByIdForm } from "@/components/Forms/DetailEmployeeByIdForm";
 import { useQuery } from "@tanstack/react-query";
 import { FetchEmployeeById } from "@/api/employees/employees";
+import { EmployeeSaleOrderTable } from "@/components/Tables/EmployeeSaleOrderTable";
 
 export default function EmployeeDetailPage() {
     const router = useRouter();
@@ -38,6 +39,9 @@ export default function EmployeeDetailPage() {
             )}
 
             {employee && <DetailEmployeeByIdForm employee={employee} />}
+            <div className="py-10">
+                <EmployeeSaleOrderTable/>
+            </div>
         </main>
     );
 }
