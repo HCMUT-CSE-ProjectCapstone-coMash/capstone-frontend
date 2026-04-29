@@ -8,6 +8,8 @@ import { formatThousands } from "@/utilities/numberFormat";
 import { Customer } from "@/types/customer";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { FetchCustomers } from "@/api/customers/customers";
+import { OwnerCustomerByIdPageRoute } from "@/const/routes";
+import { useRouter } from "next/navigation";
 
 export default function CustomerTable() {
     // --- 1. States ---
@@ -19,6 +21,7 @@ export default function CustomerTable() {
     const debouncedSearch = useDebounce(searchTerm, 500);
 
     const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
+    const router = useRouter();
 
     // --- 2. Fetch Data ---
     const { data, isLoading } = useQuery({
@@ -62,7 +65,7 @@ export default function CustomerTable() {
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => {}}
+                    onClick={() => router.push(OwnerCustomerByIdPageRoute(row.id))}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
@@ -74,16 +77,18 @@ export default function CustomerTable() {
     const customers = data?.items ?? [];
     const total = data?.total ?? 0;
 
+    const handleSearch = (value: string) => {
+        setSearchQuery(value);
+        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    };
+
     return (
         <div className="space-y-6">
             {/* Action Bar */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button 
-                        onClick={() => {
-                            setSearchQuery("");
-                            setCurrentPage(1); 
-                        }}
+                        onClick={() => handleSearch("")}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                             searchQuery === "" 
                             ? "bg-pink text-white shadow-sm" 
@@ -93,7 +98,7 @@ export default function CustomerTable() {
                         Xem tất cả
                     </button>
                     <button 
-                        onClick={() => {}} 
+                        onClick={() => handleSearch("debitMoney")}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                             searchQuery === "debitMoney" 
                             ? "bg-pink text-white shadow-sm" 

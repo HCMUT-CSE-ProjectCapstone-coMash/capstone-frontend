@@ -61,6 +61,8 @@ export const OwerEmployeeSaleOrderDetail = (employeeId: string, saleorderId: str
 // Link khách hàng ----------------------------------------------
 
 export const OwnerCustomerPageRoute = `${OwnerBaseRoute}/khach-hang`;
+export const OwnerCustomerByIdPageRoute = (customerId: string) => `${OwnerCustomerPageRoute}/chi-tiet/${customerId}`;
+export const OwnerCustomerSaleOrderPageRoute = (customerId: string, saleOrderId: string) => `${OwnerCustomerByIdPageRoute(customerId)}/don-hang/${saleOrderId}`;
 
 // Link bán hàng ----------------------------------------------
 

@@ -44,3 +44,11 @@ export async function FetchCustomers(currentPage: number, pageSize: number, sear
 
     return response.data;
 }
+
+export async function FetchCustomerById(customerId: string) {
+    const response = await axiosClient.get(
+        `/customers/${customerId}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}
