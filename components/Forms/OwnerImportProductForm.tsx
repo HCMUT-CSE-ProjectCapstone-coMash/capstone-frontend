@@ -117,7 +117,7 @@ export function OwnerImportProductForm() {
         setField("imageFile", files[0]);
 
         // imageSearchMutation.mutate(files[0]);
-        // analyzeImageMutation.mutate(files[0]);
+        analyzeImageMutation.mutate(files[0]);
     }
 
     const openFilePicker = () => {

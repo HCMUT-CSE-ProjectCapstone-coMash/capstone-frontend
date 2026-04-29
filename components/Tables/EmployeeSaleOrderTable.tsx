@@ -6,8 +6,7 @@ import { SaleOrderResponse } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { PaymentMethod } from "@/const/PaymentMethod";
 import { useParams, useRouter } from "next/navigation";
-// import { useSelector } from "react-redux";
-// import { RootState } from "@/utilities/store";
+
 import { FetchEmployeeSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -16,7 +15,7 @@ import { OwerEmployeeSaleOrderDetail } from "@/const/routes";
 export function EmployeeSaleOrderTable () {
     const router = useRouter();
     const { employeeId } = useParams<{ employeeId: string }>();
-    // const user = useSelector((state: RootState) => state.user);
+
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
     const { data, isLoading } = useQuery({
@@ -30,7 +29,6 @@ export function EmployeeSaleOrderTable () {
     { value: PaymentMethod.TRANSFER, label: "Chuyển khoản" },
     { value: PaymentMethod.DEBIT, label: "Ghi nợ" }
     ];
-
 
     const columns: Column<SaleOrderResponse>[] = [
         { title: "Mã đơn hàng", key: "orderId", render: (row) => <span>{row.saleOrderId}</span>},
