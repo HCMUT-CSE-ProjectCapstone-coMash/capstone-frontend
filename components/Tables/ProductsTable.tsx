@@ -5,7 +5,7 @@ import { OwnerProductsOrderPageRoute } from "@/const/routes";
 import { Product } from "@/types/product";
 import { Column } from "@/types/UIType";
 import { formatThousands } from "@/utilities/numberFormat";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Table } from "./Table";
 import { useCallback, useMemo, useState } from "react";
@@ -18,11 +18,15 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { BarcodeForm } from "../Forms/BarcodeForm";
+import { FetchAllSendingProductsOrders } from "@/api/productsOrder/productsOrder";
+import { Badge } from "antd";
 
 export function ProductsTable() {
     const router = useRouter();
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
+
+    const isEmployee = user.role === "employee";
 
     const [isModalOpen, setModalOpen] = useState(false);
 
@@ -36,10 +40,26 @@ export function ProductsTable() {
 
     const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
 
-    const { data, isLoading } = useQuery({
-        queryKey: ["products", currentPage, selectedCategory, effectiveSearch],
-        queryFn: () => FetchProducts(currentPage, pageSize, selectedCategory, effectiveSearch),
+    const [productsQuery, ordersQuery] = useQueries({
+        queries: [
+            {
+                queryKey: ["products", currentPage, selectedCategory, effectiveSearch],
+                queryFn: () => FetchProducts(currentPage, pageSize, selectedCategory, effectiveSearch),
+            },
+            {
+                queryKey: ["SendingProductsOrders"],
+                queryFn: () => FetchAllSendingProductsOrders(),
+                enabled: !isEmployee,
+            },
+        ],
     });
+    
+    const { data, isLoading } = productsQuery;
+    const products = data?.items ?? [];
+    const total = data?.total ?? 0;
+    
+    const { data: ordersData } = ordersQuery;
+    const ordersTotal = ordersData?.total ?? 0;
 
     const barcodeEntries = useSelector((state: RootState) => state.barcode.entries);
 
@@ -78,8 +98,6 @@ export function ProductsTable() {
         { label: "Đầm", value: "Đầm" },
         { label: "Váy", value: "Váy" },
     ];
-
-    const isEmployee = user.role === "employee";
 
     const columns: Column<Product>[] = useMemo(() => {
         const cols: Column<Product>[] = [
@@ -135,20 +153,21 @@ export function ProductsTable() {
         return cols;
     }, [dispatch, handleToggle, isProductSelected, isEmployee]);
 
-    const products = data?.items ?? [];
-    const total = data?.total ?? 0;
-
     return (
         <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
                 <p className="text-purple text-2xl font-medium">Danh sách sản phẩm</p>
                 {!isEmployee && (
-                    <button
-                        onClick={() => router.push(OwnerProductsOrderPageRoute)}
-                        className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
+                    <Badge
+                        count={ordersTotal || 0}
                     >
-                        Danh sách sản phẩm chờ duyệt
-                    </button>
+                        <button
+                            onClick={() => router.push(OwnerProductsOrderPageRoute)}
+                            className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
+                        >
+                            Danh sách sản phẩm chờ duyệt
+                        </button>
+                    </Badge>
                 )}
             </div>
 

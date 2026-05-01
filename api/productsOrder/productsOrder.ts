@@ -77,3 +77,12 @@ export async function PatchOrderAndStatus(orderId: string, updateData: UpdatePro
     
     return response.data;
 }
+
+export async function FetchAllSendingProductsOrders() {
+    const response = await axiosClient.get(
+        "products-orders/fetch-sending",
+        { withCredentials: true }
+    );
+    
+    return response.data;
+}

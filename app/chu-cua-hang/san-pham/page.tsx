@@ -1,4 +1,5 @@
 "use client";
+
 import { ProductsTable } from "@/components/Tables/ProductsTable"
 import { RootState } from "@/utilities/store";
 import { useDispatch, useSelector } from "react-redux";
