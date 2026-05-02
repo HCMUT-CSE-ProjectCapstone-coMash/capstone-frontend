@@ -9,4 +9,5 @@ export interface User {
     gender: string | null,
     dateOfBirth: string | null,
     imageURL: string | null,
+    hasChangedPassword: boolean | null
 };

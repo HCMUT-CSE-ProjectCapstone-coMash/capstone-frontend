@@ -12,6 +12,7 @@ const initialState: User = {
     gender: null,
     phoneNumber: null,
     imageURL: null,
+    hasChangedPassword: null
 };
 
 const userSlice = createSlice({

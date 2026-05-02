@@ -30,6 +30,7 @@ export function UserProvider({ children } : { children : React.ReactNode }) {
                 gender: data.gender,
                 dateOfBirth: data.dateOfBirth,
                 imageURL: data.imageURL,
+                hasChangedPassword: data.hasChangedPassword,
             }
             dispatch(setUser(user));
         }
