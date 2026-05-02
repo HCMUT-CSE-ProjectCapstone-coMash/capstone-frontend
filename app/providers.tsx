@@ -26,29 +26,23 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ConfigProvider
             warning={{ strict: false }}
             theme={{
+                token: {
+                    colorPrimary: "#6420AA",
+                    colorPrimaryHover: "#6420AA",
+                },
                 components: {
                     Alert: { withDescriptionIconSize: 20 },
-                    Switch: { colorPrimary: "#6420AA", colorPrimaryHover: "#6420AA" },
                     Pagination: {
                         itemActiveColor: "#6420AA",
                         itemActiveColorHover: "#6420AA",
-                        colorPrimary: "#6420AA",
-                        colorPrimaryHover: "#6420AA"
                     },
                     DatePicker: {
                         paddingBlock: 14,
-                        colorPrimary: "#6420AA",
                         colorPrimaryBorder: "#6420AA",
-                        colorPrimaryHover: "#6420AA",
                         colorBgContainerDisabled: "#FFFFFF",
                         colorTextDisabled: "000000",
                     },
                     Tooltip: { maxWidth: 280 },
-                    Spin: { colorPrimary: "#6420AA" },
-                    Upload: {
-                        colorPrimary: "#6420AA",
-                        colorPrimaryHover: "#6420AA",
-                    }
                 }
             }}
         >

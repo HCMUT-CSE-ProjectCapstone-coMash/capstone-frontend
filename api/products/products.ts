@@ -38,19 +38,12 @@ export async function CreateProductAsync(productData: CreateProduct, productsOrd
 
 // Tìm kiếm sản phẩm tương tự bằng hình ảnh
 export async function SearchSimilarProduct(imageFile: File) {
-    const newForm = new FormData();
-
-    newForm.append("Image", imageFile);
+    const base64Image = await fileToBase64(imageFile);
 
     const response = await axiosClient.post(
         "/product/fetch-similar",
-        newForm,
-        { 
-            withCredentials: true,
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
-        }
+        { ImageBase64: base64Image },
+        { withCredentials: true }
     );
 
     return response.data;

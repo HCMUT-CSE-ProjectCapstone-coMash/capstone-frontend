@@ -194,10 +194,11 @@ export function OwnerImportProductForm() {
 
                 <div style={{ display: "none" }}>
                     <ImgCrop
-                        rotationSlider
                         aspect={1}
                         quality={1}
+                        aspectSlider={true}
                         showReset
+                        resetText="Đặt lại"
                         modalTitle="Cắt ảnh sản phẩm"
                         modalOk="Xác nhận"
                         modalCancel="Huỷ"
