@@ -5,7 +5,7 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
+import { CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -18,6 +18,9 @@ import { SearchInput } from "../FormInputs/SearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
 import { setEditingProduct } from "@/utilities/productEditStore";
 import { parseFormattedNumber } from "@/utilities/numberFormat";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { SuggestionModal } from "../Modal/SuggestionModal";
+import { UploadIcon } from "@/public/assets/Icons";
 
 interface FormState {
     productId: string;
@@ -54,6 +57,9 @@ export function ImportProductForm() {
     const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
         setForm(prev => ({ ...prev, [key]: value }));
     };
+
+    const [suggestionModalOpen, setSuggestionModalOpen] = useState<boolean>(false);
+    const [suggestedProducts, setSuggestedProducts] = useState<ProductWithOrderStatus[]>([]);
 
     // Tuỳ theo loại size mà hiển thị các ô nhập số lượng tương ứng (UI)
     const sizes = form.isNumberSize ? sizesNumber : sizesLetter;
@@ -163,28 +169,8 @@ export function ImportProductForm() {
         mutationFn: (imageFile: File) => SearchSimilarProduct(imageFile),
 
         onSuccess: (data) => {
-            console.log(data);
-        },
-
-        onError: () => {
-
-        }
-    });
-
-    // Xử lý khi người dùng chọn hình ảnh để phân tích và tự động điền thông tin sản phẩm
-    const analyzeImageMutation = useMutation({
-        mutationFn: (imageFile: File) => AnalyzeImage(imageFile),
-
-        onSuccess: (data) => {
-            setField("productId", data.productId);
-            setField("productName", data.productName);
-            setField("category", data.category);
-            setField("color", data.color);
-            setField("pattern", data.pattern);
-        },
-
-        onError: () => {
-
+            setSuggestionModalOpen(true);
+            setSuggestedProducts(data);
         }
     });
 
@@ -193,16 +179,21 @@ export function ImportProductForm() {
 
         setField("imageFile", files[0]);
 
-        // imageSearchMutation.mutate(files[0]);
-        analyzeImageMutation.mutate(files[0]);
+        imageSearchMutation.mutate(files[0]);
     }
 
     const openFilePicker = () => {
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
         fileInputRef.current?.click();
     };
 
     const removeImage = () => {
         setField("imageFile", null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     };
 
     const debouncedName = useDebounce(form.productName, 500);
@@ -223,7 +214,7 @@ export function ImportProductForm() {
 
     return (
         <div className="flex gap-[10vw]">
-            <div>
+            <div className="flex flex-col gap-2">
                 <p>Hình ảnh sản phẩm</p>
 
                 <input 
@@ -256,16 +247,14 @@ export function ImportProductForm() {
                         </div>
                     ) : (
                         <div className="h-118.75 bg-tgray05 flex items-center justify-center">
-                            <div className="flex flex-col items-center gap-4">
-                                <p className="text-lg text-gray-700 mb-2">
-                                    Kéo & thả hình ảnh muốn tải lên
-                                </p>
+                            <div className="flex flex-col items-center gap-2">
+                                <UploadIcon width={64} height={64} className={"text-gray-400"}/>
 
                                 <button 
                                     className="text-lg font-medium underline cursor-pointer text-gray-dark"
                                     onClick={openFilePicker}
                                 >
-                                    hoặc từ máy tính của bạn
+                                    Chọn từ máy tính của bạn
                                 </button>
 
                                 <button className="text-lg font-medium underline cursor-pointer text-gray-dark">
@@ -277,24 +266,8 @@ export function ImportProductForm() {
                 </div>
             </div>
 
-            <div>
-                <div className="flex items-center justify-between mb-5">
-                    <p>Thông tin sản phẩm</p>
-                    <div className="flex items-center gap-3">
-                        <button
-                            className={`py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer`}
-                            onClick={openFilePicker}
-                        >
-                            Thêm ảnh từ máy tính
-                        </button>
-
-                        <button
-                            className={`py-2 px-3 rounded-lg text-white bg-pink text-sm cursor-pointer`}
-                        >
-                            Thêm ảnh từ điện thoại
-                        </button>
-                    </div>
-                </div>
+            <div className="flex flex-col gap-2">
+                <p>Thông tin sản phẩm</p>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
@@ -372,6 +345,27 @@ export function ImportProductForm() {
                     </div>
                 </form>
             </div>
+
+            {suggestionModalOpen && productsOrder?.id && form.imageFile && (
+                <LayoutModal
+                    onClose={() => setSuggestionModalOpen(false)}
+                    isOpen={suggestionModalOpen}
+                >
+                    <SuggestionModal 
+                        products={suggestedProducts} 
+                        productsOrdersId={productsOrder.id}
+                        onClose={() => setSuggestionModalOpen(false)}
+                        onAnalyzeResult={(data) => {
+                            setField("productName", data.productName);
+                            setField("category", data.category);
+                            setField("color", data.color);
+                            setField("pattern", data.pattern);
+                            createProductIdMutation.mutate(data.category);
+                        }}
+                        imageFile={form.imageFile}
+                    />
+                </LayoutModal>
+            )}
         </div>
     )
 }
