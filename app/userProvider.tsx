@@ -24,7 +24,12 @@ export function UserProvider({ children } : { children : React.ReactNode }) {
                 fullName: data.fullName,
                 email: data.email,
                 role: data.role,
-                createdAt: data.createdAt
+                createdAt: data.createdAt,
+                employeeId: data.employeeId,
+                phoneNumber: data.phoneNumber,
+                gender: data.gender,
+                dateOfBirth: data.dateOfBirth,
+                imageURL: data.imageURL,
             }
             dispatch(setUser(user));
         }

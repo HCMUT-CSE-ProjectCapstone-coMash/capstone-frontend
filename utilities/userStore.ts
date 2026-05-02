@@ -6,7 +6,12 @@ const initialState: User = {
     email: null,
     fullName: null,
     role: null,
-    createdAt: null
+    createdAt: null,
+    employeeId: null,
+    dateOfBirth: null,
+    gender: null,
+    phoneNumber: null,
+    imageURL: null,
 };
 
 const userSlice = createSlice({

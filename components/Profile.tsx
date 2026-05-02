@@ -59,11 +59,11 @@ const items: MenuProps["items"] = [
 ]
 
 export function Profile({ userName } : ProfileProps) {
-
+    
     return (
         <div>
             <Dropdown menu={{ items }}>
-                <div className="bg-pink text-white flex items-center justify-between gap-x-3 p-3 rounded-lg">
+                <div className="flex items-center justify-between gap-x-3 p-3 rounded-lg border border-gray-500 cursor-pointer hover:bg-gray-100">
                     <UserIcon width={24} height={24} className={""}/>
                     {userName}
                     <ArrowDownLineIcon width={24} height={24} className={""}/>
