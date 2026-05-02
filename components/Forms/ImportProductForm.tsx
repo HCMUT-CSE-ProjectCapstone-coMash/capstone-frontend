@@ -21,6 +21,9 @@ import { parseFormattedNumber } from "@/utilities/numberFormat";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { SuggestionModal } from "../Modal/SuggestionModal";
 import { UploadIcon } from "@/public/assets/Icons";
+import ImgCrop from "antd-img-crop";             
+import { Spin, Upload } from "antd";
+import type { RcFile } from "antd/es/upload/interface";
 
 interface FormState {
     productId: string;
@@ -61,7 +64,6 @@ export function ImportProductForm() {
     const [suggestionModalOpen, setSuggestionModalOpen] = useState<boolean>(false);
     const [suggestedProducts, setSuggestedProducts] = useState<ProductWithOrderStatus[]>([]);
 
-    // Tuỳ theo loại size mà hiển thị các ô nhập số lượng tương ứng (UI)
     const sizes = form.isNumberSize ? sizesNumber : sizesLetter;
     const quantities = form.isNumberSize ? form.numberQuantities : form.letterQuantities;
 
@@ -70,25 +72,20 @@ export function ImportProductForm() {
         setForm(prev => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
     }
 
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const uploadTriggerRef = useRef<HTMLButtonElement | null>(null);
 
-    // Tạo mã sản phẩm tự động khi chọn phân loại
     const createProductIdMutation = useMutation({
         mutationFn: (productName: string) => CreateProductIdByCategory(productName),
-
         onSuccess: (data) => {
             setField("productId", data.productId);
         },
-
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo mã sản phẩm tự động" }));
         }
     });
 
-    // Tạo sản phẩm mới
     const createMutation = useMutation({
         mutationFn: ({ productData, productsOrderId } : { productData: CreateProduct, productsOrderId: string }) => CreateProductAsync(productData, productsOrderId),
-
         onSuccess: (data) => {
             const newProduct: Product = {
                 id: data.id,
@@ -108,33 +105,26 @@ export function ImportProductForm() {
             }
             dispatch(addProductToOrder(newProduct));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
-
             setForm(initialFormState);
         },
-
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại" }));
         }
     });
 
-    // Xử lý submit form thêm sản phẩm mới
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if(!user.id || !productsOrder?.id) {
-            return;
-        }
+        if(!user.id || !productsOrder?.id) return;
 
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
             return;
         }
-
         if(!form.category) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui chọn phân loại" }));
             return;
         }
-
         if(!form.color) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn màu" }));
             return;
@@ -164,36 +154,26 @@ export function ImportProductForm() {
         createMutation.mutate({ productData, productsOrderId: productsOrder.id });
     }
 
-    // Xử lý khi người dùng chọn hình ảnh để tải lên
     const imageSearchMutation = useMutation({
         mutationFn: (imageFile: File) => SearchSimilarProduct(imageFile),
-
         onSuccess: (data) => {
             setSuggestionModalOpen(true);
             setSuggestedProducts(data);
         }
     });
 
-    const handleFiles = (files: FileList | null) => {
-        if (!files || files.length === 0) return;
-
-        setField("imageFile", files[0]);
-
-        imageSearchMutation.mutate(files[0]);
-    }
+    const handleBeforeUpload = (file: RcFile) => {
+        setField("imageFile", file);
+        imageSearchMutation.mutate(file);
+        return false;
+    };
 
     const openFilePicker = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-        fileInputRef.current?.click();
+        uploadTriggerRef.current?.click();
     };
 
     const removeImage = () => {
         setField("imageFile", null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
     };
 
     const debouncedName = useDebounce(form.productName, 500);
@@ -217,13 +197,26 @@ export function ImportProductForm() {
             <div className="flex flex-col gap-2">
                 <p>Hình ảnh sản phẩm</p>
 
-                <input 
-                    type="file" 
-                    className="hidden"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={(e) => handleFiles(e.target.files)}
-                />
+                <div style={{ display: "none" }}>
+                    <ImgCrop
+                        rotationSlider
+                        aspect={1}
+                        quality={1}
+                        showReset
+                        modalTitle="Cắt ảnh sản phẩm"
+                        modalOk="Xác nhận"
+                        modalCancel="Huỷ"
+                    >
+                        <Upload
+                            beforeUpload={handleBeforeUpload}
+                            showUploadList={false}
+                            accept="image/*"
+                            maxCount={1}
+                        >
+                            <button ref={uploadTriggerRef} type="button">trigger</button>
+                        </Upload>
+                    </ImgCrop>
+                </div>
 
                 <div className="w-md">
                     {form.imageFile ? (
@@ -234,6 +227,12 @@ export function ImportProductForm() {
                                 fill
                                 className="object-cover" unoptimized
                             />
+
+                            {imageSearchMutation.isPending && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                    <Spin size="large" description="Đang tìm sản phẩm tương tự..." />
+                                </div>
+                            )}
 
                             <button
                                 type="button"
@@ -251,13 +250,14 @@ export function ImportProductForm() {
                                 <UploadIcon width={64} height={64} className={"text-gray-400"}/>
 
                                 <button 
+                                    type="button"
                                     className="text-lg font-medium underline cursor-pointer text-gray-dark"
                                     onClick={openFilePicker}
                                 >
                                     Chọn từ máy tính của bạn
                                 </button>
 
-                                <button className="text-lg font-medium underline cursor-pointer text-gray-dark">
+                                <button type="button" className="text-lg font-medium underline cursor-pointer text-gray-dark">
                                     hoặc từ điện thoại của bạn
                                 </button>
                             </div>
@@ -294,7 +294,6 @@ export function ImportProductForm() {
                                     </div>
                                     <span>{item.label}</span>
                                 </div>
-
                                 {item.data.isInPendingOrder && <p className="text-sm text-pink">Đang chờ duyệt</p>}
                             </div>
                         )}
@@ -309,9 +308,7 @@ export function ImportProductForm() {
                                 setField("category", value);
                                 createProductIdMutation.mutate(value);
                             }}/>
-
                         <SelectInput label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)}/>
-
                         <SelectInput label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)}/>
                     </div>
 

@@ -20,6 +20,9 @@ import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { UploadIcon } from "@/public/assets/Icons";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { OwnerSuggestionModal } from "../Modal/OwnerSuggestionModal";
+import ImgCrop from "antd-img-crop";
+import { Spin, Upload } from "antd";
+import type { RcFile } from "antd/es/upload/interface";
 
 interface FormState {
     productId: string;
@@ -31,13 +34,13 @@ interface FormState {
     letterQuantities: Record<string, number>;
     numberQuantities: Record<string, number>;
     imageFile: File | null;
-    importPrice: number,
-    salePrice: number,
+    importPrice: number;
+    salePrice: number;
 }
 
 const createInitialQuantities = (sizes: string[]) => Object.fromEntries(sizes.map(size => [size, 0]));
 
-const initialFormState : FormState = {
+const initialFormState: FormState = {
     productId: "",
     productName: "",
     category: "",
@@ -63,60 +66,46 @@ export function OwnerImportProductForm() {
     const [suggestionModalOpen, setSuggestionModalOpen] = useState<boolean>(false);
     const [suggestedProducts, setSuggestedProducts] = useState<ProductWithOrderStatus[]>([]);
 
-    // Tuỳ theo loại size mà hiển thị các ô nhập số lượng tương ứng (UI)
     const sizes = form.isNumberSize ? sizesNumber : sizesLetter;
     const quantities = form.isNumberSize ? form.numberQuantities : form.letterQuantities;
 
     const handleQuantityChange = (size: string, value: number) => {
         const key = form.isNumberSize ? "numberQuantities" : "letterQuantities";
         setForm(prev => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
-    }
+    };
 
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const uploadTriggerRef = useRef<HTMLButtonElement | null>(null);
 
-    // Xử lý khi người dùng chọn hình ảnh để tải lên
     const imageSearchMutation = useMutation({
         mutationFn: (imageFile: File) => SearchSimilarProduct(imageFile),
-
         onSuccess: (data) => {
             setSuggestionModalOpen(true);
             setSuggestedProducts(data);
         },
     });
 
-    // Tạo mã sản phẩm tự động khi chọn phân loại
     const createProductIdMutation = useMutation({
         mutationFn: (productName: string) => CreateProductIdByCategory(productName),
-
         onSuccess: (data) => {
             setField("productId", data.productId);
         },
-
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo mã sản phẩm tự động" }));
         }
     });
 
-    const handleFiles = (files: FileList | null) => {
-        if (!files || files.length === 0) return;
-
-        setField("imageFile", files[0]);
-
-        imageSearchMutation.mutate(files[0]);
-    }
+    const handleBeforeUpload = (file: RcFile) => {
+        setField("imageFile", file);
+        imageSearchMutation.mutate(file);
+        return false;
+    };
 
     const openFilePicker = () => {
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
-        fileInputRef.current?.click();
+        uploadTriggerRef.current?.click();
     };
 
     const removeImage = () => {
         setField("imageFile", null);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-        }
     };
 
     const debouncedName = useDebounce(form.productName, 500);
@@ -126,56 +115,48 @@ export function OwnerImportProductForm() {
         queryFn: () => FetchApprovedProductByName(debouncedName),
         enabled: debouncedName.length > 2,
         staleTime: 0,
-        gcTime: 0
+        gcTime: 0,
     });
 
     const suggestions = products.map((p: Product) => ({
         label: p.productName,
         value: p.productName,
-        data: p
+        data: p,
     }));
 
     const createMutation = useMutation({
         mutationFn: (newProduct: CreateProduct) => OwnerCreateProduct(newProduct),
-
         onSuccess: () => {
             setForm(initialFormState);
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
-
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Thêm sản phẩm thất bại" }));
-        }
+        },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if(!user.id) {
+        if (!user.id) return;
+
+        if (!form.productName) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm " }));
             return;
         }
-
-        if(!form.productName) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
-            return;
-        }
-
-        if(!form.category) {
+        if (!form.category) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui chọn phân loại" }));
             return;
         }
-
-        if(!form.color) {
+        if (!form.color) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn màu" }));
             return;
         }
-
-        if(!form.importPrice) {
+        if (!form.importPrice) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá nhập" }));
             return;
         }
-
-        if(!form.salePrice) {
+        if (!form.salePrice) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá bán" }));
             return;
         }
@@ -190,7 +171,7 @@ export function OwnerImportProductForm() {
             return;
         }
 
-        const newProduct : CreateProduct = {
+        const newProduct: CreateProduct = {
             productName: form.productName,
             category: form.category,
             color: form.color,
@@ -201,7 +182,7 @@ export function OwnerImportProductForm() {
             image: form.imageFile,
             importPrice: form.importPrice,
             salePrice: form.salePrice,
-        }
+        };
 
         createMutation.mutate(newProduct);
     };
@@ -211,28 +192,47 @@ export function OwnerImportProductForm() {
             <div className="flex flex-col gap-2">
                 <p>Hình ảnh sản phẩm</p>
 
-                <input 
-                    type="file" 
-                    className="hidden"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={(e) => handleFiles(e.target.files)}
-                />
+                <div style={{ display: "none" }}>
+                    <ImgCrop
+                        rotationSlider
+                        aspect={1}
+                        quality={1}
+                        showReset
+                        modalTitle="Cắt ảnh sản phẩm"
+                        modalOk="Xác nhận"
+                        modalCancel="Huỷ"
+                    >
+                        <Upload
+                            beforeUpload={handleBeforeUpload}
+                            showUploadList={false}
+                            accept="image/*"
+                            maxCount={1}
+                        >
+                            <button ref={uploadTriggerRef} type="button">trigger</button>
+                        </Upload>
+                    </ImgCrop>
+                </div>
 
                 <div className="w-md">
                     {form.imageFile ? (
-                        <div className="relative group h-118.75 w-full">   
-                            <Image 
-                                src={URL.createObjectURL(form.imageFile)} 
+                        <div className="relative group h-118.75 w-full">
+                            <Image
+                                src={URL.createObjectURL(form.imageFile)}
                                 alt=""
                                 fill
                                 className="object-cover" unoptimized
                             />
 
+                            {imageSearchMutation.isPending && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                    <Spin size="large" description="Đang tìm sản phẩm tương tự..." />
+                                </div>
+                            )}
+
                             <button
                                 type="button"
                                 onClick={removeImage}
-                                className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full 
+                                className="absolute top-2 right-2 bg-white text-pink w-7 h-7 rounded-full
                                         flex items-center justify-center text-sm
                                         opacity-0 group-hover:opacity-100 transition cursor-pointer"
                             >
@@ -242,16 +242,17 @@ export function OwnerImportProductForm() {
                     ) : (
                         <div className="h-118.75 bg-tgray05 flex items-center justify-center">
                             <div className="flex flex-col items-center gap-4">
-                                <UploadIcon width={64} height={64} className={"text-gray-400"}/>
+                                <UploadIcon width={64} height={64} className={"text-gray-400"} />
 
-                                <button 
+                                <button
+                                    type="button"
                                     className="text-lg font-medium underline cursor-pointer text-gray-dark"
                                     onClick={openFilePicker}
                                 >
                                     hoặc từ máy tính của bạn
                                 </button>
 
-                                <button className="text-lg font-medium underline cursor-pointer text-gray-dark">
+                                <button type="button" className="text-lg font-medium underline cursor-pointer text-gray-dark">
                                     hoặc từ điện thoại của bạn
                                 </button>
                             </div>
@@ -266,10 +267,10 @@ export function OwnerImportProductForm() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput
                         disabled={true}
-                        label={"Mã sản phẩm"} 
-                        placeHolder="" 
+                        label={"Mã sản phẩm"}
+                        placeHolder=""
                         value={form.productId}
-                        onChange={(e) => setField("productId" , e.target.value)}
+                        onChange={(e) => setField("productId", e.target.value)}
                     />
 
                     <SearchInput<Product>
@@ -278,11 +279,11 @@ export function OwnerImportProductForm() {
                         value={form.productName}
                         onChange={(e) => setField("productName", e.target.value)}
                         suggestions={suggestions}
-                        onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)) }}
+                        onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)); }}
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
                                 <div className="relative w-8 h-8">
-                                    <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                                    <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized />
                                 </div>
                                 <span>{item.label}</span>
                             </div>
@@ -291,16 +292,16 @@ export function OwnerImportProductForm() {
 
                     <div className="flex items-center justify-between gap-5">
                         <TextInput
-                            label={"Giá nhập"} 
-                            placeHolder="" 
+                            label={"Giá nhập"}
+                            placeHolder=""
                             value={formatThousands(form.importPrice)}
                             inputType="text"
                             onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
                         />
 
                         <TextInput
-                            label={"Giá bán"} 
-                            placeHolder="" 
+                            label={"Giá bán"}
+                            placeHolder=""
                             value={formatThousands(form.salePrice)}
                             inputType="text"
                             onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
@@ -308,23 +309,23 @@ export function OwnerImportProductForm() {
                     </div>
 
                     <div className="flex items-center justify-between gap-5">
-                        <SelectInput 
-                            label={"Phân loại"} 
-                            options={categories} 
-                            value={form.category} 
+                        <SelectInput
+                            label={"Phân loại"}
+                            options={categories}
+                            value={form.category}
                             onChange={(value) => {
                                 setField("category", value);
                                 createProductIdMutation.mutate(value);
-                            }}/>
+                            }} />
 
-                        <SelectInput label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)}/>
+                        <SelectInput label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)} />
 
-                        <SelectInput label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)}/>
+                        <SelectInput label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)} />
                     </div>
 
                     <div className="flex items-center justify-between">
                         <p className="text-sm">Kích cỡ - Số lượng</p>
-                        <SwitchInput label={"Size số"} checked={form.isNumberSize} onChange={(checked) => setField("isNumberSize", checked)}/>
+                        <SwitchInput label={"Size số"} checked={form.isNumberSize} onChange={(checked) => setField("isNumberSize", checked)} />
                     </div>
 
                     <div className="grid grid-cols-4 gap-x-10 gap-y-5">
@@ -344,7 +345,7 @@ export function OwnerImportProductForm() {
                     <div className="flex justify-end mt-5">
                         <button className={`
                             py-2 px-3 rounded-lg text-white bg-pink text-sm
-                            ${createMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`} 
+                            ${createMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                             disabled={createMutation.isPending}
                         >
                             {createMutation.isPending ? "Đang thêm..." : "Thêm sản phẩm"}
@@ -358,7 +359,7 @@ export function OwnerImportProductForm() {
                     onClose={() => setSuggestionModalOpen(false)}
                     isOpen={suggestionModalOpen}
                 >
-                    <OwnerSuggestionModal 
+                    <OwnerSuggestionModal
                         products={suggestedProducts}
                         onClose={() => setSuggestionModalOpen(false)}
                         onAnalyzeResult={(data) => {
@@ -373,5 +374,5 @@ export function OwnerImportProductForm() {
                 </LayoutModal>
             )}
         </div>
-    )
+    );
 }
