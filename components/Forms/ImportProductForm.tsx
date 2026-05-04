@@ -117,6 +117,11 @@ export function ImportProductForm() {
 
         if(!user.id || !productsOrder?.id) return;
 
+        if (!form.imageFile) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm hình ảnh sản phẩm" }));
+            return;
+        }
+
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
             return;

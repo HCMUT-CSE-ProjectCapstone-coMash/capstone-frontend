@@ -120,6 +120,11 @@ export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }
             dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm không tồn tại" }));
             return;
         }
+        
+        if (!form.imageFile && !form.imagePreviewUrl) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm hình ảnh sản phẩm" }));
+            return;
+        }   
 
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
