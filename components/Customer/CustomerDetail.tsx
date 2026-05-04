@@ -53,7 +53,7 @@ export function CustomerDetail({ customer }: CustomerDetailProps) {
                             onChange={() => {}}
                         />
                         
-                        <div className={`w-full ${(customer?.debitDays ?? 0) >= 7 ? "[&_input]:text-red" : ""}`}>
+                        <div className={`w-full ${(customer?.debitDays ?? 0) >= 7 ? "[&_input]:text-red font-semibold" : ""}`}>
                             <TextInput
                                 disabled
                                 label="Số ngày nợ"

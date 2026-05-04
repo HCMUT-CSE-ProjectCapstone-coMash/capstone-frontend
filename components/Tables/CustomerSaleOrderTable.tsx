@@ -30,6 +30,7 @@ export function CustomerSaleOrderTable () {
         { title: "Người bán hàng", key: "createdbyName", render: (row) => <span>{row.createdByName}</span>},
         { title: "Thời gian xuất", key: "createdAt", render: (row) => <span>{new Date(row.createdAt).toLocaleString()}</span>},
         { title: "Tổng tiền", key: "totalAmount", render: (row) => <span>{formatThousands(row.totalPrice)} VNĐ</span>},
+        { title: "Phương thức thanh toán", key: "paymentMethod", render: (row) => <span>{row.paymentMethod}</span>},
 
         {
             title: "",
