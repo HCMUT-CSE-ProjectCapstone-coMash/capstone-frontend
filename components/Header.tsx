@@ -15,10 +15,11 @@ export async function Header() {
     const session = await decrypt(cookie);
 
     const homeRoute = session?.role ? (roleHomeMap[String(session.role)] ?? LoginPageRoute) : LoginPageRoute;
+    const hasChangedPassword = session?.hasChangedPassword === "True";
 
     return (
         <>
-            {session ? (
+            {session && hasChangedPassword ? (
                 <header className="min-h-20 bg-gwhite px-10 flex items-center justify-between">
                     <Link href={homeRoute}>
                         <p className="font-display font-semibold text-3xl text-pink">

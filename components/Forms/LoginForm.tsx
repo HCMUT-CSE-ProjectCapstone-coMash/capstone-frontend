@@ -28,12 +28,17 @@ export function LoginForm() {
         mutationFn: () => login(userName, password),
 
         onSuccess: (data: User) => {
-            dispatch(setUser(data));
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng nhập thành công" }));
-
-            const homeRoute = roleHomeMap[data.role!] ?? LoginPageRoute;
-            router.replace(homeRoute);
-            router.refresh();
+            if (data.hasChangedPassword) {
+                dispatch(setUser(data));
+                dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng nhập thành công" }));
+    
+                const homeRoute = roleHomeMap[data.role!] ?? LoginPageRoute;
+                router.replace(homeRoute);
+                router.refresh();
+            } else {
+                dispatch(addAlert({ type: AlertType.INFO, message: "Bạn cần đổi mật khẩu trước khi tiếp tục" }));
+                router.replace("/doi-mat-khau");
+            }
         },
 
         onError: (error: AxiosError<{ message: string }>) => {

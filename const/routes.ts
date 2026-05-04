@@ -2,6 +2,7 @@ export const DefaultPageRoute = "/";
 
 // Auth routes
 export const LoginPageRoute = "/dang-nhap";
+export const ChangePasswordPageRoute = "/doi-mat-khau";
 
 // Role base routes
 export const EmployeeBaseRoute = "/nhan-vien";
