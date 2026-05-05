@@ -31,3 +31,14 @@ export async function logout() {
 
     return response.data;
 }
+
+// Đổi mật khẩu
+export async function changePassword(newPassword: string) {
+    const response = await axiosClient.post(
+        "/auth/change-password",
+        { newPassword },
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
