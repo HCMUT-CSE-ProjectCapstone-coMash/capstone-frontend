@@ -255,7 +255,7 @@ export function OwnerImportProductForm() {
                                     className="text-lg font-medium underline cursor-pointer text-gray-dark"
                                     onClick={openFilePicker}
                                 >
-                                    hoặc từ máy tính của bạn
+                                    Chọn từ máy tính của bạn
                                 </button>
 
                                 <button type="button" className="text-lg font-medium underline cursor-pointer text-gray-dark">
