@@ -2,35 +2,37 @@
 import { useState } from "react"
 import { TextInput } from "../FormInputs/TextInput"
 import { useMutation } from "@tanstack/react-query";
-import { changePassword, logout } from "@/api/authentication/auth";
+import { changePassword, profile } from "@/api/authentication/auth";
 import { AxiosError } from "axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { clearUser } from "@/utilities/userStore";
 import { useRouter } from "next/navigation";
-import { LoginPageRoute } from "@/const/routes";
+import { EmployeeHomePageRoute, OwnerHomePageRoute } from "@/const/routes";
+import { RootState } from "@/utilities/store";
+
+const roleHomeMap: Record<string, string> = {
+    employee: EmployeeHomePageRoute,
+    owner: OwnerHomePageRoute,
+};
 
 export function ChangePasswordForm() {
     const [newPassword, setNewPassword] = useState<string>("");
     const [retypePassword, setRetypePassword] = useState<string>("");
     const dispatch = useDispatch();
     const router = useRouter();
-
+    const user = useSelector((state: RootState) => state.user);
+    
     const mutation = useMutation({
         mutationFn: () => changePassword(newPassword),
 
-        onSuccess: async (data: { message: string }) => {
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: data.message }));
-            
-            try {
-                await logout();
-                dispatch(clearUser());
-            } catch (error) {
-                console.error("Logout failed:", error);
-            }
-            
-            router.replace(LoginPageRoute);
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đổi mật khẩu thành công"}));
+
+            const homeRoute = roleHomeMap[user.role!];
+
+            router.push(homeRoute);
+            router.refresh();
         },
 
         onError: (error: AxiosError<{ message: string }>) => {

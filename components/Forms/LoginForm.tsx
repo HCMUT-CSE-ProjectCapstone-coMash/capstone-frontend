@@ -28,8 +28,9 @@ export function LoginForm() {
         mutationFn: () => login(userName, password),
 
         onSuccess: (data: User) => {
+            dispatch(setUser(data));
             if (data.hasChangedPassword) {
-                dispatch(setUser(data));
+                // dispatch(setUser(data));
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng nhập thành công" }));
     
                 const homeRoute = roleHomeMap[data.role!] ?? LoginPageRoute;
