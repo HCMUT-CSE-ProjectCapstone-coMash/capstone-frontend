@@ -27,7 +27,6 @@ export function DebtByCustomerModal({ customer, onClose }: DebtModalProps) {
         createdByName: string;
         totalPrice: number;
         debitMoney: number;
-        debitDays: number;
     }[]>({
         queryKey: ["debtOrders", customer.id],
         queryFn: () => FetchDebtSaleOrdersByCustomer(customer.id),
@@ -72,7 +71,7 @@ export function DebtByCustomerModal({ customer, onClose }: DebtModalProps) {
         updateDebtMutation.mutate();
     };
 
-    const sortedDebtOrders = [...debtOrders].sort((a, b) => (b.debitDays ?? 0) - (a.debitDays ?? 0));
+    const sortedDebtOrders = [...debtOrders].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
     return (
         <div className="w-2xl flex flex-col gap-5 max-h-[80vh]">
@@ -166,7 +165,7 @@ export function DebtByCustomerModal({ customer, onClose }: DebtModalProps) {
                                             month: "2-digit",
                                             year: "numeric",
                                         })}
-                                        {" · "}
+                                        {" - "}
                                         {order.createdByName}
                                     </p>
                                 </div>
@@ -180,9 +179,6 @@ export function DebtByCustomerModal({ customer, onClose }: DebtModalProps) {
                                     </p>
                                     <p className="text-sm text-pink font-semibold">
                                         Còn nợ: {formatThousands(order.debitMoney)} VNĐ
-                                    </p>
-                                    <p className={`text-xs font-medium ${(order.debitDays ?? 0) >= 7 ? "text-red" : "text-gray-400"}`}>
-                                        {order.debitDays ?? 0} ngày nợ
                                     </p>
                                 </div>
                             </div>
