@@ -337,7 +337,15 @@ export function ImportProductForm() {
                         ))}
                     </div>
 
-                    <div className="flex justify-end mt-5">
+                    <div className="flex justify-end mt-5 gap-x-6">
+                        <button
+                            type="button"
+                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
+                            onClick={() => setForm(initialFormState)}
+                        >
+                            Huỷ bỏ
+                        </button>
+
                         <button className={`
                             py-2 px-3 rounded-lg text-white bg-pink text-sm
                             ${createMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`} 
