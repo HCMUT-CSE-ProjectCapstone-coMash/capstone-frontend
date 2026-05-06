@@ -1,8 +1,9 @@
 "use client"
+
 import { useState } from "react"
 import { TextInput } from "../FormInputs/TextInput"
 import { useMutation } from "@tanstack/react-query";
-import { changePassword, profile } from "@/api/authentication/auth";
+import { changePassword } from "@/api/authentication/auth";
 import { AxiosError } from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
