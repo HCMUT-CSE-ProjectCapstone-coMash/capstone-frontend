@@ -471,7 +471,7 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
             </div>
 
             <RadioInput
-                label="Phương thức thanh toán"
+                label="Hình thức thanh toán"
                 labelPosition="top"
                 options={paymentOptions}
                 value={form.paymentMethod}
