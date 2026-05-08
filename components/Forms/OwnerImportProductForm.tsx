@@ -8,7 +8,7 @@ import { SearchInput } from "../FormInputs/SearchInput";
 import { CreateProduct, Product, ProductWithOrderStatus } from "@/types/product";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
-import { CreateProductIdByCategory, FetchApprovedProductByName, OwnerCreateProduct, SearchSimilarProduct } from "@/api/products/products";
+import { AnalyzeImage, CreateProductIdByCategory, FetchApprovedProductByName, OwnerCreateProduct, SearchSimilarProduct } from "@/api/products/products";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
@@ -79,9 +79,28 @@ export function OwnerImportProductForm() {
     const imageSearchMutation = useMutation({
         mutationFn: (imageFile: File) => SearchSimilarProduct(imageFile),
         onSuccess: (data) => {
-            setSuggestionModalOpen(true);
-            setSuggestedProducts(data);
+            if (data.length > 0) {
+                setSuggestedProducts(data);
+                setSuggestionModalOpen(true);
+            } else {
+                if (form.imageFile) analyzeImageMutation.mutate(form.imageFile);
+            }
+        }
+    });
+
+    // Xử lý khi người dùng chọn hình ảnh để phân tích và tự động điền thông tin sản phẩm
+    const analyzeImageMutation = useMutation({
+        mutationFn: (imageFile: File) => AnalyzeImage(imageFile),
+
+        onSuccess: (data) => {
+            setField("productName", data.productName);
+            setField("category", data.category);
+            setField("color", data.color);
+            setField("pattern", data.pattern);
+            createProductIdMutation.mutate(data.category);
         },
+
+        onError: () => {}
     });
 
     const createProductIdMutation = useMutation({
@@ -232,6 +251,12 @@ export function OwnerImportProductForm() {
                             {imageSearchMutation.isPending && (
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
                                     <Spin size="large" description="Đang tìm sản phẩm tương tự..." />
+                                </div>
+                            )}
+
+                            {analyzeImageMutation.isPending && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                    <Spin size="large" description="Đang tạo sản phẩm..." />
                                 </div>
                             )}
 

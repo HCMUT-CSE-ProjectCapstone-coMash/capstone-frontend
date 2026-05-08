@@ -5,7 +5,7 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
+import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -162,9 +162,28 @@ export function ImportProductForm() {
     const imageSearchMutation = useMutation({
         mutationFn: (imageFile: File) => SearchSimilarProduct(imageFile),
         onSuccess: (data) => {
-            setSuggestionModalOpen(true);
-            setSuggestedProducts(data);
+            if (data.length > 0) {
+                setSuggestedProducts(data);
+                setSuggestionModalOpen(true);
+            } else {
+                if (form.imageFile) analyzeImageMutation.mutate(form.imageFile);
+            }
         }
+    });
+
+    // Xử lý khi người dùng chọn hình ảnh để phân tích và tự động điền thông tin sản phẩm
+    const analyzeImageMutation = useMutation({
+        mutationFn: (imageFile: File) => AnalyzeImage(imageFile),
+
+        onSuccess: (data) => {
+            setField("productName", data.productName);
+            setField("category", data.category);
+            setField("color", data.color);
+            setField("pattern", data.pattern);
+            createProductIdMutation.mutate(data.category);
+        },
+
+        onError: () => {}
     });
 
     const handleBeforeUpload = (file: RcFile) => {
@@ -237,6 +256,12 @@ export function ImportProductForm() {
                             {imageSearchMutation.isPending && (
                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
                                     <Spin size="large" description="Đang tìm sản phẩm tương tự..." />
+                                </div>
+                            )}
+
+                            {analyzeImageMutation.isPending && (
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                                    <Spin size="large" description="Đang tạo sản phẩm..." />
                                 </div>
                             )}
 
