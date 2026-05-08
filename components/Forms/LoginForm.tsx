@@ -64,8 +64,8 @@ export function LoginForm() {
 
             <div className="flex flex-col gap-y-5">
                 <TextInput 
-                    label={"Tên đăng nhập"} 
-                    placeHolder={"Điền tên đăng nhập"}
+                    label={"Email"} 
+                    placeHolder={"Điền email"}
                     value={userName} 
                     onChange={(e) => setUserName(e.target.value)}
                 />
