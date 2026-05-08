@@ -37,9 +37,8 @@ export function DebtByCustomerModal({ customer, onClose }: DebtModalProps) {
         mutationFn: () => CustomerPayDebt(customer.id, parsedAmount),
         onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật nợ thành công" }));
-            queryClient.invalidateQueries({ queryKey: ["debtOrders", customer.id] });
-            queryClient.invalidateQueries({ queryKey: ["customers"] });
             queryClient.invalidateQueries({ queryKey: ["customer-sale-orders", customer.id] });
+            queryClient.invalidateQueries({ queryKey: ["customer", customer.id] });
             setReduceAmount("");
             onClose();
         },
