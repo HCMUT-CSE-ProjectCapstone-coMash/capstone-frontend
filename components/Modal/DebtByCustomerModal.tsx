@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
-import { FetchDebtSaleOrdersByCustomer } from "@/api/saleOrders.ts/saleOrders"; // adjust path
-// TODO: import UpdateCustomerDebt khi BE có endpoint
+import { FetchDebtSaleOrdersByCustomer, CustomerPayDebt } from "@/api/saleOrders.ts/saleOrders";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
@@ -35,14 +34,11 @@ export function DebtByCustomerModal({ customer, onClose }: DebtModalProps) {
     });
 
     const updateDebtMutation = useMutation({
-        mutationFn: async () => {
-            // TODO: thay bằng API thực khi BE có endpoint
-            // await UpdateCustomerDebt(customer.id, parsedAmount);
-            throw new Error("Chưa có API cập nhật nợ");
-        },
+        mutationFn: () => CustomerPayDebt(customer.id, parsedAmount),
         onSuccess: () => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Cập nhật nợ thành công" }));
             queryClient.invalidateQueries({ queryKey: ["debtOrders", customer.id] });
+            queryClient.invalidateQueries({ queryKey: ["customers"] }); // refresh list customer nếu có
             setReduceAmount("");
             onClose();
         },

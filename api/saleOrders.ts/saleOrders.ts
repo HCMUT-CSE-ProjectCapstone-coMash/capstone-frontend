@@ -59,3 +59,12 @@ export async function FetchDebtSaleOrdersByCustomer(customerId: string) {
     );
     return response.data;
 }
+
+export async function CustomerPayDebt(customerId: string, paymentAmount: number) {
+    const response = await axiosClient.post(
+        `/sale-orders/pay-debt/${customerId}`,
+        { paymentAmount },
+        { withCredentials: true }
+    );
+    return response.data;
+}
