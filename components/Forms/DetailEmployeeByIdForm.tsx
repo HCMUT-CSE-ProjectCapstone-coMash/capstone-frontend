@@ -13,6 +13,7 @@ import { AlertType } from "@/types/alert";
 import { Employee, UpdateEmployeePayload } from "@/types/employee";
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
 import { UpdateEmployee } from "@/api/employees/employees";
+import { resetPassword } from "@/api/authentication/auth";
 
 interface FormState {
     employeeId: string,
@@ -80,6 +81,16 @@ export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProp
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thông tin nhân viên thất bại. Vui lòng thử lại." }));
+        }
+    });
+
+    const resetPasswordMutation = useMutation({
+        mutationFn: (userId: string) => resetPassword(userId),
+        onSuccess: () => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đặt lại mật khẩu thành công!" }));
+        },
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Đặt lại mật khẩu thất bại. Vui lòng thử lại." }));
         }
     });
 
@@ -153,7 +164,14 @@ export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProp
                             Chỉnh sửa
                         </button>
                     )}
-
+                    <button
+                        type="button"
+                        className="border border-purple text-purple font-medium px-3 py-2 rounded-lg text-sm cursor-pointer inline-block text-center hover:bg-purple-50"
+                        onClick={() => resetPasswordMutation.mutate(employee.id)}
+                        disabled={resetPasswordMutation.isPending}
+                    >
+                        {resetPasswordMutation.isPending ? "Đang đặt lại..." : "Đặt lại mật khẩu"}
+                    </button>
                     <button
                         type="button"
                         className="py-2 px-4 rounded-lg border border-red bg-red text-white text-sm font-medium hover:bg-red-500 cursor-pointer transition-all"
