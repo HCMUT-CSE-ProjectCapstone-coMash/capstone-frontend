@@ -14,7 +14,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
 import { Customer } from "@/types/customer";
 import { MappedSaleOrder, mapSaleOrder, SaleComboRequest, SaleOrderRequest, SaleProductRequest } from "@/types/saleOrder";
-import { CreateSaleOrder } from "@/api/saleOrders.ts/saleOrders";
+import { CreateSaleOrder } from "@/api/saleOrders/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CartLine, OrderPromotionLevelResponse, OrderPromotionResponse } from "@/types/cart";
 import { PrintBill } from "../PrintBill";

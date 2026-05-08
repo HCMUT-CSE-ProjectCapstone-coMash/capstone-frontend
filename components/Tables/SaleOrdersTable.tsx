@@ -9,7 +9,7 @@ import { SaleOrderResponse } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { PaymentMethod } from "@/const/PaymentMethod";
 import { useQuery } from "@tanstack/react-query";
-import { FetchAllSaleOrders } from "@/api/saleOrders.ts/saleOrders";
+import { FetchAllSaleOrders } from "@/api/saleOrders/saleOrders";
 import { useRouter } from "next/navigation";
 import { EmployeeSaleOrdersByIdPageRoute, OwnerSaleOrdersByIdPageRoute } from "@/const/routes";
 import { useSelector } from "react-redux";
@@ -49,7 +49,7 @@ export function SaleOrdersTable() {
     const router = useRouter();
 
     const { data, isLoading } = useQuery({
-        queryKey: ["saleOrders", selectedTimeFilter, effectiveSearch],
+        queryKey: ["saleOrders", currentPage, selectedTimeFilter, effectiveSearch],
         queryFn: () => FetchAllSaleOrders(currentPage, pageSize, selectedTimeFilter, effectiveSearch)
     });
 

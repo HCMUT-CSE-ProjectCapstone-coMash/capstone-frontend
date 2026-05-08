@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDispatch } from "react-redux";
-import { FetchDebtSaleOrdersByCustomer, CustomerPayDebt } from "@/api/saleOrders.ts/saleOrders";
+import { FetchDebtSaleOrdersByCustomer, CustomerPayDebt } from "@/api/saleOrders/saleOrders";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";

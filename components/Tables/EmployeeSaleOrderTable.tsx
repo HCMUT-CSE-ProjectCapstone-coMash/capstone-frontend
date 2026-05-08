@@ -7,7 +7,7 @@ import { formatThousands } from "@/utilities/numberFormat";
 import { PaymentMethod } from "@/const/PaymentMethod";
 import { useParams, useRouter } from "next/navigation";
 
-import { FetchEmployeeSaleOrder } from "@/api/saleOrders.ts/saleOrders";
+import { FetchEmployeeSaleOrder } from "@/api/saleOrders/saleOrders";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { OwerEmployeeSaleOrderDetail } from "@/const/routes";

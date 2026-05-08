@@ -6,7 +6,7 @@ import { Table } from "./Table";
 import { SaleOrderResponse } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useParams, useRouter } from "next/navigation";
-import { FetchCustomerSaleOrder } from "@/api/saleOrders.ts/saleOrders";
+import { FetchCustomerSaleOrder } from "@/api/saleOrders/saleOrders";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { OwnerCustomerSaleOrderPageRoute } from "@/const/routes";

@@ -1,6 +1,6 @@
 "use client";
 
-import { FetchIncome } from "@/api/saleOrders.ts/saleOrders";
+import { FetchIncome } from "@/api/saleOrders/saleOrders";
 import { IncomeStats } from "@/types/saleOrder";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useQueries } from "@tanstack/react-query";

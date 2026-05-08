@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { FetchSaleOrdersById } from "@/api/saleOrders.ts/saleOrders";
+import { FetchSaleOrdersById } from "@/api/saleOrders/saleOrders";
 import { SaleOrderDetail } from "@/components/SaleOrder/SaleOrderDetail";
 
 export function SaleOrderDetailPageContent() {

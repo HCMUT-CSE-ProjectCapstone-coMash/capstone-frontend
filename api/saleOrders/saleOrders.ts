@@ -33,6 +33,7 @@ export async function FetchSaleOrdersById(saleOrderId: string) {
         `/sale-orders/${saleOrderId}`,
         { withCredentials: true }
     );
+    
     return response.data;
 }
 
@@ -41,6 +42,7 @@ export async function FetchEmployeeSaleOrder(id: string) {
         `/sale-orders/fetch-all-by-employee/${id}`,
         { withCredentials: true }
     );
+
     return response.data;
 }
 
@@ -49,6 +51,7 @@ export async function FetchCustomerSaleOrder(customerId: string) {
         `/sale-orders/fetch-all-by-customer/${customerId}`,
         { withCredentials: true }
     );
+
     return response.data;
 }
 
@@ -57,6 +60,7 @@ export async function FetchDebtSaleOrdersByCustomer(customerId: string) {
         `/sale-orders/get-sale-orders-with-debt/${customerId}`,
         { withCredentials: true }
     );
+
     return response.data;
 }
 
@@ -66,6 +70,7 @@ export async function CustomerPayDebt(customerId: string, paymentAmount: number)
         { paymentAmount },
         { withCredentials: true }
     );
+    
     return response.data;
 }
 
@@ -76,5 +81,15 @@ export async function FetchIncome(period: string) {
         `/sale-orders/income-stats?${params.toString()}`,
         { withCredentials: true }
     );
+
+    return response.data;
+}
+
+export async function FetchTopCustomers() {
+    const response = await axiosClient.get(
+        `/sale-orders/top-customers-spending-stats`,
+        { withCredentials: true }
+    );
+
     return response.data;
 }
