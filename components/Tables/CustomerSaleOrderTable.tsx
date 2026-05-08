@@ -10,7 +10,13 @@ import { FetchCustomerSaleOrder } from "@/api/saleOrders.ts/saleOrders";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { OwnerCustomerSaleOrderPageRoute } from "@/const/routes";
+import { PaymentMethod } from "@/const/PaymentMethod";
 
+const paymentOptions: { value: string, label: string }[] = [
+    { value: PaymentMethod.CASH, label: "Tiền mặt" },
+    { value: PaymentMethod.TRANSFER, label: "Chuyển khoản" },
+    { value: PaymentMethod.DEBIT, label: "Ghi nợ" }
+];
 
 export function CustomerSaleOrderTable () {
     const router = useRouter();
@@ -30,7 +36,9 @@ export function CustomerSaleOrderTable () {
         { title: "Người bán hàng", key: "createdbyName", render: (row) => <span>{row.createdByName}</span>},
         { title: "Thời gian xuất", key: "createdAt", render: (row) => <span>{new Date(row.createdAt).toLocaleString()}</span>},
         { title: "Tổng tiền", key: "totalAmount", render: (row) => <span>{formatThousands(row.totalPrice)} VNĐ</span>},
-
+        { title: "Hình thức thanh toán", key: "paymentMethod", render: (row) => <span>{paymentOptions.find((p) => p.value === row.paymentMethod)?.label || row.paymentMethod}</span>},
+        { title: "Số tiền nợ", key: "debtAmount", render: (row) => <span>{formatThousands(row.debitMoney)} VNĐ</span>},
+        
         {
             title: "",
             key: "action",

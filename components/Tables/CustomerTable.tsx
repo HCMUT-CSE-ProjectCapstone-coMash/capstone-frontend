@@ -54,7 +54,7 @@ export default function CustomerTable() {
                 if (!row.debitDays || row.debitDays === 0) return <span className="text-gray-400">-</span>;
                 const isOverdue = row.debitDays >= 7;
                 return (
-                    <span className={isOverdue ? "text-red font-bold" : ""}>
+                    <span className={isOverdue ? "text-red font-semibold" : ""}>
                         {row.debitDays} ngày
                     </span>
                 );

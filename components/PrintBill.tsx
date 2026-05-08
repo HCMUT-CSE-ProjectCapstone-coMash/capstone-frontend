@@ -194,7 +194,7 @@ export function PrintBill({ order }: PrintBillProps) {
             <button
                 type="button"
                 onClick={handlePrint}
-                className="p-2.5 w-45 rounded-lg text-white font-semibold bg-green-600 text-base cursor-pointer hover:bg-green-700 transition-all"
+                className="p-2.5 w-45 rounded-lg text-white font-semibold bg-pink text-base cursor-pointer hover:bg-green-700 transition-all"
             >
                 In hóa đơn
             </button>

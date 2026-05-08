@@ -420,7 +420,7 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
                     </div>
 
                     <div className="flex justify-between px-4 py-3">
-                        <span>Phương thức thanh toán</span>
+                        <span>Hình thức thanh toán</span>
                         <span className="font-medium">
                             {paymentOptions.find((opt) => opt.value === saleOrder.paymentMethod)?.label ?? saleOrder.paymentMethod}
                         </span>

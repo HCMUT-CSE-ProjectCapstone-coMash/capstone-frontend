@@ -471,7 +471,7 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
             </div>
 
             <RadioInput
-                label="Phương thức thanh toán"
+                label="Hình thức thanh toán"
                 labelPosition="top"
                 options={paymentOptions}
                 value={form.paymentMethod}
@@ -481,14 +481,17 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
 
             <div className="flex flex-row justify-between items-center">
                 <p className="text-sm text-tgray9">Số tiền khách đưa</p>
-                <div className="w-30">
+                <div className="relative w-35">
                     <TextInput
-                        label= ""
+                        label=""
                         placeHolder="0" 
                         value={formatThousands(form.customerMoney)} 
                         onChange={(e) => setField("customerMoney", parseFormattedNumber(e.target.value))} 
                         disabled={isLocked || createSaleOrderMutation.isPending}
                     />
+                    <span className="absolute right-3 bottom-4 text-sm text-tgray9 pointer-events-none">
+                        VNĐ
+                    </span>
                 </div>
             </div>
             

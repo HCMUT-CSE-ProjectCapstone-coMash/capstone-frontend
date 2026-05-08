@@ -140,6 +140,11 @@ export function OwnerImportProductForm() {
 
         if (!user.id) return;
 
+        if (!form.imageFile) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm hình ảnh sản phẩm" }));
+            return;
+        }
+        
         if (!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm " }));
             return;
@@ -250,7 +255,7 @@ export function OwnerImportProductForm() {
                                     className="text-lg font-medium underline cursor-pointer text-gray-dark"
                                     onClick={openFilePicker}
                                 >
-                                    hoặc từ máy tính của bạn
+                                    Chọn từ máy tính của bạn
                                 </button>
 
                                 <button type="button" className="text-lg font-medium underline cursor-pointer text-gray-dark">
@@ -291,22 +296,31 @@ export function OwnerImportProductForm() {
                         )}
                     />
 
-                    <div className="flex items-center justify-between gap-5">
-                        <TextInput
-                            label={"Giá nhập"}
-                            placeHolder=""
-                            value={formatThousands(form.importPrice)}
-                            inputType="text"
-                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
-                        />
+                    <div className="flex justify-between gap-5 h-20">
+                        <div className="flex-1">
+                            <TextInput
+                                label={"Giá nhập"}
+                                placeHolder=""
+                                value={formatThousands(form.importPrice)}
+                                inputType="text"
+                                onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
+                            />
+                        </div>
 
-                        <TextInput
-                            label={"Giá bán"}
-                            placeHolder=""
-                            value={formatThousands(form.salePrice)}
-                            inputType="text"
-                            onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
-                        />
+                        <div className="flex-1 flex flex-col gap-0.5">
+                            <TextInput
+                                label={"Giá bán"}
+                                placeHolder=""
+                                value={formatThousands(form.salePrice)}
+                                inputType="text"
+                                onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
+                            />
+                            {form.salePrice > 0 && form.importPrice > 0 && form.salePrice <= form.importPrice && (
+                                <p className="text-xs text-yellow-600">
+                                    Bạn đang nhập giá bán nhỏ hơn hoặc bằng giá nhập
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between gap-5">
@@ -343,10 +357,18 @@ export function OwnerImportProductForm() {
                         ))}
                     </div>
 
-                    <div className="flex justify-end mt-5">
-                        <button className={`
-                            py-2 px-3 rounded-lg text-white bg-pink text-sm
-                            ${createMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+                    <div className="flex justify-end mt-5 gap-x-6">
+                        <button
+                            type="button"
+                            className="py-2 px-3 rounded-lg text-white bg-purple text-sm cursor-pointer"
+                            onClick={() => setForm(initialFormState)}
+                        >
+                            Huỷ bỏ
+                        </button>
+
+                        <button
+                            className={`py-2 px-3 rounded-lg text-white bg-pink text-sm
+                                ${createMutation.isPending ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
                             disabled={createMutation.isPending}
                         >
                             {createMutation.isPending ? "Đang thêm..." : "Thêm sản phẩm"}

@@ -181,6 +181,11 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
 
         if (productsOrder?.id == null) return;
 
+        if (!form.imageFile && !form.imagePreviewUrl) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm hình ảnh sản phẩm" }));
+            return;
+        }
+
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
             return;

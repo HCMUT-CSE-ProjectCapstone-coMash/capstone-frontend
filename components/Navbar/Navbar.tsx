@@ -8,7 +8,7 @@ import {
 } from "@/const/routes";
 
 const employeeNavItems: NavItem[] = [
-    { label: "Nhà chính", href: EmployeeHomePageRoute },
+    { label: "Trang chủ", href: EmployeeHomePageRoute },
     { label: "Sản phẩm", href: EmployeeProductPageRoute },
     { label: "Nhập hàng", href: EmployeeImportPageRoute },
     { label: "Bán hàng", href: EmployeeSellPageRoute },
@@ -17,7 +17,7 @@ const employeeNavItems: NavItem[] = [
 ];
 
 const ownerNavItems: NavItem[] = [
-    { label: "Nhà chính", href: OwnerHomePageRoute },
+    { label: "Trang chủ", href: OwnerHomePageRoute },
     { label: "Sản phẩm", href: OwnerProductPageRoute, matchNested: true },
     { label: "Nhân viên", href: OwnerEmployeeManagementPageRoute, matchNested: true },
     { label: "Nhập hàng", href: OwnerImportPageRoute },

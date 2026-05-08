@@ -120,6 +120,11 @@ export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }
             dispatch(addAlert({ type: AlertType.ERROR, message: "Sản phẩm không tồn tại" }));
             return;
         }
+        
+        if (!form.imageFile && !form.imagePreviewUrl) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm hình ảnh sản phẩm" }));
+            return;
+        }   
 
         if(!form.productName) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
@@ -213,22 +218,31 @@ export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }
                         onChange={(e) => setField("productName", e.target.value)}
                     />
 
-                    <div className="flex items-center justify-between gap-5">
-                        <TextInput
-                            label={"Giá nhập"} 
-                            placeHolder="" 
-                            value={formatThousands(form.importPrice)}
-                            inputType="text"
-                            onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))} // store raw number
-                        />
+                    <div className="flex justify-between gap-5 h-20">
+                        <div className="flex-1">
+                            <TextInput
+                                label={"Giá nhập"}
+                                placeHolder=""
+                                value={formatThousands(form.importPrice)}
+                                inputType="text"
+                                onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
+                            />
+                        </div>
 
-                        <TextInput
-                            label={"Giá bán"} 
-                            placeHolder="" 
-                            value={formatThousands(form.salePrice)}
-                            inputType="text"
-                            onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
-                        />
+                        <div className="flex-1 flex flex-col gap-0.5">
+                            <TextInput
+                                label={"Giá bán"}
+                                placeHolder=""
+                                value={formatThousands(form.salePrice)}
+                                inputType="text"
+                                onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
+                            />
+                            {form.salePrice > 0 && form.importPrice > 0 && form.salePrice <= form.importPrice && (
+                                <p className="text-xs text-yellow-600">
+                                    Bạn đang nhập giá bán nhỏ hơn hoặc bằng giá nhập
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between gap-5">

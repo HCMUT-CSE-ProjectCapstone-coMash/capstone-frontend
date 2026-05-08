@@ -70,21 +70,23 @@ export function PendingListTable() {
         <div className="">
             <div className="flex items-center justify-between mb-5">
                 <p className="text-purple text-3xl font-medium">Danh sách chờ duyệt</p>
+                <div className="flex flex-column gap-5">
+                    <NormalSearchInput
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Tìm kiếm theo tên danh sách"
+                        className="w-xs"
+                    />
 
-                <NormalSearchInput
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Tìm kiếm theo tên danh sách"
-                    className="w-xs"
-                />
+                    <button
+                        type="button"
+                        onClick={() => router.back()}
+                        className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
+                    >
+                        Danh sách sản phẩm
+                    </button>
+                </div>
 
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
-                >
-                    Danh sách sản phẩm
-                </button>
             </div>
 
             <Table 

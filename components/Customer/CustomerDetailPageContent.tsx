@@ -40,6 +40,7 @@ export function CustomerDetailPageContent() {
             )}
 
             {customer && <CustomerDetail customer={customer} />}
+            
             <div className="mt-5">
                 <p className="text-lg text-purple font-semibold">Danh sách đơn hàng</p>
                 <CustomerSaleOrderTable />

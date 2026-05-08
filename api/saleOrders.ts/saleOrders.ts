@@ -51,3 +51,20 @@ export async function FetchCustomerSaleOrder(customerId: string) {
     );
     return response.data;
 }
+
+export async function FetchDebtSaleOrdersByCustomer(customerId: string) {
+    const response = await axiosClient.get (
+        `/sale-orders/get-sale-orders-with-debt/${customerId}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function CustomerPayDebt(customerId: string, paymentAmount: number) {
+    const response = await axiosClient.post(
+        `/sale-orders/pay-debt/${customerId}`,
+        { paymentAmount },
+        { withCredentials: true }
+    );
+    return response.data;
+}
