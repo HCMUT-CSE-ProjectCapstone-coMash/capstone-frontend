@@ -5,11 +5,11 @@ import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
+import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, DeleteTemporaryProduct, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { CreateProduct, Product, ProductWithOrderStatus } from "@/types/product";
+import { CreateProduct, Product, ProductWithOrderStatus, TemporaryProduct } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
@@ -24,6 +24,7 @@ import { UploadIcon } from "@/public/assets/Icons";
 import ImgCrop from "antd-img-crop";             
 import { Spin, Upload } from "antd";
 import type { RcFile } from "antd/es/upload/interface";
+import { TemporaryModal } from "../Modal/TemporaryModal";
 
 interface FormState {
     productId: string;
@@ -35,6 +36,7 @@ interface FormState {
     letterQuantities: Record<string, number>;
     numberQuantities: Record<string, number>;
     imageFile: File | null;
+    temporaryProductId: string | null;
 }
 
 const createInitialQuantities = (sizes: string[]) => Object.fromEntries(sizes.map(size => [size, 0]));
@@ -49,6 +51,7 @@ const initialFormState : FormState = {
     letterQuantities: createInitialQuantities(sizesLetter),
     numberQuantities: createInitialQuantities(sizesNumber),
     imageFile: null,
+    temporaryProductId: null,
 };
 
 export function ImportProductForm() {
@@ -112,6 +115,12 @@ export function ImportProductForm() {
         }
     });
 
+    const deleteTemporaryProductMutation = useMutation({
+        mutationFn: (temporaryProductId: string) => DeleteTemporaryProduct(temporaryProductId),
+        onSuccess: () => {},
+        onError: () => {}
+    });
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -157,6 +166,10 @@ export function ImportProductForm() {
         };
 
         createMutation.mutate({ productData, productsOrderId: productsOrder.id });
+
+        if (form.temporaryProductId) {
+            deleteTemporaryProductMutation.mutate(form.temporaryProductId);
+        }
     }
 
     const imageSearchMutation = useMutation({
@@ -215,6 +228,28 @@ export function ImportProductForm() {
         value: p.productName,
         data: p
     }));
+
+    // -- Temporary products from phone capture --
+    const [setShowTemporaryProducts, setSetShowTemporaryProducts] = useState<boolean>(false);
+
+    const handleTemporaryProductSelect = async (product: TemporaryProduct) => {
+        // Fetch the image from the URL and convert to File
+        const response = await fetch(product.imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], "temporary-product.jpg", { type: blob.type });
+    
+        setForm(prev => ({
+            ...prev,
+            imageFile: file,
+            productName: product.productName,
+            category: product.category,
+            color: product.color,
+            pattern: product.pattern,
+            temporaryProductId: product.id,
+        }));
+        createProductIdMutation.mutate(product.category);
+        setSetShowTemporaryProducts(false);
+    };
 
     return (
         <div className="flex gap-[10vw]">
@@ -288,7 +323,11 @@ export function ImportProductForm() {
                                     Chọn từ máy tính của bạn
                                 </button>
 
-                                <button type="button" className="text-lg font-medium underline cursor-pointer text-gray-dark">
+                                <button 
+                                    type="button" 
+                                    className="text-lg font-medium underline cursor-pointer text-gray-dark"
+                                    onClick={() => setSetShowTemporaryProducts(true)}
+                                >
                                     hoặc từ điện thoại của bạn
                                 </button>
                             </div>
@@ -399,6 +438,17 @@ export function ImportProductForm() {
                             createProductIdMutation.mutate(data.category);
                         }}
                         imageFile={form.imageFile}
+                    />
+                </LayoutModal>
+            )}
+
+            {setShowTemporaryProducts && (
+                <LayoutModal
+                    onClose={() => setSetShowTemporaryProducts(false)}
+                    isOpen={setShowTemporaryProducts}
+                >
+                    <TemporaryModal
+                        onSelect={handleTemporaryProductSelect}
                     />
                 </LayoutModal>
             )}

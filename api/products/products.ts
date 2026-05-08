@@ -232,3 +232,21 @@ export async function OwnerDeleteProduct(productId: string) {
 
     return response.data;
 }
+
+export async function FetchTemporaryProductByUserId(userId: string) {
+    const response = await axiosClient.get(
+        "/product/fetch-temporary/" + userId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function DeleteTemporaryProduct(productId: string) {
+    const response = await axiosClient.delete(
+        "/product/delete-temporary/" + productId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

@@ -71,3 +71,12 @@ export interface ProductWithOrderStatus {
     salePrice: number,
     isInPendingOrder: boolean
 };
+
+export interface TemporaryProduct {
+    id: string,
+    productName: string,
+    category: string,
+    color: string,
+    pattern: string,
+    imageUrl: string,
+}

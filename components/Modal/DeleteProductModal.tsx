@@ -33,14 +33,15 @@ export function DeleteProductModal({ productId, onClose } : DeleteProductModalPr
             <div className="flex items-center justify-center gap-5">
                 <button
                     onClick={() => deleteMutation.mutate(productId)}
-                    className="py-2 px-4 rounded-lg w-20 border border-red-500 bg-red-500 text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer"
+                    disabled={deleteMutation.isPending}
+                    className="py-2 px-4 rounded-lg w-35 border border-red-500 bg-red-500 text-white text-sm font-medium transition hover:bg-red-600 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                    <p> Xoá </p>
+                    <p> {deleteMutation.isPending ? "Đang xoá..." : "Xoá"} </p>
                 </button>
 
                 <button
                     onClick={onClose}
-                    className="py-2 px-4 rounded-lg w-20 border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/80 hover:cursor-pointer"
+                    className="py-2 px-4 rounded-lg w-35 border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/80 hover:cursor-pointer"
                 >
                     <p> Huỷ </p>
                 </button>
