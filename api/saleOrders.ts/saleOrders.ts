@@ -68,3 +68,13 @@ export async function CustomerPayDebt(customerId: string, paymentAmount: number)
     );
     return response.data;
 }
+
+export async function FetchIncome(period: string) {
+    const params = new URLSearchParams({ period });
+
+    const response = await axiosClient.get(
+        `/sale-orders/income-stats?${params.toString()}`,
+        { withCredentials: true }
+    );
+    return response.data;
+}

@@ -185,3 +185,7 @@ export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
         appliedOrderPromotion: response.appliedOrderPromotion ?? null,
     };
 }
+
+// -- Income stats types ----------------------------------------------------------------
+export interface IncomeGroup { key: string; total: number; }
+export interface IncomeStats { period: string; total: number; groups: IncomeGroup[]; }
