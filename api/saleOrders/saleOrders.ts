@@ -113,3 +113,12 @@ export async function FetchDashboardStats() {
 
     return response.data;
 }
+
+export async function FetchRecentCreatedSaleOrderByEmployeeId(employeeId: string) {
+    const response = await axiosClient.get(
+        `/sale-orders/fetch-recent-created-by-employee/${employeeId}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
