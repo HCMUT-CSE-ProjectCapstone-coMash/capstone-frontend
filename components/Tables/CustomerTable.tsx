@@ -17,7 +17,6 @@ export default function CustomerTable() {
     // --- 1. States ---
     const [currentPage, setCurrentPage] = useState(1);
     const [onlyDebt, setOnlyDebt] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
     const pageSize = 10;
 
     const [searchTerm, setSearchTerm] = useState("");
