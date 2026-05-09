@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 export default function CustomerTable() {
     // --- 1. States ---
     const [currentPage, setCurrentPage] = useState(1);
-    const [searchQuery, setSearchQuery] = useState("");
+    // const [searchQuery, setSearchQuery] = useState("");
     const pageSize = 10;
 
     const [searchTerm, setSearchTerm] = useState("");
@@ -22,6 +22,7 @@ export default function CustomerTable() {
 
     const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
     const router = useRouter();
+    const [onlyDebt, setOnlyDebt] = useState(false);
 
     // --- 2. Fetch Data ---
     const { data, isLoading } = useQuery({
@@ -29,6 +30,7 @@ export default function CustomerTable() {
         queryKey: ["customers", currentPage, effectiveSearch],
         queryFn: () => FetchCustomers(currentPage, pageSize, effectiveSearch),
     });
+
 
     // --- 3. Columns Definition ---
     const columns: Column<Customer>[] = [
@@ -75,12 +77,15 @@ export default function CustomerTable() {
     ];
 
     const customers = data?.items ?? [];
+    const displayedCustomers = onlyDebt 
+    ? customers.filter((c: Customer) => c.debitMoney > 0) 
+    : customers;
     const total = data?.total ?? 0;
 
-    const handleSearch = (value: string) => {
-        setSearchQuery(value);
-        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
-    };
+    // const handleSearch = (value: string) => {
+    //     setSearchQuery(value);
+    //     setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+    // };
 
     return (
         <div className="space-y-6">
@@ -88,9 +93,9 @@ export default function CustomerTable() {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button 
-                        onClick={() => handleSearch("")}
+                        onClick={() => { setOnlyDebt(false); setCurrentPage(1); }}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            searchQuery === "" 
+                            !onlyDebt
                             ? "bg-pink text-white shadow-sm" 
                             : "border border-pink text-pink hover:bg-pink/5"
                         }`}
@@ -98,9 +103,9 @@ export default function CustomerTable() {
                         Xem tất cả
                     </button>
                     <button 
-                        onClick={() => handleSearch("debitMoney")}
+                        onClick={() => { setOnlyDebt(true); setCurrentPage(1); }}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            searchQuery === "debitMoney" 
+                            onlyDebt
                             ? "bg-pink text-white shadow-sm" 
                             : "border border-pink text-pink hover:bg-pink/5"
                         }`}
@@ -124,7 +129,7 @@ export default function CustomerTable() {
 
             <Table
                 columns={columns}
-                data={customers}
+                data={displayedCustomers}
                 isLoading={isLoading}
                 pagination={{
                     current: currentPage,
