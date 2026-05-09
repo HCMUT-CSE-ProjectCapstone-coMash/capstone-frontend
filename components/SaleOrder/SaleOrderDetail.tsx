@@ -4,6 +4,8 @@ import Image from "next/image";
 import { TextInput } from "../FormInputs/TextInput";
 import { Table } from "../Tables/Table";
 import { Column } from "@/types/UIType";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 import {
     SaleOrderResponse,
     SaleOrderDetailResponse,
@@ -256,14 +258,14 @@ function ProfitCell({ row }: { row: TableRow }) {
 
 // ===================== DETAILS TABLE =====================
 
-function DetailsTable({ mapped }: { mapped: MappedSaleOrder }) {
+function DetailsTable({ mapped, userRole }: { mapped: MappedSaleOrder; userRole: string | null }) {
 
     const rows: TableRow[] = [
         ...mapped.combos.map((combo): TableRow => ({ kind: "combo", combo })),
         ...mapped.products.map((detail): TableRow => ({ kind: "product", detail })),
     ];
 
-    const columns: Column<TableRow>[] = [
+    const baseColumns: Column<TableRow>[] = [
         {
             title: "Tên sản phẩm",
             key: "productName",
@@ -298,12 +300,16 @@ function DetailsTable({ mapped }: { mapped: MappedSaleOrder }) {
             key: "promotion",
             render: (row) => <PromotionCell row={row} />,
         },
+    ];
+
+    const columns = userRole === "owner" ? [
+        ...baseColumns,
         {
             title: "Lợi nhuận",
             key: "profit",
-            render: (row) => <ProfitCell row={row} />,
+            render: (row:TableRow) => <ProfitCell row={row} />,
         },
-    ];
+    ] : baseColumns;
 
     return (
         <>
@@ -320,6 +326,7 @@ interface SaleOrderDetailProps {
 
 export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
     const mapped = mapSaleOrder(saleOrder);
+    const user = useSelector((state: RootState) => state.user);
 
  
     // Số tiền khuyến mãi = tổng trước - tổng sau (totalPrice đã bao gồm tất cả giảm giá)
@@ -383,7 +390,7 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
             {/* ── CHI TIẾT SẢN PHẨM ── */}
             <div>
                 <p className="mb-2">Chi tiết sản phẩm</p>
-                <DetailsTable mapped={mapped} />
+                <DetailsTable mapped={mapped} userRole={user.role} />
             </div>
 
             {/* ── TỔNG KẾT ── */}
@@ -412,12 +419,14 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
                         </span>
                     </div>
 
-                    <div className="flex justify-between px-4 py-3">
-                        <span>Tổng lợi nhuận</span>
-                        <span className="text-green-600 font-semibold">
-                            {formatThousands(saleOrder.totalProfit)} VNĐ
-                        </span>
-                    </div>
+                    {user.role === "owner" && (
+                        <div className="flex justify-between px-4 py-3">
+                            <span>Tổng lợi nhuận</span>
+                            <span className="text-green-600 font-semibold">
+                                {formatThousands(saleOrder.totalProfit)} VNĐ
+                            </span>
+                        </div>
+                    )}
 
                     <div className="flex justify-between px-4 py-3">
                         <span>Hình thức thanh toán</span>

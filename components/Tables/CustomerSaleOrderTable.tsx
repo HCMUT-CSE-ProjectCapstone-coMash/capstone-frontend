@@ -9,7 +9,9 @@ import { useParams, useRouter } from "next/navigation";
 import { FetchCustomerSaleOrder } from "@/api/saleOrders/saleOrders";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { OwnerCustomerSaleOrderPageRoute } from "@/const/routes";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
+import { EmployeeCustomerSaleOrderPageRoute, OwnerCustomerSaleOrderPageRoute } from "@/const/routes";
 import { PaymentMethod } from "@/const/PaymentMethod";
 
 const paymentOptions: { value: string, label: string }[] = [
@@ -21,7 +23,7 @@ const paymentOptions: { value: string, label: string }[] = [
 export function CustomerSaleOrderTable () {
     const router = useRouter();
     const { customerId } = useParams<{ customerId: string }>();
-    // const user = useSelector((state: RootState) => state.user);
+    const user = useSelector((state: RootState) => state.user);
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
     const { data, isLoading } = useQuery({
@@ -44,7 +46,11 @@ export function CustomerSaleOrderTable () {
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => router.push(OwnerCustomerSaleOrderPageRoute (customerId, row.id))}
+                    onClick={() => router.push(
+                        user.role === "owner"
+                            ? OwnerCustomerSaleOrderPageRoute(customerId, row.id)
+                            : EmployeeCustomerSaleOrderPageRoute(customerId, row.id)
+                    )}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem

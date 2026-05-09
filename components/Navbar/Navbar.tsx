@@ -5,6 +5,7 @@ import {
     EmployeeSellPageRoute, EmployeeSalePageRoute, EmployeeOrderPageRoute,
     OwnerHomePageRoute, OwnerProductPageRoute, OwnerEmployeeManagementPageRoute, OwnerImportPageRoute,
     OwnerSellPageRoute, OwnerSalePageRoute, OwnerOrderPageRoute, OwnerCustomerPageRoute,
+    EmployeeCustomerPageRoute,
 } from "@/const/routes";
 
 const employeeNavItems: NavItem[] = [
@@ -14,6 +15,7 @@ const employeeNavItems: NavItem[] = [
     { label: "Bán hàng", href: EmployeeSellPageRoute },
     { label: "Khuyến mãi", href: EmployeeSalePageRoute, matchNested: true },
     { label: "Đơn hàng", href: EmployeeOrderPageRoute, matchNested: true },
+    { label: "Khách hàng", href: EmployeeCustomerPageRoute, matchNested: true  },
 ];
 
 const ownerNavItems: NavItem[] = [

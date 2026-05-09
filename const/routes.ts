@@ -33,6 +33,11 @@ export const EmployeeSaleByIdPageRoute = (promotionId: string) => `${EmployeeSal
 export const EmployeeOrderPageRoute = `${EmployeeBaseRoute}/don-hang`;
 export const EmployeeSaleOrdersByIdPageRoute = (promotionId: string) => `${EmployeeOrderPageRoute}/chi-tiet/${promotionId}`;
 
+export const EmployeeCustomerPageRoute = `${EmployeeBaseRoute}/khach-hang`;
+export const EmployeeCustomerByIdPageRoute = (customerId: string) => `${EmployeeCustomerPageRoute}/chi-tiet/${customerId}`;
+export const EmployeeCustomerSaleOrderPageRoute = (customerId: string, saleOrderId: string) => `${EmployeeCustomerByIdPageRoute(customerId)}/don-hang/${saleOrderId}`;
+
+
 // Owner routes
 export const OwnerHomePageRoute = OwnerBaseRoute;
 

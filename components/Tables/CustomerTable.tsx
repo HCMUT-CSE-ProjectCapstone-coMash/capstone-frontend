@@ -8,7 +8,9 @@ import { formatThousands } from "@/utilities/numberFormat";
 import { Customer } from "@/types/customer";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { FetchCustomers } from "@/api/customers/customers";
-import { OwnerCustomerByIdPageRoute } from "@/const/routes";
+import { EmployeeCustomerByIdPageRoute, OwnerCustomerByIdPageRoute } from "@/const/routes";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 import { useRouter } from "next/navigation";
 
 export default function CustomerTable() {
@@ -22,6 +24,7 @@ export default function CustomerTable() {
 
     const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
     const router = useRouter();
+    const user = useSelector((state: RootState) => state.user);
 
     // --- 2. Fetch Data ---
     const { data, isLoading } = useQuery({
@@ -65,7 +68,11 @@ export default function CustomerTable() {
             key: "action",
             render: (row) => (
                 <button
-                    onClick={() => router.push(OwnerCustomerByIdPageRoute(row.id))}
+                    onClick={() => router.push(
+                        user.role === "owner"
+                            ? OwnerCustomerByIdPageRoute(row.id)
+                            : EmployeeCustomerByIdPageRoute(row.id)
+                    )}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
                     Xem
