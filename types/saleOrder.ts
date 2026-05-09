@@ -193,3 +193,13 @@ export interface IncomeStats { period: string; total: number; groups: IncomeGrou
 // -- Top customer stats types ----------------------------------------------------------------
 export interface TopCustomer { customerId: string, name: string, total: number }
 export interface TopCustomerStats { customers: TopCustomer[], walkInTotal: number, grandTotal: number }
+
+// -- 
+export interface DashboardStatsDto {
+    totalSaleToday: number;
+    profitToday: number;
+    totalOrderToday: number;
+    totalSaleYesterday: number;
+    profitYesterday: number;
+    totalOrderYesterday: number;
+}

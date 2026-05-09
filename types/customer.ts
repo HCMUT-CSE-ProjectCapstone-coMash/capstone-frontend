@@ -8,3 +8,9 @@ export interface Customer {
     debitMoney: number;
     debitDays: number;
 }
+
+// 
+export interface NewCustomerStatsDto {
+    todayCount: number;
+    yesterdayCount: number;
+}

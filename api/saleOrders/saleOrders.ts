@@ -93,3 +93,12 @@ export async function FetchTopCustomers() {
 
     return response.data;
 }
+
+export async function FetchDashboardStats() {
+    const response = await axiosClient.get(
+        `/sale-orders/dashboard-stats`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

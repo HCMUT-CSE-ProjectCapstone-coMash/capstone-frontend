@@ -2,6 +2,7 @@ import { IncomeChart } from "@/components/Charts/IncomeChart";
 import { TopCustomerChart } from "@/components/Charts/TopCustomerChart";
 import { DebtCustomerTable } from "@/components/Tables/DebtCustomerTable";
 import { LowStockTable } from "@/components/Tables/LowStockTable";
+import { StatsCard } from "@/components/StatsCard";
 
 export default function Home() {
     return (
@@ -12,8 +13,8 @@ export default function Home() {
                     <IncomeChart />
                 </div>
 
-                <div className="col-span-1 border border-gray-300 rounded-2xl p-4">
-                    <TopCustomerChart />
+                <div className="col-span-1">
+					<StatsCard />
                 </div>
 
                 <div className="col-span-2 grid grid-cols-2 gap-4">
@@ -26,7 +27,7 @@ export default function Home() {
                 </div>
 
                 <div className="col-span-1 border border-gray-300 rounded-2xl p-4">
-                    {/* placeholder */}
+					<TopCustomerChart />
                 </div>
 
             </div>

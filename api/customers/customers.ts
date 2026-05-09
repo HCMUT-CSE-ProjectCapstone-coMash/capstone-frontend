@@ -60,3 +60,11 @@ export async function FetchTop5DebtCustomers() {
 
     return response.data;
 }
+
+export async function FetchNewCustomerStats() {
+    const response = await axiosClient.get(
+        "/customers/new-customer-stats"
+    );
+
+    return response.data;
+}
