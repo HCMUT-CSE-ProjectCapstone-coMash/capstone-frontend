@@ -42,3 +42,14 @@ export async function changePassword(newPassword: string) {
 
     return response.data;
 }
+
+// Đặt lại mật khẩu
+export async function resetPassword(userId: string) {
+    const response = await axiosClient.post(
+        `/auth/reset-password/${userId}`,
+        {},
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
