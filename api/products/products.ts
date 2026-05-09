@@ -250,3 +250,12 @@ export async function DeleteTemporaryProduct(productId: string) {
 
     return response.data;
 }
+
+export async function FetchTop5LowStock() {
+    const response = await axiosClient.get(
+        "/product/fetch-top-5-low-stock",
+        { withCredentials: true }
+    );
+
+    return response.data;
+}

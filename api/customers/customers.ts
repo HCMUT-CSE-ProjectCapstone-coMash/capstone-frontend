@@ -52,3 +52,11 @@ export async function FetchCustomerById(customerId: string) {
     );
     return response.data;
 }
+
+export async function FetchTop5DebtCustomers() {
+    const response = await axiosClient.get(
+        "/customers/fetch-top-5-debt-customers"
+    );
+
+    return response.data;
+}
