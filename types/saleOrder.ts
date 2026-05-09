@@ -187,8 +187,8 @@ export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
 }
 
 // -- Income stats types ----------------------------------------------------------------
-export interface IncomeGroup { key: string; total: number; }
-export interface IncomeStats { period: string; total: number; groups: IncomeGroup[]; }
+export interface IncomeGroup { key: string; total: number; profit: number }
+export interface IncomeStats { period: string; total: number; totalProfit: number; groups: IncomeGroup[]; }
 
 // -- Top customer stats types ----------------------------------------------------------------
 export interface TopCustomer { customerId: string, name: string, total: number }

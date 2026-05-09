@@ -64,7 +64,7 @@ function buildLayout(): Record<Period, { labels: string[]; sublabels: string[] }
         const jsDay = cursor.getDay();
         const daysUntilSun = jsDay === 0 ? 0 : 7 - jsDay;
         const end = new Date(cursor);
-        end.setDate(cursor.getDate() + daysUntilSun);        
+        end.setDate(cursor.getDate() + daysUntilSun);
         if (end > lastOfMonth) end.setTime(lastOfMonth.getTime());
         weekRanges.push({ start, end });
         cursor = new Date(end);
@@ -139,6 +139,11 @@ export function IncomeChart() {
         return match?.total ?? 0;
     });
 
+    const profits: number[] = labels.map((_, i) => {
+        const match = data?.groups.find(g => g.key === String(i + 1));
+        return match?.profit ?? 0;
+    });
+
     // Exclude future days (day period only) and zero values from stats
     const todayIndex = getTodayIndex();
 
@@ -150,23 +155,37 @@ export function IncomeChart() {
     });
 
     const total = data?.total ?? 0;
+    const totalProfit = data?.totalProfit ?? 0;
     const high = relevantValues.length ? Math.max(...relevantValues) : 0;
     const low = relevantValues.length ? Math.min(...relevantValues) : 0;
     const avg = relevantValues.length ? Math.round(relevantValues.reduce((a, b) => a + b, 0) / relevantValues.length) : 0;
 
     const chartData: ChartData<"bar"> = {
         labels,
-        datasets: [{
-            label: "Doanh thu",
-            data: values,
-            backgroundColor: values.map((_, i) =>
-                period === "day" && i > todayIndex ? "#E5E7EB" : "#DEBDFF"
-            ),
-            borderRadius: 6,
-            hoverBackgroundColor: values.map((_, i) =>
-                period === "day" && i > todayIndex ? "#D1D5DB" : "#6420AA"
-            ),
-        }],
+        datasets: [
+            {
+                label: "Doanh thu",
+                data: values,
+                backgroundColor: values.map((_, i) =>
+                    period === "day" && i > todayIndex ? "#E5E7EB" : "#DEBDFF"
+                ),
+                borderRadius: 6,
+                hoverBackgroundColor: values.map((_, i) =>
+                    period === "day" && i > todayIndex ? "#D1D5DB" : "#6420AA"
+                ),
+            },
+            {
+                label: "Lợi nhuận",
+                data: profits,
+                backgroundColor: profits.map((_, i) =>
+                    period === "day" && i > todayIndex ? "#F3F4F6" : "#BBF7D0"
+                ),
+                borderRadius: 6,
+                hoverBackgroundColor: profits.map((_, i) =>
+                    period === "day" && i > todayIndex ? "#E5E7EB" : "#16A34A"
+                ),
+            },
+        ],
     };
 
     const options: ChartOptions<"bar"> = {
@@ -184,7 +203,7 @@ export function IncomeChart() {
                         const i = ctx[0].dataIndex;
                         return `${labels[i]}  •  ${sublabels[i]}`;
                     },
-                    label: ctx => `${formatThousands(ctx.raw as number)} VNĐ`,
+                    label: ctx => `${ctx.dataset.label}: ${formatThousands(ctx.raw as number)} VNĐ`,
                 },
             },
         },
@@ -217,15 +236,43 @@ export function IncomeChart() {
         <>
             {/* Header */}
             <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
-                <div>
-                    <p className="text-sm text-tgray5">Tổng doanh thu</p>
-                    {isLoading
-                        ? <div className="h-8 w-48 bg-gray-100 rounded animate-pulse mt-1" />
-                        : <p className="text-2xl font-semibold text-tgray9">
-                            {formatThousands(total)} <span className="text-base font-normal text-tgray5">VNĐ</span>
-                          </p>
-                    }
+                <div className="flex flex-col gap-1">
+                    {/* Totals row */}
+                    <div className="flex items-center gap-6 flex-wrap">
+                        <div>
+                            <p className="text-sm text-tgray5">Tổng doanh thu</p>
+                            {isLoading
+                                ? <div className="h-8 w-48 bg-gray-100 rounded animate-pulse mt-1" />
+                                : <p className="text-2xl font-semibold text-tgray9">
+                                    {formatThousands(total)} <span className="text-base font-normal text-tgray5">VNĐ</span>
+                                  </p>
+                            }
+                        </div>
+                        <div>
+                            <p className="text-sm text-tgray5">Tổng lợi nhuận</p>
+                            {isLoading
+                                ? <div className="h-8 w-36 bg-gray-100 rounded animate-pulse mt-1" />
+                                : <p className="text-2xl font-semibold text-green-600">
+                                    {formatThousands(totalProfit)} <span className="text-base font-normal text-tgray5">VNĐ</span>
+                                  </p>
+                            }
+                        </div>
+                    </div>
+
+                    {/* Legend */}
+                    <div className="flex items-center gap-4 mt-1">
+                        <span className="flex items-center gap-1.5 text-xs text-tgray5">
+                            <span className="inline-block w-3 h-3 rounded-sm bg-light-purple" />
+                            Doanh thu
+                        </span>
+                        <span className="flex items-center gap-1.5 text-xs text-tgray5">
+                            <span className="inline-block w-3 h-3 rounded-sm bg-[#BBF7D0]" />
+                            Lợi nhuận
+                        </span>
+                    </div>
                 </div>
+
+                {/* Period buttons */}
                 <div className="flex gap-2">
                     {PERIODS.map(({ key, label }) => (
                         <button
