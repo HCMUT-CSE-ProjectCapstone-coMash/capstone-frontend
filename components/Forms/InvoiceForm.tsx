@@ -347,6 +347,18 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
                         <div className="text-sm text-tgray9">Số điện thoại</div>
                         <div className="text-sm">{selectedCustomer.customerPhone}</div>
                     </div>
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm text-tgray9">Số tiền nợ</div>
+                        <div className="text-sm">{formatThousands(selectedCustomer.debitMoney)} VNĐ</div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <div className="text-sm text-tgray9">Số ngày nợ</div>
+                        <div className="text-sm">
+                            <span className={selectedCustomer.debitDays ? "text-red font-semibold" : ""}>
+                                {selectedCustomer.debitDays || 0} ngày
+                            </span>
+                        </div>
+                    </div>
                     <div className="flex justify-end">
                         <button
                             type="button"
