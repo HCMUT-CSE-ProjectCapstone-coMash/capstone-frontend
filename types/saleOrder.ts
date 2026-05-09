@@ -190,6 +190,10 @@ export function mapSaleOrder(response: SaleOrderResponse): MappedSaleOrder {
 export interface IncomeGroup { key: string; total: number; profit: number }
 export interface IncomeStats { period: string; total: number; totalProfit: number; groups: IncomeGroup[]; }
 
+// -- Personal Income stats types ----------------------------------------------------------------
+export interface PersonalIncomeGroup { key: string; total: number; }
+export interface PersonalIncomeStats { period: string; total: number; groups: PersonalIncomeGroup[]; }
+
 // -- Top customer stats types ----------------------------------------------------------------
 export interface TopCustomer { customerId: string, name: string, total: number }
 export interface TopCustomerStats { customers: TopCustomer[], walkInTotal: number, grandTotal: number }

@@ -85,6 +85,17 @@ export async function FetchIncome(period: string) {
     return response.data;
 }
 
+export async function FetchPersonalIncome(period: string, userId: string) {
+    const params = new URLSearchParams({ period });
+
+    const response = await axiosClient.get(
+        `/sale-orders/personal-income-stats/${userId}?${params.toString()}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
 export async function FetchTopCustomers() {
     const response = await axiosClient.get(
         `/sale-orders/top-customers-spending-stats`,
