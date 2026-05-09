@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 export default function CustomerTable() {
     // --- 1. States ---
     const [currentPage, setCurrentPage] = useState(1);
+    const [onlyDebt, setOnlyDebt] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const pageSize = 10;
 
@@ -29,8 +30,8 @@ export default function CustomerTable() {
     // --- 2. Fetch Data ---
     const { data, isLoading } = useQuery({
         // QueryKey bao gồm trang hiện tại và từ khóa tìm kiếm
-        queryKey: ["customers", currentPage, effectiveSearch],
-        queryFn: () => FetchCustomers(currentPage, pageSize, effectiveSearch),
+        queryKey: ["customers", currentPage, effectiveSearch, onlyDebt],
+        queryFn: () => FetchCustomers(currentPage, pageSize, effectiveSearch, onlyDebt),
     });
 
     // --- 3. Columns Definition ---
@@ -84,9 +85,9 @@ export default function CustomerTable() {
     const customers = data?.items ?? [];
     const total = data?.total ?? 0;
 
-    const handleSearch = (value: string) => {
-        setSearchQuery(value);
-        setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
+     const handleFilterChange = (debt: boolean) => {
+        setOnlyDebt(debt);
+        setCurrentPage(1);  // reset page khi đổi filter
     };
 
     return (
@@ -95,9 +96,9 @@ export default function CustomerTable() {
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <button 
-                        onClick={() => handleSearch("")}
+                        onClick={() => handleFilterChange(false)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            searchQuery === "" 
+                            !onlyDebt 
                             ? "bg-pink text-white shadow-sm" 
                             : "border border-pink text-pink hover:bg-pink/5"
                         }`}
@@ -105,9 +106,9 @@ export default function CustomerTable() {
                         Xem tất cả
                     </button>
                     <button 
-                        onClick={() => handleSearch("debitMoney")}
+                        onClick={() => handleFilterChange(true)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                            searchQuery === "debitMoney" 
+                            onlyDebt 
                             ? "bg-pink text-white shadow-sm" 
                             : "border border-pink text-pink hover:bg-pink/5"
                         }`}

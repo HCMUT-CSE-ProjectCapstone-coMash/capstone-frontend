@@ -29,13 +29,14 @@ export async function FetchCustomerByPhone(customerPhone: string) {
     return response.data;
 }
 
-export async function FetchCustomers(currentPage: number, pageSize: number, search?: string) {
+export async function FetchCustomers(currentPage: number, pageSize: number, search?: string, onlyDebt?: boolean) {
     const params = new URLSearchParams({
         page: currentPage.toString(),
         pageSize: pageSize.toString(),
     });
 
     if (search) params.append("search", search);
+    if (onlyDebt) params.append("onlyDebt", "true");
 
     const response = await axiosClient.get(
         `/customers/fetch-all?${params}`,
