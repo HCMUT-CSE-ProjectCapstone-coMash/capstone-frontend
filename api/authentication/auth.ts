@@ -5,8 +5,9 @@ export async function login(email: string, password: string) {
     const response = await axiosClient.post(
         "/auth/login", 
         { email, password }, 
-        { withCredentials: true }
     );
+
+    localStorage.setItem("accessToken", response.data.accessToken);
 
     return response.data;
 }
@@ -15,7 +16,6 @@ export async function login(email: string, password: string) {
 export async function profile() {
     const response = await axiosClient.get(
         "/auth/profile",
-        { withCredentials: true }
     );
 
     return response.data;
@@ -26,7 +26,6 @@ export async function logout() {
     const response = await axiosClient.post(
         "/auth/logout",
         {},
-        { withCredentials: true }
     );
 
     return response.data;
@@ -37,7 +36,6 @@ export async function changePassword(newPassword: string) {
     const response = await axiosClient.post(
         "/auth/change-password",
         { newPassword },
-        { withCredentials: true }
     );
 
     return response.data;
@@ -48,7 +46,6 @@ export async function resetPassword(userId: string) {
     const response = await axiosClient.post(
         `/auth/reset-password/${userId}`,
         {},
-        { withCredentials: true }
     );
 
     return response.data;

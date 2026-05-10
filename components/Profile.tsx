@@ -4,7 +4,7 @@ import { Dropdown, MenuProps } from "antd";
 import { LogoutIcon, UserIcon, ArrowDownLineIcon } from "@/public/assets/Icons";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { logout } from "@/api/authentication/auth";
 import { clearUser } from "@/utilities/userStore";
 import { LoginPageRoute } from "@/const/routes";
@@ -22,10 +22,13 @@ interface ProfileProps {
 function LogoutOption() {
     const router = useRouter();
     const dispatch = useDispatch();
+    const queryClient = useQueryClient();
 
     const mutation = useMutation({
         mutationFn: logout,
         onSuccess: () => {
+            queryClient.clear();
+
             dispatch(clearUser());
 
             // Clear all editing states to prevent data leak between users
@@ -36,8 +39,9 @@ function LogoutOption() {
 
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng xuất thành công" }));
 
+            localStorage.removeItem("accessToken");
+
             router.replace(LoginPageRoute);
-            router.refresh();
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "" }));

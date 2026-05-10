@@ -35,7 +35,6 @@ export function LoginForm() {
     
                 const homeRoute = roleHomeMap[data.role!] ?? LoginPageRoute;
                 router.replace(homeRoute);
-                router.refresh();
             } else {
                 dispatch(addAlert({ type: AlertType.INFO, message: "Bạn cần đổi mật khẩu trước khi tiếp tục" }));
                 router.replace("/doi-mat-khau");

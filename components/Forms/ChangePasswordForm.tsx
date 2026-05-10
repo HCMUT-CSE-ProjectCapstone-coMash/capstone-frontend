@@ -11,6 +11,7 @@ import { AlertType } from "@/types/alert";
 import { useRouter } from "next/navigation";
 import { EmployeeHomePageRoute, OwnerHomePageRoute } from "@/const/routes";
 import { RootState } from "@/utilities/store";
+import { setUser } from "@/utilities/userStore";
 
 const roleHomeMap: Record<string, string> = {
     employee: EmployeeHomePageRoute,
@@ -28,12 +29,13 @@ export function ChangePasswordForm() {
         mutationFn: () => changePassword(newPassword),
 
         onSuccess: () => {
+            dispatch(setUser({ ...user, hasChangedPassword: true }));
+
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đổi mật khẩu thành công"}));
 
             const homeRoute = roleHomeMap[user.role!];
 
             router.push(homeRoute);
-            router.refresh();
         },
 
         onError: (error: AxiosError<{ message: string }>) => {

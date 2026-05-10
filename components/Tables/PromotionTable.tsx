@@ -100,7 +100,6 @@ export function PromotionTable() {
                         } else {
                             router.push(EmployeeSaleByIdPageRoute(row.id));
                         }
-                        router.refresh();
                     }}
                     className="py-1.5 px-3 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/10 hover:cursor-pointer"
                 >
