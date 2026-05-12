@@ -2,12 +2,32 @@
 
 import { useDispatch } from "react-redux";
 import { PageLoading } from "@/components/PageLoading";
-import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { profile } from "@/api/authentication/auth";
+import { setUser } from "@/utilities/userStore";
+import { useEffect } from "react";
 
-export function UserProvider({ children } : { children : React.ReactNode }) {
+interface UserProviderProps {
+    children: React.ReactNode;
+    userId: string | null;
+}
 
+export function UserProvider({ children, userId } : UserProviderProps) {
+    const dispatch = useDispatch();
 
-    // if (isLoading) return <PageLoading/>;
+    const { data, isLoading } = useQuery({
+        queryKey: ["profile"],
+        queryFn: profile,
+        enabled: !!userId,
+    });
+
+    useEffect(() => {
+        if (data) {
+            dispatch(setUser(data));
+        }
+    }, [data, dispatch]);
+
+    if (isLoading) return <PageLoading/>;
 
     return <>{children}</>
 }

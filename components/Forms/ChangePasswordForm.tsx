@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { TextInput } from "../FormInputs/TextInput"
 import { useMutation } from "@tanstack/react-query";
-import { changePassword } from "@/api/authentication/auth";
 import { AxiosError } from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
@@ -12,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { EmployeeHomePageRoute, OwnerHomePageRoute } from "@/const/routes";
 import { RootState } from "@/utilities/store";
 import { setUser } from "@/utilities/userStore";
+import { changePasswordAction } from "@/actions/auth";
 
 const roleHomeMap: Record<string, string> = {
     employee: EmployeeHomePageRoute,
@@ -19,14 +19,15 @@ const roleHomeMap: Record<string, string> = {
 };
 
 export function ChangePasswordForm() {
-    const [newPassword, setNewPassword] = useState<string>("");
-    const [retypePassword, setRetypePassword] = useState<string>("");
     const dispatch = useDispatch();
     const router = useRouter();
     const user = useSelector((state: RootState) => state.user);
+
+    const [newPassword, setNewPassword] = useState<string>("");
+    const [retypePassword, setRetypePassword] = useState<string>("");
     
     const mutation = useMutation({
-        mutationFn: () => changePassword(newPassword),
+        mutationFn: ({ userId, newPassword } : { userId: string, newPassword: string }) => changePasswordAction(userId, newPassword),
 
         onSuccess: () => {
             dispatch(setUser({ ...user, hasChangedPassword: true }));
@@ -46,6 +47,8 @@ export function ChangePasswordForm() {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!user.id) return;
+
         if (!newPassword) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng điền mật khẩu mới" }));
             return;
@@ -61,7 +64,7 @@ export function ChangePasswordForm() {
             return;
         }
 
-        mutation.mutate();
+        mutation.mutate({ userId: user.id, newPassword: newPassword });
     }
 
     return (

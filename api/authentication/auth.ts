@@ -19,20 +19,10 @@ export async function profile() {
     return response.data;
 }
 
-// Đăng xuất người dùng
-export async function logout() {
-    const response = await axiosClient.post(
-        "/auth/logout",
-        {},
-    );
-
-    return response.data;
-}
-
 // Đổi mật khẩu
-export async function changePassword(newPassword: string) {
+export async function changePassword(userId: string, newPassword: string) {
     const response = await axiosClient.post(
-        "/auth/change-password",
+        "/auth/change-password/" + userId,
         { newPassword },
     );
 

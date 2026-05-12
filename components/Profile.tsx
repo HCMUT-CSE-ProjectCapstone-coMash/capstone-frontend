@@ -5,7 +5,6 @@ import { LogoutIcon, UserIcon, ArrowDownLineIcon } from "@/public/assets/Icons";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { logout } from "@/api/authentication/auth";
 import { clearUser } from "@/utilities/userStore";
 import { LoginPageRoute } from "@/const/routes";
 import { addAlert } from "@/utilities/alertStore";
@@ -14,6 +13,7 @@ import { clearEditingProduct } from "@/utilities/productEditStore";
 import { clearProductsOrder } from "@/utilities/productsOrderStore";
 import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { clearBarCode } from "@/utilities/barcodeSlice";
+import { logoutAction } from "@/actions/auth";
 
 interface ProfileProps {
     userName: string
@@ -25,7 +25,7 @@ function LogoutOption() {
     const queryClient = useQueryClient();
 
     const mutation = useMutation({
-        mutationFn: logout,
+        mutationFn: logoutAction,
         onSuccess: () => {
             queryClient.clear();
 
@@ -38,8 +38,6 @@ function LogoutOption() {
             dispatch(clearBarCode());
 
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng xuất thành công" }));
-
-            localStorage.removeItem("accessToken");
 
             router.replace(LoginPageRoute);
         },
