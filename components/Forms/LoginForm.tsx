@@ -18,8 +18,8 @@ const roleHomeMap: Record<string, string> = {
 };
 
 export function LoginForm() {
-    const [userName, setUserName] = useState<string>("test123@gmail.com");
-    const [password, setPassword] = useState<string>("123456");
+    const [userName, setUserName] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
     const dispatch = useDispatch();
     const router = useRouter();
 
