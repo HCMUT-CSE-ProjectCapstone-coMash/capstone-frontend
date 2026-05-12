@@ -4,10 +4,8 @@ import { axiosClient } from "../axiosClient";
 export async function login(email: string, password: string) {
     const response = await axiosClient.post(
         "/auth/login", 
-        { email, password }, 
+        { email, password },
     );
-
-    localStorage.setItem("accessToken", response.data.accessToken);
 
     return response.data;
 }

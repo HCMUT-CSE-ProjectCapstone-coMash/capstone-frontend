@@ -2,7 +2,6 @@
 import { useState } from "react"
 import { TextInput } from "../FormInputs/TextInput"
 import { useMutation } from "@tanstack/react-query";
-import { login } from "@/api/authentication/auth";
 import { AxiosError } from "axios";
 import { useDispatch } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
@@ -11,6 +10,7 @@ import { setUser } from "@/utilities/userStore";
 import { User } from "@/types/user";
 import { useRouter } from "next/navigation";
 import { EmployeeHomePageRoute, LoginPageRoute, OwnerHomePageRoute } from "@/const/routes";
+import { loginAction } from "@/actions/auth";
 
 const roleHomeMap: Record<string, string> = {
     employee: EmployeeHomePageRoute,
@@ -18,23 +18,24 @@ const roleHomeMap: Record<string, string> = {
 };
 
 export function LoginForm() {
-    const [userName, setUserName] = useState<string>("");
-    const [password, setPassword] = useState<string>("");
+    const [userName, setUserName] = useState<string>("test123@gmail.com");
+    const [password, setPassword] = useState<string>("123456");
     const dispatch = useDispatch();
     const router = useRouter();
 
     // Đăng nhập
     const mutation = useMutation({
-        mutationFn: () => login(userName, password),
+        mutationFn: () => loginAction(userName, password),
 
         onSuccess: (data: User) => {
             dispatch(setUser(data));
-            
+
             if (data.hasChangedPassword) {
                 dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đăng nhập thành công" }));
     
                 const homeRoute = roleHomeMap[data.role!] ?? LoginPageRoute;
                 router.replace(homeRoute);
+                router.refresh();
             } else {
                 dispatch(addAlert({ type: AlertType.INFO, message: "Bạn cần đổi mật khẩu trước khi tiếp tục" }));
                 router.replace("/doi-mat-khau");

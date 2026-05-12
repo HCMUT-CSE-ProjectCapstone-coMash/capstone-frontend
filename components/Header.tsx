@@ -1,26 +1,25 @@
-"use client";
-
 import { Navbar } from "./Navbar/Navbar";
 import { Profile } from "./Profile";
 import Link from "next/link";
 import { EmployeeHomePageRoute, LoginPageRoute, OwnerHomePageRoute } from "@/const/routes";
-import { useSelector } from "react-redux";
-import { RootState } from "@/utilities/store";
+import { cookies } from "next/headers";
+import { decrypt } from "@/utilities/session";
 
 const roleHomeMap: Record<string, string> = {
     employee: EmployeeHomePageRoute,
     owner: OwnerHomePageRoute,
 };
 
-export function Header() {
-    const user = useSelector((state: RootState) => state.user);
-    const homeRoute = user.role ? (roleHomeMap[String(user.role)] ?? LoginPageRoute) : LoginPageRoute;
+export async function Header() {
+    const cookie = (await cookies()).get('accessToken')?.value;
+    const session = await decrypt(cookie);
 
-    console.log(user);
+    const homeRoute = session?.role ? (roleHomeMap[String(session.role)] ?? LoginPageRoute) : LoginPageRoute;
+    const hasChangedPassword = session?.hasChangedPassword === "True";
 
     return (
         <>
-            {user.hasChangedPassword ? (
+            {session && hasChangedPassword ? (
                 <header className="min-h-20 bg-gwhite px-10 flex items-center justify-between">
                     <Link href={homeRoute}>
                         <p className="font-display font-semibold text-3xl text-pink">
@@ -28,10 +27,10 @@ export function Header() {
                         </p>
                     </Link>
 
-                    <Navbar role={user.role ?? ""}/>
+                    <Navbar role={session.role}/>
 
                     <div>
-                        <Profile userName={user.fullName || ""}/>
+                        <Profile userName={String(session.given_name) || ""}/>
                     </div>
                 </header>
             ) : (
