@@ -21,7 +21,13 @@ if (typeof window !== "undefined") {
 
 const queryClient = new QueryClient();
 
-export function Providers({ children }: { children: React.ReactNode }) {
+interface ProvidersProps {
+    children: React.ReactNode;
+    userId: string | null;
+}
+
+export function Providers({ children, userId }: ProvidersProps) {
+
     return (
         <ConfigProvider
             warning={{ strict: false }}
@@ -48,7 +54,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         >
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
-                    <UserProvider>
+                    <UserProvider userId={userId}>
                         {children}
                     </UserProvider>
                 </QueryClientProvider>
