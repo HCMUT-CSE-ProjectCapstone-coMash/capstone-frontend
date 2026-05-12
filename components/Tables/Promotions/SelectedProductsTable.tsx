@@ -1,5 +1,6 @@
 import { SelectInput } from "@/components/FormInputs/SelectInput";
 import { TextInput } from "@/components/FormInputs/TextInput";
+import { pinkPlaceholder } from "@/const/placeholder";
 import { TrashIcon } from "@/public/assets/Icons";
 import { AlertType } from "@/types/alert";
 import { DiscountType, ProductDiscountItem } from "@/types/promotion";
@@ -103,7 +104,7 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove, is
                                                 <Image
                                                     src={product.imageURL}
                                                     placeholder="blur"
-                                                    blurDataURL={"/assets/image/light-pink.png"}
+                                                    blurDataURL={pinkPlaceholder}
                                                     alt=""
                                                     fill
                                                     className="object-cover rounded"

@@ -13,6 +13,7 @@ import { TrashIcon } from "@/public/assets/Icons";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface ComboTableProps {
     combo: ComboDeal;
@@ -137,7 +138,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: Com
                                         <Image
                                             src={item.data.imageURL}
                                             placeholder="blur"
-                                            blurDataURL={"/assets/image/light-pink.png"}
+                                            blurDataURL={pinkPlaceholder}
                                             fill
                                             alt=""
                                             className="object-cover"
@@ -180,7 +181,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: Com
                                                     <Image
                                                         src={product.imageURL}
                                                         placeholder="blur"
-                                                        blurDataURL={"/assets/image/light-pink.png"}
+                                                        blurDataURL={pinkPlaceholder}
                                                         alt=""
                                                         fill
                                                         className="object-cover rounded"

@@ -14,6 +14,7 @@ import { Employee, UpdateEmployeePayload } from "@/types/employee";
 import { DatePickerInput } from "../FormInputs/DatePickerInput";
 import { UpdateEmployee } from "@/api/employees/employees";
 import { resetPassword } from "@/api/authentication/auth";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface FormState {
     employeeId: string,
@@ -117,7 +118,7 @@ export function DetailEmployeeByIdForm({ employee } : DetailEmployeeByIdFormProp
                             <Image
                                 src={previewSrc} 
                                 placeholder="blur" 
-                                blurDataURL={"/assets/image/light-pink.png"} 
+                                blurDataURL={pinkPlaceholder} 
                                 alt="" fill className="object-cover" unoptimized
                             />
                         </div>

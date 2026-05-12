@@ -16,6 +16,7 @@ import Image from "next/image";
 import { OwnerUpdateProduct } from "@/api/products/products";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { DeleteProductModal } from "../Modal/DeleteProductModal";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface FormState {
     productId: string;
@@ -193,7 +194,7 @@ export function OwnerUpdateProductForm({ editProduct, isHasCancelButton = true }
                         <Image
                             src={previewSrc ?? "/placeholder-image.png"} alt="" fill 
                             className="object-cover" unoptimized
-                            placeholder="blur" blurDataURL={"/assets/image/light-pink.png"}
+                            placeholder="blur" blurDataURL={pinkPlaceholder}
                         />
                     </div>
                 </div>

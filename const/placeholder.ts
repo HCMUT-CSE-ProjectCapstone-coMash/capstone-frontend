@@ -1,0 +1,1 @@
+export const pinkPlaceholder = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8zfC/HgAGMwJrg9rbAQAAAABJRU5ErkJggg==";

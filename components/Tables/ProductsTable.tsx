@@ -20,6 +20,7 @@ import { LayoutModal } from "../Modal/LayoutModal";
 import { BarcodeForm } from "../Forms/BarcodeForm";
 import { FetchAllSendingProductsOrders } from "@/api/productsOrder/productsOrder";
 import { Badge } from "antd";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 export function ProductsTable() {
     const router = useRouter();
@@ -104,7 +105,14 @@ export function ProductsTable() {
             { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
             {title: "Hình ảnh", key: "imageUrl", render: (row) => (
                 <div className="relative w-20 h-20 mx-auto">
-                    <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                    <Image 
+                        src={row.imageURL} 
+                        placeholder="blur" 
+                        blurDataURL={pinkPlaceholder} 
+                        alt="" 
+                        fill 
+                        className="object-cover" 
+                        unoptimized/>
                 </div>
             )},
             { title: "Tên sản phẩm", key: "productName", render: (row) => (

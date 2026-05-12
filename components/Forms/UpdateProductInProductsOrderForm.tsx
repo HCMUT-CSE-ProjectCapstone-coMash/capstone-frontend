@@ -16,6 +16,7 @@ import { AlertType } from "@/types/alert";
 import { addProductToOrder, updateProductInOrder } from "@/utilities/productsOrderStore";
 import { RootState } from "@/utilities/store";
 import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface FormState {
     productId: string;
@@ -266,7 +267,7 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
                         <Image
                             src={previewSrc ?? "/placeholder-image.png"} alt="" fill
                             className="object-cover" unoptimized
-                            placeholder="blur" blurDataURL={"/assets/image/light-pink.png"}
+                            placeholder="blur" blurDataURL={pinkPlaceholder}
                         />
                     </div>
                 </div>

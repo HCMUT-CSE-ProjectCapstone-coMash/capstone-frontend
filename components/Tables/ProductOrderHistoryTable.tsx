@@ -15,6 +15,7 @@ import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { removeDiacritics } from "@/utilities/removeDiacritics";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatThousands } from "@/utilities/numberFormat";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 export function ProductOrderHistoryTable() {
     const router = useRouter();
@@ -50,7 +51,7 @@ export function ProductOrderHistoryTable() {
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
         {title: "Hình ảnh", key: "imageUrl", render: (row) => (
             <div className="mx-auto relative w-20 h-20">
-                <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
+                <Image src={row.imageURL} placeholder="blur" blurDataURL={pinkPlaceholder} fill alt="" className="object-cover" unoptimized/>
             </div>
         )},
         { title: "Tên sản phẩm", key: "productName", render: (row) => (<span>{row.productName}</span>)},

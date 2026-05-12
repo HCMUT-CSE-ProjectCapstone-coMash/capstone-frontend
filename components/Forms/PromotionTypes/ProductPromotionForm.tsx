@@ -9,6 +9,7 @@ import Image from "next/image";
 import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
 import { SelectedProductsTable } from "../../Tables/Promotions/SelectedProductsTable";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 
@@ -77,7 +78,7 @@ export function ProductPromotionForm({ productDiscounts, onChange } : ProductPro
                             <div className="flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-8 h-8">
-                                        <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} fill alt="" className="object-cover" unoptimized/>
+                                        <Image src={item.data.imageURL} placeholder="blur" blurDataURL={pinkPlaceholder} fill alt="" className="object-cover" unoptimized/>
                                     </div>
                                     <span>{item.label}</span>
                                 </div>

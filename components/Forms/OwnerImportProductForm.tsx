@@ -24,6 +24,7 @@ import ImgCrop from "antd-img-crop";
 import { Spin, Upload } from "antd";
 import type { RcFile } from "antd/es/upload/interface";
 import { TemporaryModal } from "../Modal/TemporaryModal";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface FormState {
     productId: string;
@@ -353,7 +354,7 @@ export function OwnerImportProductForm() {
                         renderItem={(item) => (
                             <div className="flex items-center gap-3">
                                 <div className="relative w-8 h-8">
-                                    <Image src={item.data.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized />
+                                    <Image src={item.data.imageURL} placeholder="blur" blurDataURL={pinkPlaceholder} alt="" fill className="object-cover" unoptimized />
                                 </div>
                                 <span>{item.label}</span>
                             </div>

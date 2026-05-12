@@ -17,6 +17,7 @@ import { AlertType } from "@/types/alert";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { ProductsOrderForm } from "../Forms/ProductsOrderForm";
 import Image from "next/image";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 export function PendingProductsTable() {
     const dispatch = useDispatch();
@@ -70,7 +71,7 @@ export function PendingProductsTable() {
         { title: "Tên sản phẩm", key: "productName", render: (row) => (
             <div className="flex items-center justify-center gap-4">
                 <div className="relative w-12 h-12">
-                    <Image src={row.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                    <Image src={row.imageURL} placeholder="blur" blurDataURL={pinkPlaceholder} alt="" fill className="object-cover" unoptimized/>
                 </div>
                 <p>{row.productName}</p>
             </div>

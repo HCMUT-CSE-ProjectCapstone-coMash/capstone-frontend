@@ -1,4 +1,5 @@
 import { FetchTemporaryProductByUserId } from "@/api/products/products";
+import { pinkPlaceholder } from "@/const/placeholder";
 import { TemporaryProduct } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import { useQuery } from "@tanstack/react-query";
@@ -39,7 +40,7 @@ export function TemporaryModal({ onSelect }: TemporaryModalProps) {
                             className="flex flex-col gap-2 p-3 rounded-lg border border-gray-200 hover:border-pink hover:shadow-md transition-all cursor-pointer text-left group"
                         >
                             <div className="relative w-full aspect-square rounded overflow-hidden bg-gray-100">
-                                <Image src={product.imageUrl} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                                <Image src={product.imageUrl} placeholder="blur" blurDataURL={pinkPlaceholder} alt="" fill className="object-cover" unoptimized/>
                             </div>
                             <div className="flex flex-col gap-0.5">
                                 <p className="text-sm font-medium text-gray-dark line-clamp-1">{product.productName}</p>

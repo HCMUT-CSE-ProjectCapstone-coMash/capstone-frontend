@@ -9,6 +9,7 @@ import { clearBarCode, removeBarcode, updatePrintQuantity } from "@/utilities/ba
 import { TextInput } from "../FormInputs/TextInput";
 import { TrashIcon } from "@/public/assets/Icons";
 import { BarcodeLabel, labelStyles } from "../BarcodeLabel";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface BarcodeForm {
     onClose: () => void;
@@ -58,7 +59,7 @@ export function BarcodeForm({ onClose } : BarcodeForm) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-8 h-8">
-                                        <Image src={entry.imageUrl} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                                        <Image src={entry.imageUrl} placeholder="blur" blurDataURL={pinkPlaceholder} alt="" fill className="object-cover" unoptimized/>
                                     </div>
                                     <div>
                                         <p className="font-medium">{entry.productName}</p>

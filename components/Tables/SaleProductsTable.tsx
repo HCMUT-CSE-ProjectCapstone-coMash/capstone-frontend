@@ -18,6 +18,7 @@ import { useState } from "react";
 import { PromotionSelectModal } from "../Modal/PromotionSelectModal";
 import { ComboSizeModal } from "../Modal/ComboSizeModal";
 import { Product } from "@/types/product";
+import { pinkPlaceholder } from "@/const/placeholder";
 
 interface SaleProductsTableProps {
     cart: CartLine[];
@@ -202,7 +203,7 @@ function ProductNameCell({ line }: { line: CartLine }) {
         return (
             <div className="flex items-center justify-center gap-4">
                 <div className="relative w-12 h-12">
-                    <Image src={line.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                    <Image src={line.product.imageURL} placeholder="blur" blurDataURL={pinkPlaceholder} alt="" fill className="object-cover" unoptimized/>
                 </div>
                 <p>{line.product.productName}</p>
             </div>
@@ -214,7 +215,7 @@ function ProductNameCell({ line }: { line: CartLine }) {
             {line.appliedCombo.comboItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-4">
                     <div className="relative w-12 h-12">
-                        <Image src={item.product.imageURL} placeholder="blur" blurDataURL={"/assets/image/light-pink.png"} alt="" fill className="object-cover" unoptimized/>
+                        <Image src={item.product.imageURL} placeholder="blur" blurDataURL={pinkPlaceholder} alt="" fill className="object-cover" unoptimized/>
                     </div>
                     <p>{item.product.productName}</p>
                 </div>
