@@ -1,8 +1,11 @@
 import axios from "axios";
 
+const baseURL = process.env.NODE_ENV === "production"
+    ? "https://capstone-backend-production-037b.up.railway.app"
+    : "http://localhost:5194";
+
 export const axiosClient = axios.create({
-    // baseURL: "http://localhost:5194",
-    baseURL: "https://capstone-backend-production-037b.up.railway.app",
+    baseURL,
     headers: {
         "Content-Type": "application/json",
     }
