@@ -2,7 +2,7 @@
 
 import { Product, ProductQuantity, ProductWithOrderStatus } from "@/types/product";
 import { SearchInput } from "../FormInputs/SearchInput";
-import { SaleProductsTable } from "../Tables/SaleProductsTable";
+import { SaleProductsTable } from "../Tables/SaleProductsTable/SaleProductsTable";
 import { useState } from "react";
 import Image from "next/image";
 import { useDebounce } from "@/hooks/useDebounce";
