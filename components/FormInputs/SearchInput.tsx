@@ -66,7 +66,7 @@ export function SearchInput<T>({ label, value, placeHolder, onChange, labelPosit
                                         onSuggestionClick(item);
                                         setShowSuggestions(false);
                                     }}
-                                    className={`px-4 py-2.5 text-sm transition-colors
+                                    className={`px-4 py-2.5 text-sm transition-colors group
                                         ${disabled
                                             ? "opacity-50 cursor-not-allowed text-tgray9"
                                             : "hover:bg-purple hover:text-white cursor-pointer text-tgray9"

@@ -22,6 +22,7 @@ export const EmployeeImportPageRoute = `${EmployeeBaseRoute}/nhap-hang`;
 // Link bán hàng ----------------------------------------------
 
 export const EmployeeSellPageRoute = `${EmployeeBaseRoute}/ban-hang`;
+export const EmployeeExchangePageRoute = (saleOrderId: string) => `${EmployeeSellPageRoute}/doi-hang/${saleOrderId}`;
 
 // Link khuyến mãi ----------------------------------------------
 
@@ -73,6 +74,7 @@ export const OwnerCustomerSaleOrderPageRoute = (customerId: string, saleOrderId:
 // Link bán hàng ----------------------------------------------
 
 export const OwnerSellPageRoute = `${OwnerBaseRoute}/ban-hang`;
+export const OwnerExchangePageRoute = (saleOrderId: string) => `${OwnerSellPageRoute}/doi-hang/${saleOrderId}`;
 
 // Link nhập hàng ----------------------------------------------
 
