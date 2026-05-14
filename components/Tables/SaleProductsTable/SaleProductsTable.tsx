@@ -40,131 +40,7 @@ interface SaleProductsTableProps {
 export function SaleProductsTable({ cart, setCart, isLocked, knownCombos, setKnownCombos, promotionRegistry, setPromotionRegistry } : SaleProductsTableProps) {
     const dispatch = useDispatch();
 
-    // -- Update Product Discount --
-    const UpdateDiscount = (lineIndex: number, discount: number) => {
-        const updatedCart = [...cart];
-        const line = updatedCart[lineIndex];
-
-        if (line.kind === "product") {
-            updatedCart[lineIndex] = { ...line, discount };
-            setCart(updatedCart);
-        }
-    };
-
-    // -- Remove Product From Cart --
-    const RemoveFromCart = (lineIndex: number) => {
-        setCart(cart.filter((_, index) => index !== lineIndex));
-    };
-
-    // -- Update Combo Slot Quantity -- 
-    const UpdateComboSlotQuantity = (lineIndex: number, slotIndex: number, size: string, newQuantity: number) => {
-        const updatedCart = [...cart];
-        const line = updatedCart[lineIndex];
-
-        if (line.kind !== "combo") return;
-
-        const slot = line.itemSlots[slotIndex];
-        const sizeEntry = slot.product.quantities.find(q => q.size === size);
-        if (!sizeEntry) return;
-
-        // Check stock — account for quantity already used by *other* lines/slots
-        const otherUsage = cart.reduce((total, l, i) => {
-            if (i === lineIndex) {
-                // Same combo line, but exclude THIS slot+size
-                if (l.kind !== "combo") return total;
-                return total + l.itemSlots.reduce((s, sl, sIdx) => {
-                    return s + sl.selectedQuantity.reduce((qs, q) => {
-                        if (sl.product.id === slot.product.id && q.size === size && sIdx !== slotIndex) {
-                            return qs + q.quantities;
-                        }
-                        return qs;
-                    }, 0);
-                }, 0);
-            }
-            if (l.kind === "product" && l.product.id === slot.product.id && l.selectedSize === size) {
-                return total + l.quantity;
-            }
-            if (l.kind === "combo") {
-                return total + l.itemSlots.reduce((s, sl) => {
-                    if (sl.product.id !== slot.product.id) return s;
-                    const sized = sl.selectedQuantity.find(q => q.size === size);
-                    return s + (sized?.quantities ?? 0);
-                }, 0);
-            }
-            return total;
-        }, 0);
-
-        const available = sizeEntry.quantities - otherUsage;
-        const clamped = Math.max(0, Math.min(newQuantity, available));
-
-        // Also clamp so the slot doesn't exceed requiredQuantity
-        const otherSizesInSlot = slot.selectedQuantity.reduce(
-            (sum, q) => q.size === size ? sum : sum + q.quantities,
-            0
-        );
-        const remainingCapacity = slot.requiredQuantity - otherSizesInSlot;
-        const finalQuantity = Math.min(clamped, remainingCapacity);
-
-        if (finalQuantity < newQuantity) {
-            dispatch(addAlert({ type: AlertType.WARNING, message: finalQuantity === remainingCapacity
-                    ? `Slot này chỉ cần ${slot.requiredQuantity} sản phẩm`
-                    : `Size ${size} chỉ còn ${available} sản phẩm`
-            }));
-        }
-
-        const updatedSlot = {
-            ...slot,
-            selectedQuantity: slot.selectedQuantity.map(q =>
-                q.size === size ? { ...q, quantities: finalQuantity } : q
-            ),
-        };
-
-        const updatedItemSlots = [...line.itemSlots];
-        updatedItemSlots[slotIndex] = updatedSlot;
-
-        updatedCart[lineIndex] = { ...line, itemSlots: updatedItemSlots };
-        setCart(updatedCart);
-    }
-    
-    // -- Get Available Quantity of Product -- 
-    const getAvailableQuantity = (line: CartLine): number => {
-        if (line.kind === "product") {
-            return line.product.quantities.find(q => q.size === line.selectedSize)?.quantities ?? 0;
-        }
-        
-        const lineIndex = cart.indexOf(line);
-        let maxCombos = Infinity;
-
-        for (let slotIdx = 0; slotIdx < line.itemSlots.length; slotIdx++) {
-            const slot = line.itemSlots[slotIdx];
-            const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
-            const totalStock = slot.product.quantities.reduce((s, q) => s + q.quantities, 0);
-    
-            const otherUsage = cart.reduce((total, l, i) => {
-                if (i === lineIndex) return total;
-                if (l.kind === "product" && l.product.id === slot.product.id) {
-                    return total + l.quantity;
-                }
-                if (l.kind === "combo") {
-                    return total + l.itemSlots.reduce((s, sl) => {
-                        if (sl.product.id !== slot.product.id) return s;
-                        const filled = sl.selectedQuantity.reduce((qs, q) => qs + q.quantities, 0);
-                        const unfilled = Math.max(0, sl.requiredQuantity - filled);
-                        return s + filled + unfilled;
-                    }, 0);
-                }
-                return total;
-            }, 0);
-            
-            const availForSlot = totalStock - otherUsage;
-            const maxForSlot = Math.floor(availForSlot / perComboReq);
-            maxCombos = Math.min(maxCombos, maxForSlot);
-        }
-
-        return Math.max(0, maxCombos);
-    };
-
-    // -- Search product ----------------------------------------------------------------------
+    // -- Search ----------------------------------------------------------------------------------
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedName = useDebounce(searchTerm, 500);
 
@@ -182,470 +58,7 @@ export function SaleProductsTable({ cart, setCart, isLocked, knownCombos, setKno
         data: p
     }));
 
-    // -- Search Promotions -------------------------------------------------------------------
-    const searchPromotionsMutation = useMutation({
-        mutationKey: ["get-promotions"],
-        mutationFn: (productId: string) => GetPromotionsByProductId(productId),
-        onError: () => {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể lấy thông tin khuyến mãi của sản phẩm" }));
-        }
-    });
-
-    // -- Cart and Size Checker -------------------------------------------------------------------
-    const getCurrentCartQuantity = (productId: string, size: string) => {
-        return cart.reduce((total, line) => {
-            if (line.kind === "product") {
-                if (line.product.id === productId && line.selectedSize === size) {
-                    return total + line.quantity;
-                }
-                return total;
-            }
-
-            return total + line.itemSlots.reduce((slotSum, slot) => {
-                if (slot.product.id !== productId) return slotSum;
-    
-                const filledForThisSize = slot.selectedQuantity.find(q => q.size === size)?.quantities ?? 0;
-                const filledTotal = slot.selectedQuantity.reduce((s, q) => s + q.quantities, 0);
-                const unfilledCapacity = Math.max(0, slot.requiredQuantity - filledTotal);
-    
-                return slotSum + filledForThisSize + unfilledCapacity;
-            }, 0);
-        }, 0);
-    };
-
-    const getAvailableSize = (product: Product): string | null => {
-        for (const sizeEntry of product.quantities) {
-            const currentQtyInCart = getCurrentCartQuantity(product.id, sizeEntry.size);
-            if (sizeEntry.quantities - currentQtyInCart > 0) {
-                return sizeEntry.size;
-            }
-        }
-        return null;
-    };
- 
-    // -- Utility to build initial slot quantities for combo items --------------------------------
-    const buildInitialSlotQuantities = (product: Product): ProductQuantity[] =>
-        product.quantities.map(q => ({ ...q, quantities: 0 }));
-
-    // -- Combo Optimization ------------------------------------------------------------------
-    const flattenToProducts = (currentCart: CartLine[]): ProductCartLine[] => {
-        const pool: Map<string, ProductCartLine> = new Map();
-    
-        for (const line of currentCart) {
-            if (line.kind === "product") {
-                const key = `${line.product.id}-${line.selectedSize}`;
-                const existing = pool.get(key);
-                if (existing) {
-                    pool.set(key, { ...existing, quantity: existing.quantity + line.quantity });
-                } else {
-                    pool.set(key, { ...line });
-                }
-            } else {
-                for (const slot of line.itemSlots) {
-                    const selectedSize = getAvailableSize(slot.product) ?? slot.product.quantities[0]?.size ?? ""
-                    const key = `${slot.product.id}-${selectedSize}`;
-                    const existing = pool.get(key);
-                    if (existing) {
-                        pool.set(key, { ...existing, quantity: existing.quantity + slot.requiredQuantity });
-                    } else {
-                        pool.set(key, {
-                            kind: "product",
-                            product: slot.product,
-                            selectedSize: selectedSize,
-                            quantity: slot.requiredQuantity,
-                            discount: 0,
-                            availableCombos: [],
-                        });
-                    }
-                }    
-            }
-        }
-    
-        return Array.from(pool.values());
-    };
-
-    // -- Effective price helper ------------------------------------------------------------------
-    const getEffectivePrice = (product: Product, promotionRegistry: Map<string, AppliedProductDiscount>): number => {
-        const promotion = promotionRegistry.get(product.id);
-        if (!promotion) return product.salePrice;
-        if (promotion.discountType === "Percent") {
-            return product.salePrice * (1 - promotion.discountValue / 100);
-        }
-        return product.salePrice - promotion.discountValue;
-    };
-
-    const getComboSavings = (combo: ComboDealResponse, promotionRegistry: Map<string, AppliedProductDiscount>): number => {
-        const effectiveTotal = combo.comboItems.reduce(
-            (sum, item) => sum + getEffectivePrice(item.product, promotionRegistry) * item.quantity,
-            0
-        );
-        return effectiveTotal - combo.comboPrice; 
-    };
-    
-    const optimizeCombos = (currentCart: CartLine[], allCombos: ComboDealResponse[], knownCombosMap: Map<string, ComboDealResponse>, promotionRegistry: Map<string, AppliedProductDiscount>): CartLine[] => {
-        const pool = flattenToProducts(currentCart);
-
-        const existingComboQueues = new Map<string, ComboCartLine[]>();
-        for (const line of currentCart) {
-            if (line.kind !== "combo") continue;
-            const queue = existingComboQueues.get(line.appliedCombo.id) ?? [];
-            queue.push(line);
-            existingComboQueues.set(line.appliedCombo.id, queue);
-        }
-
-        const bestResult = { savings: 0, combos: [] as ComboDealResponse[] };
-
-        const trySubsets = (index: number, chosen: ComboDealResponse[], remaining: ProductCartLine[]) => {
-            const savings = chosen.reduce((sum, c) => sum + getComboSavings(c, promotionRegistry), 0);
-            if (savings > bestResult.savings) {
-                bestResult.savings = savings;
-                bestResult.combos = [...chosen];
-            }
-
-            for (let i = index; i < allCombos.length; i++) {
-                const combo = allCombos[i];
-                const canForm = combo.comboItems.every(item => {
-                    const total = remaining.reduce((sum, p) => p.product.id === item.product.id ? sum + p.quantity : sum, 0);
-                    return total >= item.quantity;
-                });
-
-                if (!canForm) continue;
-
-                const newRemaining = remaining.map(p => ({ ...p }));
-                for (const item of combo.comboItems) {
-                    let needed = item.quantity;
-                    for (const p of newRemaining) {
-                        if (p.product.id !== item.product.id || needed <= 0) continue;
-                        const deducted = Math.min(p.quantity, needed);
-                        p.quantity -= deducted;
-                        needed -= deducted;
-                    }
-                }
-
-                trySubsets(i, [...chosen, combo], newRemaining);
-            }
-        };
-
-        // Start the recursive search with a fresh copy of the pool to avoid mutation issues
-        trySubsets(0, [], pool.map(p => ({ ...p })));
-
-        const resultCart: CartLine[] = [];
-        const remaining = pool.map(p => ({ ...p }));
-
-        // Apply the best combos found
-        for (const combo of bestResult.combos) {
-            for (const item of combo.comboItems) {
-                let needed = item.quantity;
-                for (const p of remaining) {
-                    if (p.product.id !== item.product.id || needed <= 0) continue;
-                    const deducted = Math.min(p.quantity, needed);
-                    p.quantity -= deducted;
-                    needed -= deducted;
-                }
-            }
-
-            const existingLine = existingComboQueues.get(combo.id)?.shift();
-
-            resultCart.push({
-                kind: "combo",
-                appliedCombo: combo,
-                quantity: 1,
-                itemSlots: existingLine
-                    ? existingLine.itemSlots
-                    : combo.comboItems.map(item => ({
-                        product: item.product,
-                        requiredQuantity: item.quantity,
-                        selectedQuantity: buildInitialSlotQuantities(item.product),
-                    })),
-            });
-        }
-
-        // Add back any remaining products that weren't included in combos
-        for (const p of remaining) {
-            if (p.quantity > 0) {
-                const availableCombos = [...knownCombosMap.values()].filter(combo =>
-                    combo.comboItems.some(item => item.product.id === p.product.id)
-                );
-                resultCart.push({
-                    ...p,
-                    availableCombos,
-                    appliedPromotion: promotionRegistry.get(p.product.id),
-                });
-            }
-        }    
-    
-        return mergeComboLines(resultCart);;    
-    };
-
-    // -- Cart Handler ------------------------------------------------------------------------
-    const AddToCart = (product: Product, selectedSize: string, availableCombos: ComboDealResponse[], appliedPromotion?: AppliedProductDiscount) => {
-        const existingLineIndex = cart.findIndex(
-            line => line.kind === "product" && line.product.id === product.id && line.selectedSize === selectedSize
-        );
-
-        let newCart: CartLine[];
-
-        if (existingLineIndex >= 0) {
-            const updatedCart = [...cart];
-            const existingLine = updatedCart[existingLineIndex] as ProductCartLine;
-            updatedCart[existingLineIndex] = { ...existingLine, quantity: existingLine.quantity + 1 };
-            newCart = updatedCart;
-        } else {
-            newCart = [...cart, {
-                kind: "product",
-                product,
-                selectedSize,
-                quantity: 1,
-                discount: 0,
-                appliedPromotion,
-                availableCombos
-            }];
-        }
-
-        // Lưu các combo đã biết mới vào state để sử dụng cho tối ưu hóa sau này
-        const updatedKnownCombos = new Map(knownCombos);
-        for (const combo of availableCombos) updatedKnownCombos.set(combo.id, combo);
-        setKnownCombos(updatedKnownCombos);
-
-        const updatedPromotionRegistry = new Map(promotionRegistry);
-        if (appliedPromotion) {
-            updatedPromotionRegistry.set(product.id, appliedPromotion);
-            setPromotionRegistry(updatedPromotionRegistry);
-        }
-
-        // Tối ưu hóa combo mỗi khi có sự thay đổi trong giỏ hàng, dựa trên tất cả combo đã biết
-        const allCombos = [...updatedKnownCombos.values()];
-        const finalCart = allCombos.length > 0 ? optimizeCombos(newCart, allCombos, updatedKnownCombos, updatedPromotionRegistry) : newCart;
-
-        // Notify if a new combo was applied
-        const prevComboIds = cart.filter(l => l.kind === "combo").map(l => (l as ComboCartLine).appliedCombo.id);
-        const nextComboIds = finalCart.filter(l => l.kind === "combo").map(l => (l as ComboCartLine).appliedCombo.id);
-        const newComboId = nextComboIds.find(id => !prevComboIds.includes(id));
-        if (newComboId) {
-            const comboName = updatedKnownCombos.get(newComboId)?.comboName;
-            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã tự động áp dụng combo "${comboName}"` }));
-        }
-
-        setCart(finalCart);
-        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã thêm sản phẩm vào giỏ hàng" }));
-    };
-
-    const UpdateQuantity = (lineIndex: number, newQuantity: number) => {
-        const updatedCart = [...cart];
-        const line = updatedCart[lineIndex];
-    
-        let newCart: CartLine[];
-        let skipOptimize = false;
-    
-        if (newQuantity <= 0) {
-            newCart = updatedCart.filter((_, index) => index !== lineIndex);
-        } else if (line.kind === "combo"){
-            const updatedItemSlots = line.itemSlots.map((slot, slotIdx) => {
-                const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
-                const newRequiredQuantity = perComboReq * newQuantity;
-
-                const totalSelected = slot.selectedQuantity.reduce((sum, q) => sum + q.quantities, 0);
-                let updatedSelectedQuantity = slot.selectedQuantity;
-
-                if (totalSelected > newRequiredQuantity) {
-                    let excess = totalSelected - newRequiredQuantity;
-                    updatedSelectedQuantity = slot.selectedQuantity.map(q => {
-                        if (excess <= 0) return q;
-                        const reduction = Math.min(q.quantities, excess);
-                        excess -= reduction;
-                        return { ...q, quantities: q.quantities - reduction };
-                    });
-                }
-
-                return { ...slot, requiredQuantity: newRequiredQuantity, selectedQuantity: updatedSelectedQuantity };
-            });
-
-            updatedCart[lineIndex] = { ...line, quantity: newQuantity, itemSlots: updatedItemSlots };
-            newCart = updatedCart;
-            skipOptimize = true; 
-        } else {
-            updatedCart[lineIndex] = { ...line, quantity: newQuantity };
-            newCart = updatedCart;
-        }
-    
-        const allCombos = [...knownCombos.values()];
-        const finalCart = (!skipOptimize && allCombos.length > 0) ? optimizeCombos(newCart, allCombos, knownCombos, promotionRegistry) : newCart;
-
-        setCart(finalCart);
-    };
-
-    const UpdateSize = (lineIndex: number, newSize: string) => {
-        const updatedCart = [...cart];
-        const line = updatedCart[lineIndex];
-
-        if (line.kind !== "product") return;
-
-        const sizeEntry = line.product.quantities.find(q => q.size === newSize);
-        if (!sizeEntry) return;
-
-        const otherCartQty = cart.reduce((total, l, i) => {
-            if (i !== lineIndex && l.kind === "product" && l.product.id === line.product.id && l.selectedSize === newSize) {
-                return total + l.quantity;
-            }
-            return total;
-        }, 0);
-
-        const available = sizeEntry.quantities - otherCartQty;
-
-        if (available <= 0) {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Size này đã hết hàng" }));
-            return;
-        }
-
-        const existingLineIndex = cart.findIndex(
-            (l, i) => i !== lineIndex && l.kind === "product" && l.product.id === line.product.id && l.selectedSize === newSize
-        );
-
-        if (existingLineIndex >= 0) {
-            const existingLine = updatedCart[existingLineIndex] as ProductCartLine;
-            const mergedQuantity = Math.min(existingLine.quantity + line.quantity, available + existingLine.quantity);
-            updatedCart[existingLineIndex] = { ...existingLine, quantity: mergedQuantity };
-            setCart(updatedCart.filter((_, i) => i !== lineIndex));
-        } else {
-            const clampedQuantity = Math.min(line.quantity, available);
-            updatedCart[lineIndex] = { ...line, selectedSize: newSize, quantity: clampedQuantity };
-            setCart(updatedCart);
-        }
-
-        dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã đổi size thành ${newSize}` }));
-    };
-
-    const ApplyCombo = async (lineIndex: number, combo: ComboDealResponse) => {
-        const updatedCart = [...cart];
-        updatedCart[lineIndex] = {
-            kind: "combo",
-            appliedCombo: combo,
-            quantity: 1,
-            itemSlots: combo.comboItems.map((item) => ({
-                product: item.product,
-                requiredQuantity: item.quantity,
-                selectedQuantity: buildInitialSlotQuantities(item.product),
-            })),
-        };
-
-        const updatedPromotionRegistry = new Map(promotionRegistry);
-        const updatedKnownCombos = new Map(knownCombos);
-        updatedKnownCombos.set(combo.id, combo);
-    
-        for (const item of combo.comboItems) {
-            if (updatedPromotionRegistry.has(item.product.id)) continue;
-            try {
-                const promotionsData = await searchPromotionsMutation.mutateAsync(item.product.id);
-                const bestPromotion = findBestProductPromotion(promotionsData, item.product);
-                const availableCombos = findAvailableCombos(promotionsData, item.product);
-    
-                if (bestPromotion) updatedPromotionRegistry.set(item.product.id, bestPromotion);
-                for (const c of availableCombos) updatedKnownCombos.set(c.id, c);
-            } catch {
-                // silently skip — product will just have no promotion if it exits the combo later
-            }
-        }
-    
-        setPromotionRegistry(updatedPromotionRegistry);
-        setKnownCombos(updatedKnownCombos);
-        setCart(updatedCart);
-    };
-
-    const mergeComboLines = (cartLines: CartLine[]): CartLine[] => {
-        const seen = new Map<string, number>();
-        const result: CartLine[] = [];
-
-        for (const line of cartLines) {
-            if (line.kind !== "combo") {
-                result.push(line);
-                continue;
-            }
-
-            const existingIndex = seen.get(line.appliedCombo.id);
-            if (existingIndex === undefined) {
-                seen.set(line.appliedCombo.id, result.length);
-                result.push({ ...line });
-                continue;
-            }
-
-            const existing = result[existingIndex] as ComboCartLine;
-            const mergedQuantity = existing.quantity + line.quantity;
-
-            result[existingIndex] = {
-                ...existing,
-                quantity: mergedQuantity,
-                itemSlots: existing.itemSlots.map((slot, slotIdx) => {
-                    const perComboReq = existing.appliedCombo.comboItems[slotIdx].quantity;
-                    return {
-                        ...slot,
-                        requiredQuantity: perComboReq * mergedQuantity,
-                        selectedQuantity: slot.selectedQuantity.map(q => {
-                            const fromIncoming = line.itemSlots[slotIdx].selectedQuantity.find(oq => oq.size === q.size);
-                            return { ...q, quantities: q.quantities + (fromIncoming?.quantities ?? 0) };
-                        }),
-                    };
-                }),
-            };
-        }
-
-        return result;
-    };
-
-    const MergeDuplicateComboLines = (lineIndex: number) => {
-        const line = cart[lineIndex];
-        if (!line || line.kind !== "combo") return;
-    
-        const merged = mergeComboLines(cart);
-        if (merged.length === cart.length) return;
-    
-        setCart(merged);
-        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã gộp combo cùng loại" }));
-    };
-
-    // -- Promotion Helper --------------------------------------------------------------------
-    const findBestProductPromotion = (data: PromotionsResponse, product: Product): AppliedProductDiscount | undefined => {
-        const candidates: AppliedProductDiscount[] = [];
-
-        for (const promotion of data.productPromotions) {
-            const discountItem = promotion.productDiscounts.find(item => item.product.id === product.id);
-            if (discountItem) {
-                candidates.push({
-                    id: discountItem.id,
-                    discountType: discountItem.discountType,
-                    discountValue: discountItem.discountValue,
-                });
-            }
-        }
-
-        if (candidates.length === 0) return undefined;
-
-        return candidates.reduce((best, current) => {
-            const savedBest = best.discountType === "Percent"
-                ? product.salePrice * (best.discountValue / 100)
-                : best.discountValue;
-
-            const savedCurrent = current.discountType === "Percent"
-                ? product.salePrice * (current.discountValue / 100)
-                : current.discountValue;
-
-            return savedCurrent > savedBest ? current : best;
-        });
-    };
-
-    const findAvailableCombos = (data: PromotionsResponse, product: Product): ComboDealResponse[] => {
-        const results: ComboDealResponse[] = [];
-
-        for (const comboPromotion of data.comboPromotions) {
-            for (const combo of comboPromotion.combos) {
-                const isInCombo = combo.comboItems.some(item => item.product.id === product.id);
-                if (isInCombo) results.push(combo);
-            }
-        }
-
-        return results;
-    };
-
-    // -- Suggestion click handler ------------------------------------------------------------
+    // Fires when user selects a suggestion or presses Enter
     const handleSuggestionOnClick = async (product: Product) => {
         const lastDash = searchTerm.lastIndexOf("-");
         const HasExplicitSize = lastDash > 0;
@@ -689,7 +102,7 @@ export function SaleProductsTable({ cart, setCart, isLocked, knownCombos, setKno
         setSearchTerm("");
     };
 
-    // -- Search input key handler ------------------------------------------------------------
+    // Allows typing "PRODUCT_ID-SIZE" and pressing Enter to add directly
     const handleSearchKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key !== "Enter") return;
 
@@ -712,12 +125,611 @@ export function SaleProductsTable({ cart, setCart, isLocked, knownCombos, setKno
         await handleSuggestionOnClick(matched);
     };
 
+    // -- Promotions -------------------------------------------------------------------------------
+    const searchPromotionsMutation = useMutation({
+        mutationKey: ["get-promotions"],
+        mutationFn: (productId: string) => GetPromotionsByProductId(productId),
+        onError: () => {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể lấy thông tin khuyến mãi của sản phẩm" }));
+        }
+    });
+
+    // Returns the promotion with the highest absolute discount value for a given product
+    const findBestProductPromotion = (data: PromotionsResponse, product: Product): AppliedProductDiscount | undefined => {
+        const candidates: AppliedProductDiscount[] = [];
+
+        for (const promotion of data.productPromotions) {
+            const discountItem = promotion.productDiscounts.find(item => item.product.id === product.id);
+            if (discountItem) {
+                candidates.push({
+                    id: discountItem.id,
+                    discountType: discountItem.discountType,
+                    discountValue: discountItem.discountValue,
+                });
+            }
+        }
+
+        if (candidates.length === 0) return undefined;
+
+        return candidates.reduce((best, current) => {
+            const savedBest = best.discountType === "Percent"
+                ? product.salePrice * (best.discountValue / 100)
+                : best.discountValue;
+
+            const savedCurrent = current.discountType === "Percent"
+                ? product.salePrice * (current.discountValue / 100)
+                : current.discountValue;
+
+            return savedCurrent > savedBest ? current : best;
+        });
+    };
+
+    // Returns all combo deals that include the given product
+    const findAvailableCombos = (data: PromotionsResponse, product: Product): ComboDealResponse[] => {
+        const results: ComboDealResponse[] = [];
+
+        for (const comboPromotion of data.comboPromotions) {
+            for (const combo of comboPromotion.combos) {
+                const isInCombo = combo.comboItems.some(item => item.product.id === product.id);
+                if (isInCombo) results.push(combo);
+            }
+        }
+
+        return results;
+    };
+
+    // -- Stock and Cart Utilities -----------------------------------------------------------------------
+
+    // Returns total quantity of a specific product+size currently reserved across all cart lines
+    const getCurrentCartQuantity = (productId: string, size: string) => {
+        return cart.reduce((total, line) => {
+            if (line.kind === "product") {
+                if (line.product.id === productId && line.selectedSize === size) {
+                    return total + line.quantity;
+                }
+                return total;
+            }
+
+            return total + line.itemSlots.reduce((slotSum, slot) => {
+                if (slot.product.id !== productId) return slotSum;
+    
+                const filledForThisSize = slot.selectedQuantity.find(q => q.size === size)?.quantities ?? 0;
+                const filledTotal = slot.selectedQuantity.reduce((s, q) => s + q.quantities, 0);
+                const unfilledCapacity = Math.max(0, slot.requiredQuantity - filledTotal);
+    
+                return slotSum + filledForThisSize + unfilledCapacity;
+            }, 0);
+        }, 0);
+    };
+
+    // Returns the first size that still has available stock (not fully consumed by the cart)
+    const getAvailableSize = (product: Product): string | null => {
+        for (const sizeEntry of product.quantities) {
+            const currentQtyInCart = getCurrentCartQuantity(product.id, sizeEntry.size);
+            if (sizeEntry.quantities - currentQtyInCart > 0) {
+                return sizeEntry.size;
+            }
+        }
+        return null;
+    };
+
+    // For product lines: remaining stock for the selected size.
+    // For combo lines: max number of complete combos that can still be fulfilled.
+    const getAvailableQuantity = (line: CartLine): number => {
+        if (line.kind === "product") {
+            return line.product.quantities.find(q => q.size === line.selectedSize)?.quantities ?? 0;
+        }
+        
+        const lineIndex = cart.indexOf(line);
+        let maxCombos = Infinity;
+
+        for (let slotIdx = 0; slotIdx < line.itemSlots.length; slotIdx++) {
+            const slot = line.itemSlots[slotIdx];
+            const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
+            const totalStock = slot.product.quantities.reduce((s, q) => s + q.quantities, 0);
+    
+            const otherUsage = cart.reduce((total, l, i) => {
+                if (i === lineIndex) return total;
+                if (l.kind === "product" && l.product.id === slot.product.id) {
+                    return total + l.quantity;
+                }
+                if (l.kind === "combo") {
+                    return total + l.itemSlots.reduce((s, sl) => {
+                        if (sl.product.id !== slot.product.id) return s;
+                        const filled = sl.selectedQuantity.reduce((qs, q) => qs + q.quantities, 0);
+                        const unfilled = Math.max(0, sl.requiredQuantity - filled);
+                        return s + filled + unfilled;
+                    }, 0);
+                }
+                return total;
+            }, 0);
+            
+            const availForSlot = totalStock - otherUsage;
+            const maxForSlot = Math.floor(availForSlot / perComboReq);
+            maxCombos = Math.min(maxCombos, maxForSlot);
+        }
+
+        return Math.max(0, maxCombos);
+    };
+
+    // Initializes all sizes for a product with 0 selected quantity (used when building combo slots)
+    const buildInitialSlotQuantities = (product: Product): ProductQuantity[] =>
+        product.quantities.map(q => ({ ...q, quantities: 0 }));
+
+    // Collapses all cart lines into a flat product pool, merging duplicates by product+size.
+    // Combo lines are expanded into their constituent products using requiredQuantity.
+    const flattenToProducts = (currentCart: CartLine[]): ProductCartLine[] => {
+        const pool: Map<string, ProductCartLine> = new Map();
+    
+        for (const line of currentCart) {
+            if (line.kind === "product") {
+                const key = `${line.product.id}-${line.selectedSize}`;
+                const existing = pool.get(key);
+                if (existing) {
+                    pool.set(key, { ...existing, quantity: existing.quantity + line.quantity });
+                } else {
+                    pool.set(key, { ...line });
+                }
+            } else {
+                for (const slot of line.itemSlots) {
+                    const selectedSize = getAvailableSize(slot.product) ?? slot.product.quantities[0]?.size ?? ""
+                    const key = `${slot.product.id}-${selectedSize}`;
+                    const existing = pool.get(key);
+                    if (existing) {
+                        pool.set(key, { ...existing, quantity: existing.quantity + slot.requiredQuantity });
+                    } else {
+                        pool.set(key, {
+                            kind: "product",
+                            product: slot.product,
+                            selectedSize: selectedSize,
+                            quantity: slot.requiredQuantity,
+                            discount: 0,
+                            availableCombos: [],
+                        });
+                    }
+                }    
+            }
+        }
+    
+        return Array.from(pool.values());
+    };
+
+    // Returns the price of a product after applying its registered promotion (if any)
+    const getEffectivePrice = (product: Product, registry: Map<string, AppliedProductDiscount>): number => {
+        const promotion = registry.get(product.id);
+        if (!promotion) return product.salePrice;
+        if (promotion.discountType === "Percent") {
+            return product.salePrice * (1 - promotion.discountValue / 100);
+        }
+        return product.salePrice - promotion.discountValue;
+    };
+
+    // Returns how much cheaper a combo is vs. buying each item at its effective price individually
+    const getComboSavings = (combo: ComboDealResponse, registry: Map<string, AppliedProductDiscount>): number => {
+        const effectiveTotal = combo.comboItems.reduce(
+            (sum, item) => sum + getEffectivePrice(item.product, registry) * item.quantity,
+            0
+        );
+        return effectiveTotal - combo.comboPrice; 
+    };
+
+    // Brute-force subset search: finds the combination of combos that maximises total savings.
+    // Preserves existing combo slot selections where possible.
+    const optimizeCombos = (currentCart: CartLine[], allCombos: ComboDealResponse[], knownCombosMap: Map<string, ComboDealResponse>, registry: Map<string, AppliedProductDiscount>): CartLine[] => {
+        const pool = flattenToProducts(currentCart);
+
+        const existingComboQueues = new Map<string, ComboCartLine[]>();
+        for (const line of currentCart) {
+            if (line.kind !== "combo") continue;
+            const queue = existingComboQueues.get(line.appliedCombo.id) ?? [];
+            queue.push(line);
+            existingComboQueues.set(line.appliedCombo.id, queue);
+        }
+
+        const bestResult = { savings: 0, combos: [] as ComboDealResponse[] };
+
+        const trySubsets = (index: number, chosen: ComboDealResponse[], remaining: ProductCartLine[]) => {
+            const savings = chosen.reduce((sum, c) => sum + getComboSavings(c, registry), 0);
+            if (savings > bestResult.savings) {
+                bestResult.savings = savings;
+                bestResult.combos = [...chosen];
+            }
+
+            for (let i = index; i < allCombos.length; i++) {
+                const combo = allCombos[i];
+                const canForm = combo.comboItems.every(item => {
+                    const total = remaining.reduce((sum, p) => p.product.id === item.product.id ? sum + p.quantity : sum, 0);
+                    return total >= item.quantity;
+                });
+
+                if (!canForm) continue;
+
+                const newRemaining = remaining.map(p => ({ ...p }));
+                for (const item of combo.comboItems) {
+                    let needed = item.quantity;
+                    for (const p of newRemaining) {
+                        if (p.product.id !== item.product.id || needed <= 0) continue;
+                        const deducted = Math.min(p.quantity, needed);
+                        p.quantity -= deducted;
+                        needed -= deducted;
+                    }
+                }
+
+                trySubsets(i, [...chosen, combo], newRemaining);
+            }
+        };
+
+        trySubsets(0, [], pool.map(p => ({ ...p })));
+
+        const resultCart: CartLine[] = [];
+        const remaining = pool.map(p => ({ ...p }));
+
+        for (const combo of bestResult.combos) {
+            for (const item of combo.comboItems) {
+                let needed = item.quantity;
+                for (const p of remaining) {
+                    if (p.product.id !== item.product.id || needed <= 0) continue;
+                    const deducted = Math.min(p.quantity, needed);
+                    p.quantity -= deducted;
+                    needed -= deducted;
+                }
+            }
+
+            const existingLine = existingComboQueues.get(combo.id)?.shift();
+
+            resultCart.push({
+                kind: "combo",
+                appliedCombo: combo,
+                quantity: 1,
+                itemSlots: existingLine
+                    ? existingLine.itemSlots
+                    : combo.comboItems.map(item => ({
+                        product: item.product,
+                        requiredQuantity: item.quantity,
+                        selectedQuantity: buildInitialSlotQuantities(item.product),
+                    })),
+            });
+        }
+
+        // Remaining products that couldn't form any combo go back as standalone lines
+        for (const p of remaining) {
+            if (p.quantity > 0) {
+                const availableCombos = [...knownCombosMap.values()].filter(combo =>
+                    combo.comboItems.some(item => item.product.id === p.product.id)
+                );
+                resultCart.push({
+                    ...p,
+                    availableCombos,
+                    appliedPromotion: registry.get(p.product.id),
+                });
+            }
+        }    
+    
+        return mergeComboLines(resultCart);
+    };
+
+    // Merges multiple cart lines of the same combo into one, summing quantities and slot fills
+    const mergeComboLines = (cartLines: CartLine[]): CartLine[] => {
+        const seen = new Map<string, number>();
+        const result: CartLine[] = [];
+
+        for (const line of cartLines) {
+            if (line.kind !== "combo") {
+                result.push(line);
+                continue;
+            }
+
+            const existingIndex = seen.get(line.appliedCombo.id);
+            if (existingIndex === undefined) {
+                seen.set(line.appliedCombo.id, result.length);
+                result.push({ ...line });
+                continue;
+            }
+
+            const existing = result[existingIndex] as ComboCartLine;
+            const mergedQuantity = existing.quantity + line.quantity;
+
+            result[existingIndex] = {
+                ...existing,
+                quantity: mergedQuantity,
+                itemSlots: existing.itemSlots.map((slot, slotIdx) => {
+                    const perComboReq = existing.appliedCombo.comboItems[slotIdx].quantity;
+                    return {
+                        ...slot,
+                        requiredQuantity: perComboReq * mergedQuantity,
+                        selectedQuantity: slot.selectedQuantity.map(q => {
+                            const fromIncoming = line.itemSlots[slotIdx].selectedQuantity.find(oq => oq.size === q.size);
+                            return { ...q, quantities: q.quantities + (fromIncoming?.quantities ?? 0) };
+                        }),
+                    };
+                }),
+            };
+        }
+
+        return result;
+    };
+
+    // -- Cart Operations -----------------------------------------------------------------------
+    const AddToCart = (product: Product, selectedSize: string, availableCombos: ComboDealResponse[], appliedPromotion?: AppliedProductDiscount) => {
+        const existingLineIndex = cart.findIndex(
+            line => line.kind === "product" && line.product.id === product.id && line.selectedSize === selectedSize
+        );
+
+        let newCart: CartLine[];
+
+        if (existingLineIndex >= 0) {
+            const updatedCart = [...cart];
+            const existingLine = updatedCart[existingLineIndex] as ProductCartLine;
+            updatedCart[existingLineIndex] = { ...existingLine, quantity: existingLine.quantity + 1 };
+            newCart = updatedCart;
+        } else {
+            newCart = [...cart, {
+                kind: "product",
+                product,
+                selectedSize,
+                quantity: 1,
+                discount: 0,
+                appliedPromotion,
+                availableCombos
+            }];
+        }
+
+        const updatedKnownCombos = new Map(knownCombos);
+        for (const combo of availableCombos) updatedKnownCombos.set(combo.id, combo);
+        setKnownCombos(updatedKnownCombos);
+
+        const updatedPromotionRegistry = new Map(promotionRegistry);
+        if (appliedPromotion) {
+            updatedPromotionRegistry.set(product.id, appliedPromotion);
+            setPromotionRegistry(updatedPromotionRegistry);
+        }
+
+        // Re-optimize combos on every cart change using all ever-seen combos
+        const allCombos = [...updatedKnownCombos.values()];
+        const finalCart = allCombos.length > 0 ? optimizeCombos(newCart, allCombos, updatedKnownCombos, updatedPromotionRegistry) : newCart;
+
+        // Notify if a new combo was automatically applied
+        const prevComboIds = cart.filter(l => l.kind === "combo").map(l => (l as ComboCartLine).appliedCombo.id);
+        const nextComboIds = finalCart.filter(l => l.kind === "combo").map(l => (l as ComboCartLine).appliedCombo.id);
+        const newComboId = nextComboIds.find(id => !prevComboIds.includes(id));
+        if (newComboId) {
+            const comboName = updatedKnownCombos.get(newComboId)?.comboName;
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã tự động áp dụng combo "${comboName}"` }));
+        }
+
+        setCart(finalCart);
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã thêm sản phẩm vào giỏ hàng" }));
+    };
+
+    const UpdateQuantity = (lineIndex: number, newQuantity: number) => {
+        const updatedCart = [...cart];
+        const line = updatedCart[lineIndex];
+    
+        let newCart: CartLine[];
+        let skipOptimize = false;
+    
+        if (newQuantity <= 0) {
+            newCart = updatedCart.filter((_, index) => index !== lineIndex);
+        } else if (line.kind === "combo") {
+            // Scale requiredQuantity for each slot and trim any over-selected sizes
+            const updatedItemSlots = line.itemSlots.map((slot, slotIdx) => {
+                const perComboReq = line.appliedCombo.comboItems[slotIdx].quantity;
+                const newRequiredQuantity = perComboReq * newQuantity;
+
+                const totalSelected = slot.selectedQuantity.reduce((sum, q) => sum + q.quantities, 0);
+                let updatedSelectedQuantity = slot.selectedQuantity;
+
+                if (totalSelected > newRequiredQuantity) {
+                    let excess = totalSelected - newRequiredQuantity;
+                    updatedSelectedQuantity = slot.selectedQuantity.map(q => {
+                        if (excess <= 0) return q;
+                        const reduction = Math.min(q.quantities, excess);
+                        excess -= reduction;
+                        return { ...q, quantities: q.quantities - reduction };
+                    });
+                }
+
+                return { ...slot, requiredQuantity: newRequiredQuantity, selectedQuantity: updatedSelectedQuantity };
+            });
+
+            updatedCart[lineIndex] = { ...line, quantity: newQuantity, itemSlots: updatedItemSlots };
+            newCart = updatedCart;
+            skipOptimize = true; // Don't re-optimize when the user manually adjusts a combo
+        } else {
+            updatedCart[lineIndex] = { ...line, quantity: newQuantity };
+            newCart = updatedCart;
+        }
+    
+        const allCombos = [...knownCombos.values()];
+        const finalCart = (!skipOptimize && allCombos.length > 0) ? optimizeCombos(newCart, allCombos, knownCombos, promotionRegistry) : newCart;
+
+        setCart(finalCart);
+    };
+
+    const UpdateSize = (lineIndex: number, newSize: string) => {
+        const updatedCart = [...cart];
+        const line = updatedCart[lineIndex];
+
+        if (line.kind !== "product") return;
+
+        const sizeEntry = line.product.quantities.find(q => q.size === newSize);
+        if (!sizeEntry) return;
+
+        const otherCartQty = cart.reduce((total, l, i) => {
+            if (i !== lineIndex && l.kind === "product" && l.product.id === line.product.id && l.selectedSize === newSize) {
+                return total + l.quantity;
+            }
+            return total;
+        }, 0);
+
+        const available = sizeEntry.quantities - otherCartQty;
+
+        if (available <= 0) {
+            dispatch(addAlert({ type: AlertType.ERROR, message: "Size này đã hết hàng" }));
+            return;
+        }
+
+        // If the new size already has a line in the cart, merge into it instead of creating a duplicate
+        const existingLineIndex = cart.findIndex(
+            (l, i) => i !== lineIndex && l.kind === "product" && l.product.id === line.product.id && l.selectedSize === newSize
+        );
+
+        if (existingLineIndex >= 0) {
+            const existingLine = updatedCart[existingLineIndex] as ProductCartLine;
+            const mergedQuantity = Math.min(existingLine.quantity + line.quantity, available + existingLine.quantity);
+            updatedCart[existingLineIndex] = { ...existingLine, quantity: mergedQuantity };
+            setCart(updatedCart.filter((_, i) => i !== lineIndex));
+        } else {
+            const clampedQuantity = Math.min(line.quantity, available);
+            updatedCart[lineIndex] = { ...line, selectedSize: newSize, quantity: clampedQuantity };
+            setCart(updatedCart);
+        }
+
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: `Đã đổi size thành ${newSize}` }));
+    };
+
+    const UpdateDiscount = (lineIndex: number, discount: number) => {
+        const updatedCart = [...cart];
+        const line = updatedCart[lineIndex];
+
+        if (line.kind === "product") {
+            updatedCart[lineIndex] = { ...line, discount };
+            setCart(updatedCart);
+        }
+    };
+
+    const RemoveFromCart = (lineIndex: number) => {
+        setCart(cart.filter((_, index) => index !== lineIndex));
+    };
+
+    // Updates a single size's quantity within a specific slot of a combo line,
+    // clamping against stock, other cart usage, and the slot's requiredQuantity cap.
+    const UpdateComboSlotQuantity = (lineIndex: number, slotIndex: number, size: string, newQuantity: number) => {
+        const updatedCart = [...cart];
+        const line = updatedCart[lineIndex];
+
+        if (line.kind !== "combo") return;
+
+        const slot = line.itemSlots[slotIndex];
+        const sizeEntry = slot.product.quantities.find(q => q.size === size);
+        if (!sizeEntry) return;
+
+        const otherUsage = cart.reduce((total, l, i) => {
+            if (i === lineIndex) {
+                // Same combo line — exclude only this slot+size to avoid double-counting
+                if (l.kind !== "combo") return total;
+                return total + l.itemSlots.reduce((s, sl, sIdx) => {
+                    return s + sl.selectedQuantity.reduce((qs, q) => {
+                        if (sl.product.id === slot.product.id && q.size === size && sIdx !== slotIndex) {
+                            return qs + q.quantities;
+                        }
+                        return qs;
+                    }, 0);
+                }, 0);
+            }
+            if (l.kind === "product" && l.product.id === slot.product.id && l.selectedSize === size) {
+                return total + l.quantity;
+            }
+            if (l.kind === "combo") {
+                return total + l.itemSlots.reduce((s, sl) => {
+                    if (sl.product.id !== slot.product.id) return s;
+                    const sized = sl.selectedQuantity.find(q => q.size === size);
+                    return s + (sized?.quantities ?? 0);
+                }, 0);
+            }
+            return total;
+        }, 0);
+
+        const available = sizeEntry.quantities - otherUsage;
+        const clamped = Math.max(0, Math.min(newQuantity, available));
+
+        const otherSizesInSlot = slot.selectedQuantity.reduce(
+            (sum, q) => q.size === size ? sum : sum + q.quantities,
+            0
+        );
+        const remainingCapacity = slot.requiredQuantity - otherSizesInSlot;
+        const finalQuantity = Math.min(clamped, remainingCapacity);
+
+        if (finalQuantity < newQuantity) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: finalQuantity === remainingCapacity
+                    ? `Slot này chỉ cần ${slot.requiredQuantity} sản phẩm`
+                    : `Size ${size} chỉ còn ${available} sản phẩm`
+            }));
+        }
+
+        const updatedSlot = {
+            ...slot,
+            selectedQuantity: slot.selectedQuantity.map(q =>
+                q.size === size ? { ...q, quantities: finalQuantity } : q
+            ),
+        };
+
+        const updatedItemSlots = [...line.itemSlots];
+        updatedItemSlots[slotIndex] = updatedSlot;
+
+        updatedCart[lineIndex] = { ...line, itemSlots: updatedItemSlots };
+        setCart(updatedCart);
+    };
+
+    // Manually applies a combo to a specific cart line, fetching promotions for any
+    // new products that aren't yet in the registry
+    const ApplyCombo = async (lineIndex: number, combo: ComboDealResponse) => {
+        const updatedCart = [...cart];
+        updatedCart[lineIndex] = {
+            kind: "combo",
+            appliedCombo: combo,
+            quantity: 1,
+            itemSlots: combo.comboItems.map((item) => ({
+                product: item.product,
+                requiredQuantity: item.quantity,
+                selectedQuantity: buildInitialSlotQuantities(item.product),
+            })),
+        };
+
+        const updatedPromotionRegistry = new Map(promotionRegistry);
+        const updatedKnownCombos = new Map(knownCombos);
+        updatedKnownCombos.set(combo.id, combo);
+    
+        for (const item of combo.comboItems) {
+            if (updatedPromotionRegistry.has(item.product.id)) continue;
+            try {
+                const promotionsData = await searchPromotionsMutation.mutateAsync(item.product.id);
+                const bestPromotion = findBestProductPromotion(promotionsData, item.product);
+                const availableCombos = findAvailableCombos(promotionsData, item.product);
+    
+                if (bestPromotion) updatedPromotionRegistry.set(item.product.id, bestPromotion);
+                for (const c of availableCombos) updatedKnownCombos.set(c.id, c);
+            } catch {
+                // Silently skip — product will just have no promotion if it exits the combo later
+            }
+        }
+    
+        setPromotionRegistry(updatedPromotionRegistry);
+        setKnownCombos(updatedKnownCombos);
+        setCart(updatedCart);
+    };
+
+    // Called when the ComboSizeModal closes — collapses any duplicate combo lines that
+    // may have been created during slot editing
+    const MergeDuplicateComboLines = (lineIndex: number) => {
+        const line = cart[lineIndex];
+        if (!line || line.kind !== "combo") return;
+    
+        const merged = mergeComboLines(cart);
+        if (merged.length === cart.length) return;
+    
+        setCart(merged);
+        dispatch(addAlert({ type: AlertType.SUCCESS, message: "Đã gộp combo cùng loại" }));
+    };
+
+    // -- MODAL STATE -------------------------------------------------------------------------
     const [selectedPromotionLine, setSelectedPromotionLine] = useState<CartLine | null>(null);
     const [isPromotionModalOpen, setIsPromotionModalOpen] = useState(false);
 
     const [selectedComboLineIndex, setSelectedComboLineIndex] = useState<number | null>(null);
     const [isComboSizeModalOpen, setIsComboSizeModalOpen] = useState(false);
 
+    // -- TABLE COLUMNS ------------------------------------------------------------------------
     const columns: Column<CartLine>[] = [
         { title: "Tên sản phẩm", key: "productName", render: (line) => (
             <ProductNameCell line={line}/>
@@ -777,6 +789,7 @@ export function SaleProductsTable({ cart, setCart, isLocked, knownCombos, setKno
         )}
     ];
 
+    // --RENDER ----------------------------------------------------------------------------------
     return (
         <div className="flex flex-col">
             <div className="w-1/2">
