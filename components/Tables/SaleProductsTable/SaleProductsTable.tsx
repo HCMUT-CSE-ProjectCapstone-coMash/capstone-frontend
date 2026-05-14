@@ -21,19 +21,104 @@ import { DeleteCell } from "./DeleteCell";
 
 interface SaleProductsTableProps {
     cart: CartLine[];
+    setCart: (newCart: CartLine[]) => void;
     isLocked: boolean;
     onQuantityChange: ( lineIndex: number, newQuantity: number ) => void;
-    onRemove: ( lineIndex: number ) => void;
-    onDiscountChange: ( lineIndex: number, newDiscount: number ) => void;
     onSizeChange: ( lineIndex: number, newSize: string ) => void;
     onApplyCombo: (lineIndex: number, combo: ComboDealResponse) => void;
-    onComboSlotQuantityChange: (lineIndex: number, slotIndex: number, size: string, newQuantity: number) => void;
     onComboSizeModalClose: (lineIndex: number) => void;
 }
 
-export function SaleProductsTable({ cart, isLocked, onQuantityChange, onRemove, onDiscountChange, onSizeChange, onApplyCombo, onComboSlotQuantityChange, onComboSizeModalClose } : SaleProductsTableProps) {
+export function SaleProductsTable({ cart, setCart, isLocked, onQuantityChange, onSizeChange, onApplyCombo, onComboSizeModalClose } : SaleProductsTableProps) {
     const dispatch = useDispatch();
+
+    // -- Update Product Discount --
+    const UpdateDiscount = (lineIndex: number, discount: number) => {
+        const updatedCart = [...cart];
+        const line = updatedCart[lineIndex];
+
+        if (line.kind === "product") {
+            updatedCart[lineIndex] = { ...line, discount };
+            setCart(updatedCart);
+        }
+    };
+
+    // -- Remove Product From Cart --
+    const RemoveFromCart = (lineIndex: number) => {
+        setCart(cart.filter((_, index) => index !== lineIndex));
+    };
+
+    // -- Update Combo Slot Quantity -- 
+    const UpdateComboSlotQuantity = (lineIndex: number, slotIndex: number, size: string, newQuantity: number) => {
+        const updatedCart = [...cart];
+        const line = updatedCart[lineIndex];
+
+        if (line.kind !== "combo") return;
+
+        const slot = line.itemSlots[slotIndex];
+        const sizeEntry = slot.product.quantities.find(q => q.size === size);
+        if (!sizeEntry) return;
+
+        // Check stock — account for quantity already used by *other* lines/slots
+        const otherUsage = cart.reduce((total, l, i) => {
+            if (i === lineIndex) {
+                // Same combo line, but exclude THIS slot+size
+                if (l.kind !== "combo") return total;
+                return total + l.itemSlots.reduce((s, sl, sIdx) => {
+                    return s + sl.selectedQuantity.reduce((qs, q) => {
+                        if (sl.product.id === slot.product.id && q.size === size && sIdx !== slotIndex) {
+                            return qs + q.quantities;
+                        }
+                        return qs;
+                    }, 0);
+                }, 0);
+            }
+            if (l.kind === "product" && l.product.id === slot.product.id && l.selectedSize === size) {
+                return total + l.quantity;
+            }
+            if (l.kind === "combo") {
+                return total + l.itemSlots.reduce((s, sl) => {
+                    if (sl.product.id !== slot.product.id) return s;
+                    const sized = sl.selectedQuantity.find(q => q.size === size);
+                    return s + (sized?.quantities ?? 0);
+                }, 0);
+            }
+            return total;
+        }, 0);
+
+        const available = sizeEntry.quantities - otherUsage;
+        const clamped = Math.max(0, Math.min(newQuantity, available));
+
+        // Also clamp so the slot doesn't exceed requiredQuantity
+        const otherSizesInSlot = slot.selectedQuantity.reduce(
+            (sum, q) => q.size === size ? sum : sum + q.quantities,
+            0
+        );
+        const remainingCapacity = slot.requiredQuantity - otherSizesInSlot;
+        const finalQuantity = Math.min(clamped, remainingCapacity);
+
+        if (finalQuantity < newQuantity) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: finalQuantity === remainingCapacity
+                    ? `Slot này chỉ cần ${slot.requiredQuantity} sản phẩm`
+                    : `Size ${size} chỉ còn ${available} sản phẩm`
+            }));
+        }
+
+        const updatedSlot = {
+            ...slot,
+            selectedQuantity: slot.selectedQuantity.map(q =>
+                q.size === size ? { ...q, quantities: finalQuantity } : q
+            ),
+        };
+
+        const updatedItemSlots = [...line.itemSlots];
+        updatedItemSlots[slotIndex] = updatedSlot;
+
+        updatedCart[lineIndex] = { ...line, itemSlots: updatedItemSlots };
+        setCart(updatedCart);
+    }
     
+    // -- Get Available Quantity of Product -- 
     const getAvailableQuantity = (line: CartLine): number => {
         if (line.kind === "product") {
             return line.product.quantities.find(q => q.size === line.selectedSize)?.quantities ?? 0;
@@ -112,7 +197,7 @@ export function SaleProductsTable({ cart, isLocked, onQuantityChange, onRemove, 
             <DiscountCell 
                 line={line} 
                 lineIndex={index} 
-                onDiscountChange={onDiscountChange}
+                onDiscountChange={UpdateDiscount}
                 isLocked={isLocked}
             />
         )},
@@ -130,7 +215,7 @@ export function SaleProductsTable({ cart, isLocked, onQuantityChange, onRemove, 
             <DeleteCell
                 line={line} 
                 lineIndex={index} 
-                onRemove={onRemove}
+                onRemove={RemoveFromCart}
                 isLocked={isLocked}
             />
         )}
@@ -173,7 +258,7 @@ export function SaleProductsTable({ cart, isLocked, onQuantityChange, onRemove, 
                     <ComboSizeModal 
                         line={cart[selectedComboLineIndex]}
                         lineIndex={selectedComboLineIndex}
-                        onSlotQuantityChange={onComboSlotQuantityChange}
+                        onSlotQuantityChange={UpdateComboSlotQuantity}
                     />
                 </LayoutModal>
             )}

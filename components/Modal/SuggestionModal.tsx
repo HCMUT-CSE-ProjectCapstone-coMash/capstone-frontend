@@ -2,8 +2,8 @@
 
 import { AnalyzeImage } from "@/api/products/products";
 import { GetProductsOrderById } from "@/api/productsOrder/productsOrder";
-import { sizesLetter, sizesNumber } from "@/const/product";
 import { ProductWithOrderStatus } from "@/types/product";
+import { sortSizes } from "@/utilities/cart";
 import { formatThousands } from "@/utilities/numberFormat";
 import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { setEditingProduct } from "@/utilities/productEditStore";
@@ -11,18 +11,6 @@ import { RootState } from "@/utilities/store";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
-
-const sortSizes = (sizes: string[], sizeType: "Letter" | "Number"): string[] => {
-    const ORDER = sizeType === "Letter" ? sizesLetter : sizesNumber;
-    return [...sizes].sort((a, b) => {
-        const indexA = ORDER.indexOf(a);
-        const indexB = ORDER.indexOf(b);
-        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-    });
-};
 
 interface SuggestionModalProps {
     products: ProductWithOrderStatus[];
