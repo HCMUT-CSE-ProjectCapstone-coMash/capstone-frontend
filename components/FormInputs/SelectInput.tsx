@@ -52,7 +52,7 @@ export function SelectInput({ label, options, value, onChange, disabled, noDefau
 
                 {/* Danh sách options tùy chỉnh */}
                 {isOpen && (
-                    <ul className="absolute z-10 w-full mt-1 bg-white border border-tgray5 rounded-lg shadow-lg overflow-hidden">
+                    <ul className="absolute z-10 w-full mt-1 bg-white border border-tgray5 rounded-lg shadow-lg overflow-y-auto max-h-52">
                         {!noDefaultOption && (
                             <li
                                 onClick={() => { onChange(""); setIsOpen(false); }}
