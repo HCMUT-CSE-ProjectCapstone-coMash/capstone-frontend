@@ -180,6 +180,17 @@ export function CreatePromotionForm() {
             return;
         }
 
+        if (form.promotionType === "Product") {
+            const missingDiscount = form.productDiscounts.filter(
+            (item) => !item.discountValue || item.discountValue <= 0);
+
+            if (missingDiscount.length > 0) {
+            const names = missingDiscount.map((item) => item.product.productName).join(", ");
+            dispatch(addAlert({ type: AlertType.WARNING, message: `Vui lòng nhập giá trị giảm cho ${names}` }));
+            return;
+            }
+        }
+
         if (form.promotionType === "Combo" && form.combos.length === 0) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một combo áp dụng" }));
             return;
