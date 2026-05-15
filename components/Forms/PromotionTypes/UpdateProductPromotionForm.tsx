@@ -163,6 +163,16 @@ export function UpdateProductPromotionForm({ promotion } : UpdateProductPromotio
             return;
         }
 
+        const missingDiscount = formState.productDiscounts.filter(
+            (item) => !item.discountValue || item.discountValue <= 0
+        );
+
+        if (missingDiscount.length > 0) {
+            const names = missingDiscount.map((item) => item.product.productName).join(", ");
+            dispatch(addAlert({ type: AlertType.WARNING, message: `Vui lòng nhập giá trị giảm cho ${names}` }));
+            return;
+        }
+
         const payload = toPayload(formState);
 
         updateMutation.mutate({ promotionId: promotion.id, payload });
