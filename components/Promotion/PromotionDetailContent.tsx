@@ -28,7 +28,7 @@ export function PromotionDetailContent() {
                     onClick={() => router.back()}
                     className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
                 >
-                    Danh sach khuyến mãi
+                    Danh sách khuyến mãi
                 </button>
             </div>
 

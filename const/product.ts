@@ -8,6 +8,7 @@ export const categories = [
 export const colors = [
     { label: "Đen", value: "Đen" },
     { label: "Trắng", value: "Trắng" },
+    { label: "Xám", value: "Xám" },
     { label: "Đỏ", value: "Đỏ" },
     { label: "Cam", value: "Cam" },
     { label: "Vàng", value: "Vàng" },
@@ -23,6 +24,7 @@ export const patterns = [
     { label: "Sọc Dọc", value: "Sọc Dọc" },
     { label: "Sọc Ngang", value: "Sọc Ngang" },
     { label: "Caro", value: "Caro" },
+    { label: "Chấm Bi", value: "Chấm Bi" },
     { label: "Hoa Văn", value: "Hoa Văn" },
 ];
  
