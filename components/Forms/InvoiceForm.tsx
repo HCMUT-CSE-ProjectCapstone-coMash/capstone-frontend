@@ -259,6 +259,34 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
 
         if (!user.id) return;
         
+        if (cart.length === 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm sản phẩm vào giỏ hàng" }));
+            return;
+        }
+
+        const incompleteCombo = cart.find(line => {
+            if (line.kind !== "combo") return false;
+            return line.itemSlots.some(slot => {
+                const totalSelected = slot.selectedQuantity.reduce((sum, q) => sum + q.quantities, 0);
+                return totalSelected < slot.requiredQuantity;
+            });
+        });
+
+        if (incompleteCombo) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn size cho tất cả sản phẩm trong combo" }));
+            return;
+        }
+
+        if (form.paymentMethod !== PaymentMethod.DEBIT && form.customerMoney <= 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập số tiền khách đưa" }));
+            return;
+        }
+
+        if (form.paymentMethod === PaymentMethod.CASH && form.customerMoney < finalAmount) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Số tiền khách đưa không đủ" }));
+            return;
+        }
+
         const saleOrderRequest = mapCartToSaleOrderRequest(
             cart, 
             selectedCustomer ? selectedCustomer.id : "", 
