@@ -8,12 +8,12 @@ import { UpdateOrderPromotionForm } from "@/components/Forms/PromotionTypes/Upda
 import { UpdateComboPromotionForm } from "@/components/Forms/PromotionTypes/UpdateComboPromotionForm";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { useState } from "react";
-import { DeletePromotionModal } from "../Modal/DeletePromotionModal";
+import { PausePromotionModal } from "../Modal/PausePromotionModal";
 
 export function PromotionDetailContent() {
     const { promotionId } = useParams();
     const router = useRouter();
-    
+
     const [isConfirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
     
     const { data: promotion, isLoading, isError } = useQuery({
@@ -29,13 +29,15 @@ export function PromotionDetailContent() {
                 <p className="text-purple text-3xl font-medium">Chi tiết khuyến mãi</p>
 
                 <div className="flex items-center gap-3">
-                    {promotion?.promotionPhase === "Upcoming" && (
+                    {!isLoading && !isError && promotion &&
+                        promotion.promotionPhase !== "Expired" &&
+                        promotion.promotionPhase !== "Paused" && (
                         <button
                             type="button"
                             onClick={() => setConfirmModalOpen(true)}
                             className="py-2 px-4 rounded-lg border border-red bg-white text-red text-sm font-medium transition hover:bg-red/5 hover:cursor-pointer"
                         >
-                            Xóa khuyến mãi
+                            Dừng khuyến mãi
                         </button>
                     )}
 
@@ -76,7 +78,7 @@ export function PromotionDetailContent() {
                     isOpen={isConfirmModalOpen}
                     onClose={() => setConfirmModalOpen(false)}
                 >
-                    <DeletePromotionModal promotionId={promotionId as string} onClose={() => setConfirmModalOpen(false)}/>
+                    <PausePromotionModal promotionId={promotionId as string} onClose={() => setConfirmModalOpen(false)}/>
                 </LayoutModal>
             )}
         </main>

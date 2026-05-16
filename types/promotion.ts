@@ -4,9 +4,9 @@ export type PromotionType = "Product" | "Combo" | "Order";
 
 export type DiscountType = "Percent" | "Fixed";
 
-export type PromotionStatus = "Active" | "Stopped" | "Deleted";
+export type PromotionStatus = "Active" | "Paused" | "Deleted";
 
-export type PromotionPhase = "Upcoming" | "Ongoing" | "Expired";
+export type PromotionPhase = "Upcoming" | "Ongoing" | "Expired" | "Paused";
 
 // ── Shared fields across all promotion types ──────────────────────────────────
 

@@ -26,6 +26,7 @@ const PHASE_DISPLAY: Record<PromotionPhase, { label: string; color: string }> = 
     Upcoming: { label: "Sắp diễn ra",  color: "bg-blue-100 text-blue-800" },
     Ongoing:  { label: "Đang diễn ra", color: "bg-green-100 text-green-800" },
     Expired:  { label: "Đã kết thúc",  color: "bg-gray-100 text-gray-800" },
+    Paused:   { label: "Đã dừng",     color: "bg-red-100 text-red-800" },
 };
 
 // ── Filter tabs ────────────────────────────────────────────────────────────────

@@ -103,3 +103,12 @@ export async function DeletePromotion(promotionId: string) {
 
     return response.data;
 }
+
+export async function PausePromotion(promotionId: string) {
+    const response = await axiosClient.patch(
+        "/promotions/pause-promotion/" + promotionId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
