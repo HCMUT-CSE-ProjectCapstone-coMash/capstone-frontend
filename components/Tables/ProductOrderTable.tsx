@@ -77,6 +77,33 @@ export function ProductOrderTable() {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại"}));
         }
     });
+    const handleApprove = () => {
+        const missingImportPrice = products.find(
+            (p) => !p.importPrice || p.importPrice <= 0
+        );
+
+        if (missingImportPrice) {
+            dispatch(addAlert({ 
+                type: AlertType.WARNING, 
+                message: `Vui lòng nhập giá nhập cho sản phẩm "${missingImportPrice.productName}"` 
+            }));
+            return;
+        }
+
+        const missingSalePrice = products.find(
+            (p) => !p.salePrice || p.salePrice <= 0
+        );
+
+        if (missingSalePrice) {
+            dispatch(addAlert({ 
+                type: AlertType.WARNING, 
+                message: `Vui lòng nhập giá bán cho sản phẩm "${missingSalePrice.productName}"` 
+            }));
+            return;
+        }
+
+        approveMutation.mutate(productsOrdersId as string);
+    };
 
     const approveMutation = useMutation({
         mutationFn: (orderId: string) => ApproveProductsOrder(orderId),
@@ -256,7 +283,7 @@ export function ProductOrderTable() {
 
                         <div className="flex gap-3">
                             <button
-                                onClick={() => approveMutation.mutate(productsOrdersId as string)}
+                                onClick={handleApprove}
                                 disabled={approveMutation.isPending}
                                 className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer disabled:opacity-50"
                             >
