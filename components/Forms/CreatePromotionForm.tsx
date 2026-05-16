@@ -196,9 +196,29 @@ export function CreatePromotionForm() {
             return;
         }
 
+        if (form.promotionType === "Combo" && form.combos.some((combo) => !combo.comboName.trim())) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên combo" }));
+            return;
+        }
+
+        if (form.promotionType === "Combo" && form.combos.some((combo) => !combo.comboPrice || combo.comboPrice <= 0)) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá combo" }));
+            return;
+        }
+
         if (form.promotionType === "Order" && form.levels.length === 0) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng thêm ít nhất một mức khuyến mãi" }));
             return;
+        }
+
+        if (form.promotionType === "Order") {
+            const missingDiscount = form.levels.filter(
+            (level) => !level.discountValue || level.discountValue <= 0);
+
+            if (missingDiscount.length > 0) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá trị giảm cho đơn hàng" }));
+            return;
+            }
         }
 
         const payload = buildPayload(form);
