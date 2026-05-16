@@ -178,17 +178,24 @@ export function ProductOrderTable() {
                 }
             />
         },
-        { title: "Giá bán", key: "salePrice", render: (row) => 
-            <Cell
-                value={row.salePrice}
-                onSave={(newValue) =>
-                    updatePriceMutation.mutate({
-                        productId: row.id,
-                        data: { salePrice: newValue }
-                    })
-                }
-            />
-        },
+        { title: "Giá bán", key: "salePrice", render: (row) => (
+            <div className="flex flex-col items-center">
+                <Cell
+                    value={row.salePrice}
+                    onSave={(newValue) =>
+                        updatePriceMutation.mutate({
+                            productId: row.id,
+                            data: { salePrice: newValue }
+                        })
+                    }
+                />
+                {row.salePrice > 0 && row.importPrice > 0 && row.salePrice <= row.importPrice && (
+                    <p className="text-xs text-yellow-600 h-4">
+                        Giá bán nhỏ hơn hoặc bằng giá nhập
+                    </p>
+                )}
+            </div>
+        )},
         { title: "Trạng thái", key: "status", render: (row) => {
             if (row.status === "Approved") return <span className="text-purple">Nhập thêm</span>;
             if (row.status === "Pending") return <span className="text-pink">Hàng mới</span>;

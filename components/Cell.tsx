@@ -44,7 +44,7 @@ export function Cell({ value, onSave, isPercentage = false, disabled = false }: 
     ) : (
         <span  
             onClick={handleStart}
-            className={`px-2 py-1 rounded ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-gray-100"}`}
+            className={`px-2 py-1 rounded min-w-28 ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-gray-100"}`}
         >
             {isPercentage ? `${value} %` : `${formatThousands(value)} VNĐ`}
         </span>
