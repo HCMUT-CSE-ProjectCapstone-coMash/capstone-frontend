@@ -6,10 +6,15 @@ import { useParams, useRouter } from "next/navigation";
 import { UpdateProductPromotionForm } from "@/components/Forms/PromotionTypes/UpdateProductPromotionForm";
 import { UpdateOrderPromotionForm } from "@/components/Forms/PromotionTypes/UpdateOrderPromotionForm";
 import { UpdateComboPromotionForm } from "@/components/Forms/PromotionTypes/UpdateComboPromotionForm";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { useState } from "react";
+import { DeletePromotionModal } from "../Modal/DeletePromotionModal";
 
 export function PromotionDetailContent() {
     const { promotionId } = useParams();
     const router = useRouter();
+    
+    const [isConfirmModalOpen, setConfirmModalOpen] = useState<boolean>(false);
     
     const { data: promotion, isLoading, isError } = useQuery({
         queryKey: ["promotion", promotionId],
@@ -23,13 +28,25 @@ export function PromotionDetailContent() {
             <div className="flex items-center justify-between mb-5">
                 <p className="text-purple text-3xl font-medium">Chi tiết khuyến mãi</p>
 
-                <button
-                    type="button"
-                    onClick={() => router.back()}
-                    className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
-                >
-                    Danh sách khuyến mãi
-                </button>
+                <div className="flex items-center gap-3">
+                    {promotion?.promotionPhase === "Upcoming" && (
+                        <button
+                            type="button"
+                            onClick={() => setConfirmModalOpen(true)}
+                            className="py-2 px-4 rounded-lg border border-red bg-white text-red text-sm font-medium transition hover:bg-red/5 hover:cursor-pointer"
+                        >
+                            Xóa khuyến mãi
+                        </button>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={() => router.back()}
+                        className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer"
+                    >
+                        Danh sách khuyến mãi
+                    </button>
+                </div>
             </div>
 
             {isLoading ? (
@@ -52,6 +69,15 @@ export function PromotionDetailContent() {
                         <UpdateOrderPromotionForm key={JSON.stringify(promotion)} promotion={promotion} />
                     )}
                 </>
+            )}
+
+            {promotionId && (
+                <LayoutModal
+                    isOpen={isConfirmModalOpen}
+                    onClose={() => setConfirmModalOpen(false)}
+                >
+                    <DeletePromotionModal promotionId={promotionId as string} onClose={() => setConfirmModalOpen(false)}/>
+                </LayoutModal>
             )}
         </main>
     );

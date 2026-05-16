@@ -94,3 +94,12 @@ export async function FetchOrderPromotions() {
 
     return response.data;
 }
+
+export async function DeletePromotion(promotionId: string) {
+    const response = await axiosClient.delete(
+        "/promotions/" + promotionId,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
