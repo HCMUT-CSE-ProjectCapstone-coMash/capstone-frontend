@@ -139,6 +139,11 @@ export function UpdateOrderPromotionForm({ promotion } : UpdateOrderPromotionFor
             return;
         }
 
+        if (formState.levels.some((level) => !level.discountValue || level.discountValue <= 0)) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá trị giảm cho đơn hàng" }));
+            return;
+        }
+
         const payload = toPayload(formState);
 
         updateMutation.mutate({ promotionId: promotion.id, payload });

@@ -145,6 +145,16 @@ export function UpdateComboPromotionForm({ promotion } : UpdateComboPromotionFor
             return;
         }
 
+        if (formState.combos.some((combo) => !combo.comboName.trim())) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên combo" }));
+            return;
+        }   
+
+        if (formState.combos.some((combo) => !combo.comboPrice || combo.comboPrice <= 0)) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập giá combo" }));
+            return;
+        }
+
         const payload = toPayload(formState);
 
         updateMutation.mutate({ promotionId: promotion.id, payload });
