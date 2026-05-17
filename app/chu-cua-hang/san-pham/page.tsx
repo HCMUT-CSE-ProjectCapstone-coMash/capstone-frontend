@@ -4,18 +4,11 @@ import { ProductsTable } from "@/components/Tables/ProductsTable"
 import { RootState } from "@/utilities/store";
 import { useDispatch, useSelector } from "react-redux";
 import { OwnerUpdateProductForm } from "@/components/Forms/OwnerUpdateProductForm";
-import { useEffect } from "react";
 import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 
 export default function ProductPage() {
     const dispatch = useDispatch();
     const ownerEditProduct = useSelector((state: RootState) => state.ownerProductEdit.ownerEditingProduct);
-
-    useEffect(() => {
-        return () => {
-            dispatch(clearOwnerEditingProduct());
-        };
-    }, [dispatch]);
 
     return (
         <main className="px-20 pt-10 pb-25">

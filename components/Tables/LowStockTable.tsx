@@ -1,10 +1,15 @@
 "use client";
 
 import { FetchTop5LowStock } from "@/api/products/products";
+import { OwnerProductPageRoute } from "@/const/routes";
 import { BoxIcon } from "@/public/assets/Icons";
 import { Product } from "@/types/product";
+import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
+import { RootState } from "@/utilities/store";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
 
 function getStockColor(stock: number) {
     if (stock <= 1) return { text: "text-red",       };
@@ -13,6 +18,10 @@ function getStockColor(stock: number) {
 }
 
 export function LowStockTable() {
+    const dispatch = useDispatch();
+    const router = useRouter();
+    const user = useSelector((state: RootState) => state.user);
+
     const { data, isLoading, isError } = useQuery<Product[]>({
         queryKey: ["top-5-low-stock"],
         queryFn: FetchTop5LowStock,
@@ -24,6 +33,7 @@ export function LowStockTable() {
             .filter(q => q.quantities <= 3)
             .map(q => ({
                 key: `${p.id}-${q.size}`,
+                product: p,
                 name: p.productName,
                 size: q.size,
                 stock: q.quantities,
@@ -82,7 +92,21 @@ export function LowStockTable() {
 
                                 {/* Name + size badge */}
                                 <div className="flex flex-col gap-0.5 min-w-0">
-                                    <span className="text-sm text-tgray9 truncate">{row.name}</span>
+                                    <span 
+                                        className={`text-sm truncate ${
+                                            user.role === "owner" 
+                                                ? "text-tgray9 cursor-pointer hover:text-purple" 
+                                                : "text-tgray9 cursor-default"
+                                        }`}
+                                        onClick={() => {
+                                            if (user.role === "owner") {
+                                                dispatch(setOwnerEditingProduct(row.product));
+                                                router.push(OwnerProductPageRoute);
+                                            }
+                                        }}
+                                    >
+                                        {row.name}
+                                    </span>
                                     <span className="text-xs text-tgray5">Size {row.size}</span>
                                 </div>
 

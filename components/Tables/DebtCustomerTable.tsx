@@ -5,6 +5,10 @@ import { CardIcon } from "@/public/assets/Icons";
 import { Customer } from "@/types/customer";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { EmployeeCustomerByIdPageRoute, OwnerCustomerByIdPageRoute } from "@/const/routes";
+import { useSelector } from "react-redux";
+import { RootState } from "@/utilities/store";
 
 function getInitials(name: string) {
     const parts = name.trim().split(" ");
@@ -27,6 +31,9 @@ function getDebtDaysStyle(days: number) {
 }
 
 export function DebtCustomerTable() {
+    const router = useRouter();
+    const user = useSelector((state: RootState) => state.user);
+
     const { data, isLoading, isError } = useQuery<Customer[]>({
         queryKey: ["top-5-debt-customers"],
         queryFn: FetchTop5DebtCustomers,
@@ -78,7 +85,18 @@ export function DebtCustomerTable() {
                                     <div className={`w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-xs font-semibold ${avatar.bg} ${avatar.text}`}>
                                         {getInitials(c.customerName)}
                                     </div>
-                                    <span className="text-sm text-tgray9 truncate">{c.customerName}</span>
+                                    <span 
+                                        className="text-sm text-tgray9 truncate cursor-pointer hover:text-purple"
+                                        onClick={() => {
+                                            if (user.role === "owner") {
+                                                router.push(OwnerCustomerByIdPageRoute(c.id));
+                                            } else {
+                                                router.push(EmployeeCustomerByIdPageRoute(c.id));
+                                            }
+                                        }}
+                                    >
+                                        {c.customerName}
+                                    </span>
                                 </div>
 
                                 {/* Debt */}
