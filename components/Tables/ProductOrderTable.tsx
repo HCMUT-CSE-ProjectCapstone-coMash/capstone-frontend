@@ -77,6 +77,33 @@ export function ProductOrderTable() {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại"}));
         }
     });
+    const handleApprove = () => {
+        const missingImportPrice = products.find(
+            (p) => !p.importPrice || p.importPrice <= 0
+        );
+
+        if (missingImportPrice) {
+            dispatch(addAlert({ 
+                type: AlertType.WARNING, 
+                message: `Vui lòng nhập giá nhập cho sản phẩm "${missingImportPrice.productName}"` 
+            }));
+            return;
+        }
+
+        const missingSalePrice = products.find(
+            (p) => !p.salePrice || p.salePrice <= 0
+        );
+
+        if (missingSalePrice) {
+            dispatch(addAlert({ 
+                type: AlertType.WARNING, 
+                message: `Vui lòng nhập giá bán cho sản phẩm "${missingSalePrice.productName}"` 
+            }));
+            return;
+        }
+
+        approveMutation.mutate(productsOrdersId as string);
+    };
 
     const approveMutation = useMutation({
         mutationFn: (orderId: string) => ApproveProductsOrder(orderId),
@@ -151,17 +178,24 @@ export function ProductOrderTable() {
                 }
             />
         },
-        { title: "Giá bán", key: "salePrice", render: (row) => 
-            <Cell
-                value={row.salePrice}
-                onSave={(newValue) =>
-                    updatePriceMutation.mutate({
-                        productId: row.id,
-                        data: { salePrice: newValue }
-                    })
-                }
-            />
-        },
+        { title: "Giá bán", key: "salePrice", render: (row) => (
+            <div className="flex flex-col items-center">
+                <Cell
+                    value={row.salePrice}
+                    onSave={(newValue) =>
+                        updatePriceMutation.mutate({
+                            productId: row.id,
+                            data: { salePrice: newValue }
+                        })
+                    }
+                />
+                {row.salePrice > 0 && row.importPrice > 0 && row.salePrice <= row.importPrice && (
+                    <p className="text-xs text-yellow-600 h-4">
+                        Giá bán nhỏ hơn hoặc bằng giá nhập
+                    </p>
+                )}
+            </div>
+        )},
         { title: "Trạng thái", key: "status", render: (row) => {
             if (row.status === "Approved") return <span className="text-purple">Nhập thêm</span>;
             if (row.status === "Pending") return <span className="text-pink">Hàng mới</span>;
@@ -256,7 +290,7 @@ export function ProductOrderTable() {
 
                         <div className="flex gap-3">
                             <button
-                                onClick={() => approveMutation.mutate(productsOrdersId as string)}
+                                onClick={handleApprove}
                                 disabled={approveMutation.isPending}
                                 className="py-2 px-4 rounded-lg border border-purple bg-white text-purple text-sm font-medium transition hover:bg-purple/5 hover:cursor-pointer disabled:opacity-50"
                             >
