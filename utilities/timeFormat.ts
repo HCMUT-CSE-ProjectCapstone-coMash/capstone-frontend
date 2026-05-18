@@ -8,10 +8,14 @@ export function formatDate(isoDate: string): string {
     return `${day}/${month}/${year}`;
 }
 
-export function formatTime(createdAt: string) {
+export function formatTime(createdAt: string): string {
     const d = new Date(createdAt);
-    d.setHours(d.getHours() + 7);
-    const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-    const date = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+
+    const vnOffset = 7 * 60 * 60 * 1000;
+    const vnDate = new Date(d.getTime() + vnOffset);
+
+    const time = `${String(vnDate.getUTCHours()).padStart(2, "0")}:${String(vnDate.getUTCMinutes()).padStart(2, "0")}`;
+    const date = `${String(vnDate.getUTCDate()).padStart(2, "0")}/${String(vnDate.getUTCMonth() + 1).padStart(2, "0")}/${vnDate.getUTCFullYear()}`;
+
     return `${time} • ${date}`;
 }
