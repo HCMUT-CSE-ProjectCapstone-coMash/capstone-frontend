@@ -35,6 +35,7 @@ export interface Product {
     createdAt: string,
     status: "Pending" | "Approved",
     imageURL: string
+    modelImageURL: string,
     quantityChanges?: ProductQuantityChange[],
     importPrice: number,
     salePrice: number,

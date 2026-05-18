@@ -1,15 +1,14 @@
 "use client";
 
 import { FetchTop5LowStock } from "@/api/products/products";
-import { OwnerProductPageRoute } from "@/const/routes";
+import { OwnerProductByIdPageRoute } from "@/const/routes";
 import { BoxIcon } from "@/public/assets/Icons";
 import { Product } from "@/types/product";
-import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { RootState } from "@/utilities/store";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 function getStockColor(stock: number) {
     if (stock <= 1) return { text: "text-red",       };
@@ -18,7 +17,6 @@ function getStockColor(stock: number) {
 }
 
 export function LowStockTable() {
-    const dispatch = useDispatch();
     const router = useRouter();
     const user = useSelector((state: RootState) => state.user);
 
@@ -100,8 +98,7 @@ export function LowStockTable() {
                                         }`}
                                         onClick={() => {
                                             if (user.role === "owner") {
-                                                dispatch(setOwnerEditingProduct(row.product));
-                                                router.push(OwnerProductPageRoute);
+                                                router.push(OwnerProductByIdPageRoute(row.product.id));
                                             }
                                         }}
                                     >

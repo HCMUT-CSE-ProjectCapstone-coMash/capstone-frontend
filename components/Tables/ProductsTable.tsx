@@ -1,7 +1,7 @@
 "use client";
 
 import { FetchProducts } from "@/api/products/products";
-import { OwnerProductsOrderPageRoute } from "@/const/routes";
+import { OwnerProductByIdPageRoute, OwnerProductsOrderPageRoute } from "@/const/routes";
 import { Product } from "@/types/product";
 import { Column } from "@/types/UIType";
 import { formatThousands } from "@/utilities/numberFormat";
@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { Table } from "./Table";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
@@ -120,7 +119,7 @@ export function ProductsTable() {
                     <span>{row.productName}</span> 
                 ) :( 
                     <button 
-                        onClick={() => dispatch(setOwnerEditingProduct(row))}
+                        onClick={() => router.push(OwnerProductByIdPageRoute(row.id))}
                         className="cursor-pointer"
                     >
                         {row.productName}
@@ -159,7 +158,7 @@ export function ProductsTable() {
         );
 
         return cols;
-    }, [dispatch, handleToggle, isProductSelected, isEmployee]);
+    }, [handleToggle, isProductSelected, isEmployee, router]);
 
     return (
         <div className="flex flex-col gap-4">

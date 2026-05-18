@@ -43,6 +43,7 @@ export const OwnerHomePageRoute = OwnerBaseRoute;
 
 // Link sản phẩm ----------------------------------------------
 export const OwnerProductPageRoute = `${OwnerBaseRoute}/san-pham`;
+export const OwnerProductByIdPageRoute = (id: string) => `${OwnerProductPageRoute}/chi-tiet/${id}`;
 
 export const OwnerProductsOrderPageRoute = `${OwnerBaseRoute}/san-pham/cho-duyet`;
 

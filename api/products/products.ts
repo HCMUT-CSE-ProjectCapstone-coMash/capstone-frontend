@@ -259,3 +259,20 @@ export async function FetchTop5LowStock() {
 
     return response.data;
 }
+
+export async function FetchProductById(id: string) {
+    const response = await axiosClient.get(
+        "/product/" + id,
+    );
+
+    return response.data;
+}
+
+export async function GenerateModalImage(id: string) {
+    const response = await axiosClient.post(
+        "/product/generate-model-image/" + id,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
