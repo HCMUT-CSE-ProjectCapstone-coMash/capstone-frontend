@@ -151,6 +151,7 @@ export function UpdateProductInProductsOrderForm({ editProduct }: UpdateProductF
                 createdAt: data.createdAt,
                 status: data.status,
                 imageURL: data.imageURL,
+                modelImageURL: data.modelImageURL,
                 quantityChanges: data.quantityChanges,
                 importPrice: data.importPrice,
                 salePrice: data.salePrice
