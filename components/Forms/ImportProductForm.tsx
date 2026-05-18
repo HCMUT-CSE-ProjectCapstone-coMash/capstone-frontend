@@ -106,6 +106,7 @@ export function ImportProductForm() {
                 imageURL: data.imageURL,
                 importPrice: data.importPrice,
                 salePrice: data.salePrice,
+                modelImageURL: data.modelImageURL,
             }
             dispatch(addProductToOrder(newProduct));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
