@@ -79,7 +79,7 @@ export function BarcodeForm({ onClose } : BarcodeForm) {
 
                             <div className="mt-3 flex flex-wrap gap-3">
                                 {entry.quantities.map((quantity) => (
-                                    <div key={quantity.size} className="w-40">
+                                    <div key={quantity.size} className="w-48">
                                         <TextInput
                                             label={`Size ${quantity.size} (tồn: ${quantity.quantities})`}
                                             value={String(entry.printQuantities[quantity.size] ?? 0)}

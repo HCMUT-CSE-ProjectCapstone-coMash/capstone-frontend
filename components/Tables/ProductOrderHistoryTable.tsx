@@ -6,8 +6,8 @@ import { Product } from "@/types/product";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { GetProductsOrderById } from "@/api/productsOrder/productsOrder";
-import { useEffect, useMemo, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { ProductsOrder } from "@/types/productsOrder";
 import { setProductsOrder } from "@/utilities/productsOrderStore";
 import Image from "next/image";
@@ -16,6 +16,10 @@ import { removeDiacritics } from "@/utilities/removeDiacritics";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatThousands } from "@/utilities/numberFormat";
 import { pinkPlaceholder } from "@/const/placeholder";
+import { RootState } from "@/utilities/store";
+import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
+import { LayoutModal } from "../Modal/LayoutModal";
+import { BarcodeForm } from "../Forms/BarcodeForm";
 
 export function ProductOrderHistoryTable() {
     const router = useRouter();
@@ -46,6 +50,32 @@ export function ProductOrderHistoryTable() {
             dispatch(setProductsOrder(productsOrder));
         }
     }, [data, dispatch]);
+
+    const [isModalOpen, setModalOpen] = useState(false);
+    const barcodeEntries = useSelector((state: RootState) => state.barcode.entries);
+
+    const isProductSelected = useCallback((product: Product): boolean => {
+        return barcodeEntries.some((entry) => entry.id === product.id);
+    }, [barcodeEntries]);
+    
+    const handleToggle = useCallback((product: Product) => {
+        if (isProductSelected(product)) {
+            dispatch(removeBarcode({ id: product.id }));
+        } else {
+            dispatch(addBarcode({
+                id: product.id,
+                productId: product.productId,
+                productName: product.productName,
+                category: product.category,
+                color: product.color,
+                pattern: product.pattern,
+                salePrice: product.salePrice,
+                quantities: product.quantities,
+                imageUrl: product.imageURL,
+                printQuantities: {},
+            }));
+        }
+    }, [dispatch, isProductSelected]);
 
     const columns: Column<Product>[] = useMemo(() => [
         { title: "Mã sản phẩm", key: "productId", render: (row) => <span>{row.productId}</span> },
@@ -88,7 +118,15 @@ export function ProductOrderHistoryTable() {
             if (row.quantityChanges?.length) return <span className="text-purple">Nhập thêm</span>;
             if (!row.quantityChanges?.length) return <span className="text-pink">Hàng mới</span>;
         }},
-    ], []);
+        { title: "In mã", key: "id", render:(row) => (
+            <input 
+                type="checkbox" 
+                checked={isProductSelected(row)}
+                onChange={() => handleToggle(row)}
+                className="w-4 h-4 accent-purple cursor-pointer"
+            />
+        )}
+    ], [handleToggle, isProductSelected]);
 
     const categories = [
         { label: "Xem tất cả", value: "" },
@@ -119,26 +157,42 @@ export function ProductOrderHistoryTable() {
                 </button>
             </div>
 
-            <div className="flex gap-2">
-                {categories.map((cat) => (
-                    <button
-                        key={cat.value}
-                        onClick={() => setSelectedCategory(cat.value)}
-                        className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
-                            selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
-                    >
-                        {cat.label}
-                    </button>
-                ))}
-                <NormalSearchInput
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Tìm kiếm theo tên sản phẩm"
-                    className="w-2xs"
-                />
+            <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.value}
+                            onClick={() => setSelectedCategory(cat.value)}
+                            className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
+                                selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
+                        >
+                            {cat.label}
+                        </button>
+                    ))}
+                    <NormalSearchInput
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Tìm kiếm theo tên sản phẩm"
+                        className="w-2xs"
+                    />
+                </div>
+
+                <button
+                    className="py-2 px-4 rounded-lg border border-purple bg-purple text-white text-sm font-medium transition hover:bg-purple/90 hover:cursor-pointer"
+                    onClick={() => setModalOpen(true)}
+                >
+                    In mã vạch sản phẩm
+                </button>
             </div>
 
             <Table columns={columns} data={filteredProducts} isLoading={isLoading}/>
+
+            <LayoutModal
+                isOpen={isModalOpen}
+                onClose={() => setModalOpen(false)}
+            >
+                <BarcodeForm onClose={() => setModalOpen(false)}/>
+            </LayoutModal>
         </div>
     );
 }
