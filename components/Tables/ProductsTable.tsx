@@ -20,6 +20,7 @@ import { BarcodeForm } from "../Forms/BarcodeForm";
 import { FetchAllSendingProductsOrders } from "@/api/productsOrder/productsOrder";
 import { Badge } from "antd";
 import { pinkPlaceholder } from "@/const/placeholder";
+import { sortSizes } from "@/utilities/cart";
 
 export function ProductsTable() {
     const router = useRouter();
@@ -131,12 +132,17 @@ export function ProductsTable() {
             { title: "Họa tiết", key: "pattern", render: (row) => <span>{row.pattern || "Không"}</span> },
             { title: "Số lượng", key: "quantities", render: (row) => (
                 <>
-                    {row.quantities.map((quantity) => (
-                        <div key={quantity.size} className="flex justify-center items-center gap-2 text-sm">
-                            <span className="font-medium">{quantity.size}:</span>
-                            <span className="text-purple font-bold">{quantity.quantities}</span>
-                        </div>
-                    ))}
+                    {sortSizes(row.quantities.map(q => q.size), row.sizeType)
+                        .map((size) => {
+                            const quantity = row.quantities.find(q => q.size === size);
+                            return quantity ? (
+                                <div key={size} className="flex justify-center items-center gap-2 text-sm">
+                                    <span className="font-medium">{size}:</span>
+                                    <span className="text-purple font-bold">{quantity.quantities}</span>
+                                </div>
+                            ) : null;
+                        })
+                    }
                 </>
             )}
         ];

@@ -1,8 +1,8 @@
 import { OwnerDeleteProduct } from "@/api/products/products";
 import { AlertType } from "@/types/alert";
 import { addAlert } from "@/utilities/alertStore";
-import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 
 interface DeleteProductModalProps {
@@ -11,6 +11,7 @@ interface DeleteProductModalProps {
 }
 
 export function DeleteProductModal({ productId, onClose } : DeleteProductModalProps) {
+    const router = useRouter();
     const dispatch = useDispatch()
 
     const deleteMutation = useMutation({
@@ -18,7 +19,8 @@ export function DeleteProductModal({ productId, onClose } : DeleteProductModalPr
 
         onSuccess: (data) => {
             dispatch(addAlert({ type: AlertType.SUCCESS, message: `Xoá thành công ${data.productName}` }));
-            dispatch(clearOwnerEditingProduct());
+            onClose();
+            router.back();
         },
 
         onError: () => {
