@@ -66,7 +66,8 @@ export interface ProductWithOrderStatus {
     createdBy: string,
     createdAt: string,
     status: "Pending" | "Approved",
-    imageURL: string
+    imageURL: string,
+    modelImageURL: string,
     quantityChanges?: ProductQuantityChange[],
     importPrice: number,
     salePrice: number,
