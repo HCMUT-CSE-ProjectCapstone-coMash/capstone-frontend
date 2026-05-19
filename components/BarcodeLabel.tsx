@@ -18,10 +18,10 @@ export function BarcodeLabel({ productId, productName, size, salePrice } : Barco
             JsBarcode(barcodeRef.current, barcodeValue, {
                 format: "CODE128",
                 width: 1,
-                height: 18,
+                height: 25,
                 displayValue: true,
-                fontSize: 6,
-                margin: 1,      
+                fontSize: 8,
+                margin: 2,
                 background: "#ffffff",
                 lineColor: "#000000",
             });
@@ -43,7 +43,7 @@ export function BarcodeLabel({ productId, productName, size, salePrice } : Barco
 
 export const labelStyles = `
     @page {
-        size: 70mm 22mm;
+        size: 50mm 40mm;
         margin: 0;
     }
 
@@ -54,29 +54,25 @@ export const labelStyles = `
 
     .label-grid {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
     }
 
     .label-card {
-        width: 35mm;
-        height: 22mm;
-        padding: 1.5mm 2mm;
+        width: 50mm;
+        height: 40mm;
+        padding: 2mm 3mm;
         background: #fff;
         font-family: 'Courier New', monospace;
+        page-break-after: always;
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        gap: 1.5mm;
-    }
-
-    /* Page break after every 2 labels */
-    .label-card:nth-child(2n) {
-        page-break-after: always;
+        gap: 5mm;
     }
 
     .label-name {
-        font-size: 7px;
+        font-size: 9px;
         font-weight: 600;
         color: #111827;
         margin: 0;
@@ -102,11 +98,11 @@ export const labelStyles = `
         justify-content: center;
         align-items: center;
         border-top: 1px dashed #e5e7eb;
-        padding-top: 1mm;
+        padding-top: 3mm;
     }
 
     .label-price {
-        font-size: 8px;
+        font-size: 10px;
         font-weight: 700;
         color: #111827;
         font-family: sans-serif;
