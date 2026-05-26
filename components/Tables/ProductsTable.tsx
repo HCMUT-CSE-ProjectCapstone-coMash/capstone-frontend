@@ -18,7 +18,7 @@ import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { BarcodeForm } from "../Forms/BarcodeForm";
 import { FetchAllSendingProductsOrders } from "@/api/productsOrder/productsOrder";
-import { Badge } from "antd";
+import { Badge, Select } from "antd";
 import { pinkPlaceholder } from "@/const/placeholder";
 import { sortSizes } from "@/utilities/cart";
 
@@ -193,16 +193,13 @@ export function ProductsTable() {
 
             <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                    {categoryOptions.map((cat : { label: string; value: string }) => (
-                        <button
-                            key={cat.value}
-                            onClick={() => handleCategoryChange(cat.value)}
-                            className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
-                                selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
-                        >
-                            {cat.label}
-                        </button>
-                    ))}
+                    <Select
+                        value={selectedCategory}
+                        onChange={(value) => handleCategoryChange(value)}
+                        options={categoryOptions}
+                        className="w-48"
+                        placeholder="Phân loại"
+                    />
 
                     <NormalSearchInput 
                         value={searchTerm} 
