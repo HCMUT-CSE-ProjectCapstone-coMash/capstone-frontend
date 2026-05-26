@@ -4,15 +4,15 @@ import { useRef, useState } from "react";
 import { TextInput } from "../FormInputs/TextInput";
 import { SelectInput } from "../FormInputs/SelectInput";
 import { SwitchInput } from "../FormInputs/SwitchInput";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategory, DeleteTemporaryProduct, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
+import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
+import { AnalyzeImage, CreateProductAsync, CreateProductIdByCategoryId, DeleteTemporaryProduct, FetchAllCategories, FetchAllColors, FetchAllPatterns, FetchApprovedProductByName, SearchSimilarProduct } from "@/api/products/products";
 import { useDispatch, useSelector } from "react-redux";
 import { addAlert } from "@/utilities/alertStore";
 import { AlertType } from "@/types/alert";
-import { CreateProduct, Product, ProductWithOrderStatus, TemporaryProduct } from "@/types/product";
+import { Category, Color, CreateProduct, Pattern, Product, ProductWithOrderStatus, TemporaryProduct } from "@/types/product";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
-import { categories, colors, patterns, sizesLetter, sizesNumber  } from "@/const/product";
+import { sizesLetter, sizesNumber  } from "@/const/product";
 import { addProductToOrder } from "@/utilities/productsOrderStore";
 import { SearchInput } from "../FormInputs/SearchInput";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -30,9 +30,9 @@ import { pinkPlaceholder } from "@/const/placeholder";
 interface FormState {
     productId: string;
     productName: string;
-    category: string;
-    color: string;
-    pattern: string;
+    categoryId: string;
+    colorId: string;
+    patternId: string;
     isNumberSize: boolean;
     letterQuantities: Record<string, number>;
     numberQuantities: Record<string, number>;
@@ -45,9 +45,9 @@ const createInitialQuantities = (sizes: string[]) => Object.fromEntries(sizes.ma
 const initialFormState : FormState = {
     productId: "",
     productName: "",
-    category: "",
-    color: "",
-    pattern: "",
+    categoryId: "",
+    colorId: "",
+    patternId: "",
     isNumberSize: false,
     letterQuantities: createInitialQuantities(sizesLetter),
     numberQuantities: createInitialQuantities(sizesNumber),
@@ -59,6 +59,41 @@ export function ImportProductForm() {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState) => state.user);
     const productsOrder = useSelector((state: RootState) => state.productsOrder.productsOrder);
+
+    const [categoriesQuery, colorsQuery, patternsQuery] = useQueries({
+        queries: [
+            {
+                queryKey: ["categories"],
+                queryFn: () => FetchAllCategories(),
+                refetchOnWindowFocus: false,
+            },
+            {
+                queryKey: ["colors"],
+                queryFn: () => FetchAllColors(),
+                refetchOnWindowFocus: false,
+            },
+            {
+                queryKey: ["patterns"],
+                queryFn: () => FetchAllPatterns(),
+                refetchOnWindowFocus: false,
+            }
+        ] 
+    });
+    
+    const categoryOptions = (categoriesQuery.data ?? []).map((c: Category) => ({
+        label: c.categoryName,
+        value: c.id,
+    }));
+    
+    const colorOptions = (colorsQuery.data ?? []).map((c: Color) => ({
+        label: c.colorName,
+        value: c.id,
+    }));
+    
+    const patternOptions = (patternsQuery.data ?? []).map((p: Pattern) => ({
+        label: p.patternName,
+        value: p.id,
+    }));
 
     const [form, setForm] = useState(initialFormState);
     const setField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -79,7 +114,7 @@ export function ImportProductForm() {
     const uploadTriggerRef = useRef<HTMLButtonElement | null>(null);
 
     const createProductIdMutation = useMutation({
-        mutationFn: (productName: string) => CreateProductIdByCategory(productName),
+        mutationFn: (categoryId: string) => CreateProductIdByCategoryId(categoryId),
         onSuccess: (data) => {
             setField("productId", data.productId);
         },
@@ -137,11 +172,11 @@ export function ImportProductForm() {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng nhập tên sản phẩm "}));
             return;
         }
-        if(!form.category) {
+        if(!form.categoryId) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui chọn phân loại" }));
             return;
         }
-        if(!form.color) {
+        if(!form.colorId) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn màu" }));
             return;
         }
@@ -158,9 +193,9 @@ export function ImportProductForm() {
 
         const productData: CreateProduct = {
             productName: form.productName,
-            category: form.category,
-            color: form.color,
-            pattern: form.pattern,
+            categoryId: form.categoryId,
+            colorId: form.colorId,
+            patternId: form.patternId,
             sizeType: form.isNumberSize ? "Number" : "Letter",
             quantities: formattedQuantities,
             createdBy: user.id,
@@ -192,10 +227,17 @@ export function ImportProductForm() {
 
         onSuccess: (data) => {
             setField("productName", data.productName);
-            setField("category", data.category);
-            setField("color", data.color);
-            setField("pattern", data.pattern);
-            createProductIdMutation.mutate(data.category);
+        
+            const matchedCategory = categoriesQuery.data?.find((c: Category) => c.categoryName === data.category);
+            const matchedColor = colorsQuery.data?.find((c: Color) => c.colorName === data.color);
+            const matchedPattern = patternsQuery.data?.find((p: Pattern) => p.patternName === data.pattern);
+        
+            if (matchedCategory) {
+                setField("categoryId", matchedCategory.id);
+                createProductIdMutation.mutate(matchedCategory.id);
+            }
+            if (matchedColor) setField("colorId", matchedColor.id);
+            if (matchedPattern) setField("patternId", matchedPattern.id);
         },
 
         onError: () => {}
@@ -240,16 +282,21 @@ export function ImportProductForm() {
         const blob = await response.blob();
         const file = new File([blob], "temporary-product.jpg", { type: blob.type });
     
+        const matchedCategory = categoriesQuery.data?.find((c: Category) => c.categoryName === product.category);
+        const matchedColor = colorsQuery.data?.find((c: Color) => c.colorName === product.color);
+        const matchedPattern = patternsQuery.data?.find((p: Pattern) => p.patternName === product.pattern);
+    
         setForm(prev => ({
             ...prev,
             imageFile: file,
             productName: product.productName,
-            category: product.category,
-            color: product.color,
-            pattern: product.pattern,
+            categoryId: matchedCategory?.id ?? "",
+            colorId: matchedColor?.id ?? "",
+            patternId: matchedPattern?.id ?? "",
             temporaryProductId: product.id,
         }));
-        createProductIdMutation.mutate(product.category);
+    
+        if (matchedCategory) createProductIdMutation.mutate(matchedCategory.id);
         setSetShowTemporaryProducts(false);
     };
 
@@ -374,14 +421,14 @@ export function ImportProductForm() {
                     <div className="flex items-center justify-between gap-5">
                         <SelectInput 
                             label={"Phân loại"} 
-                            options={categories} 
-                            value={form.category} 
+                            options={categoryOptions} 
+                            value={form.categoryId} 
                             onChange={(value) => {
-                                setField("category", value);
+                                setField("categoryId", value);
                                 createProductIdMutation.mutate(value);
                             }}/>
-                        <SelectInput label={"Màu sắc"} options={colors} value={form.color} onChange={(value) => setField("color", value)}/>
-                        <SelectInput label={"Hoạ tiết"} options={patterns} value={form.pattern} onChange={(value) => setField("pattern", value)}/>
+                        <SelectInput label={"Màu sắc"} options={colorOptions} value={form.colorId} onChange={(value) => setField("colorId", value)}/>
+                        <SelectInput label={"Hoạ tiết"} options={patternOptions} value={form.patternId} onChange={(value) => setField("patternId", value)}/>
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -434,10 +481,17 @@ export function ImportProductForm() {
                         onClose={() => setSuggestionModalOpen(false)}
                         onAnalyzeResult={(data) => {
                             setField("productName", data.productName);
-                            setField("category", data.category);
-                            setField("color", data.color);
-                            setField("pattern", data.pattern);
-                            createProductIdMutation.mutate(data.category);
+                        
+                            const matchedCategory = categoriesQuery.data?.find((c: Category) => c.categoryName === data.category);
+                            const matchedColor = colorsQuery.data?.find((c: Color) => c.colorName === data.color);
+                            const matchedPattern = patternsQuery.data?.find((p: Pattern) => p.patternName === data.pattern);
+                        
+                            if (matchedCategory) {
+                                setField("categoryId", matchedCategory.id);
+                                createProductIdMutation.mutate(matchedCategory.id);
+                            }
+                            if (matchedColor) setField("colorId", matchedColor.id);
+                            if (matchedPattern) setField("patternId", matchedPattern.id);
                         }}
                         imageFile={form.imageFile}
                     />

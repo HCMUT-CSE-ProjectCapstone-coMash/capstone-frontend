@@ -11,9 +11,9 @@ export interface ProductQuantityChange {
 
 export interface CreateProduct {
     productName: string,
-    category: string,
-    color: string,
-    pattern: string,
+    categoryId: string,
+    colorId: string,
+    patternId: string,
     sizeType: "Letter" | "Number",
     quantities: ProductQuantity[],
     createdBy: string,
@@ -44,9 +44,9 @@ export interface Product {
 export interface UpdateProduct {
     productId?: string,
     productName?: string,
-    category?: string,
-    color?: string,
-    pattern?: string,
+    categoryId?: string,
+    colorId?: string,
+    patternId?: string,
     sizeType?: "Letter" | "Number",
     quantities?: ProductQuantity[],
     image?: File | null,
@@ -81,4 +81,19 @@ export interface TemporaryProduct {
     color: string,
     pattern: string,
     imageUrl: string,
+}
+
+export type Category = {
+    id: string,
+    categoryName: string,
+};
+
+export type Color = {
+    id: string,
+    colorName: string,
+};
+
+export type Pattern = {
+    id: string,
+    patternName: string,
 }

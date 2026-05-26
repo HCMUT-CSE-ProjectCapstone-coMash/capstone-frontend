@@ -1,8 +1,8 @@
 "use client";
 
-import { FetchProducts } from "@/api/products/products";
+import { FetchAllCategories, FetchProducts } from "@/api/products/products";
 import { OwnerProductByIdPageRoute, OwnerProductsOrderPageRoute } from "@/const/routes";
-import { Product } from "@/types/product";
+import { Category, Product } from "@/types/product";
 import { Column } from "@/types/UIType";
 import { formatThousands } from "@/utilities/numberFormat";
 import { useQueries } from "@tanstack/react-query";
@@ -41,16 +41,23 @@ export function ProductsTable() {
 
     const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
 
-    const [productsQuery, ordersQuery] = useQueries({
+    const [productsQuery, ordersQuery, categoriesQuery] = useQueries({
         queries: [
             {
                 queryKey: ["products", currentPage, selectedCategory, effectiveSearch],
                 queryFn: () => FetchProducts(currentPage, pageSize, selectedCategory, effectiveSearch),
+                refetchOnWindowFocus: false,
             },
             {
                 queryKey: ["SendingProductsOrders"],
                 queryFn: () => FetchAllSendingProductsOrders(),
                 enabled: !isEmployee,
+                refetchOnWindowFocus: false,
+            },
+            {
+                queryKey: ["categories"],
+                queryFn: () => FetchAllCategories(),
+                refetchOnWindowFocus: false,
             },
         ],
     });
@@ -61,6 +68,14 @@ export function ProductsTable() {
     
     const { data: ordersData } = ordersQuery;
     const ordersTotal = ordersData?.total ?? 0;
+
+    const categoryOptions = [
+        { label: "Xem tất cả", value: "" },
+        ...(categoriesQuery.data ?? []).map((c: Category) => ({
+            label: c.categoryName,
+            value: c.categoryName,
+        }))
+    ];
 
     const barcodeEntries = useSelector((state: RootState) => state.barcode.entries);
 
@@ -91,14 +106,6 @@ export function ProductsTable() {
         setSelectedCategory(category);
         setCurrentPage(1);
     };
-
-    const categories = [
-        { label: "Xem tất cả", value: "" },
-        { label: "Áo", value: "Áo" },
-        { label: "Quần", value: "Quần" },
-        { label: "Đầm", value: "Đầm" },
-        { label: "Váy", value: "Váy" },
-    ];
 
     const columns: Column<Product>[] = useMemo(() => {
         const cols: Column<Product>[] = [
@@ -186,7 +193,7 @@ export function ProductsTable() {
 
             <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                    {categories.map((cat) => (
+                    {categoryOptions.map((cat : { label: string; value: string }) => (
                         <button
                             key={cat.value}
                             onClick={() => handleCategoryChange(cat.value)}

@@ -2,10 +2,10 @@
 
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { Product, UpdateProduct } from "@/types/product";
+import { Category, Product, UpdateProduct } from "@/types/product";
 import { TrashIcon } from "@/public/assets/Icons";
 import { useParams, useRouter } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { ApproveProductsOrder, DeleteProductFromProductsOrders, DeleteProductsOrder, GetProductsOrderById } from "@/api/productsOrder/productsOrder";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,7 +18,7 @@ import { RootState } from "@/utilities/store";
 import { UpdateProductInProductsOrderForm } from "../Forms/UpdateProductInProductsOrderForm";
 import Image from "next/image";
 import { Cell } from "../Cell";
-import { OwnerUpdateProductInProductsOrder } from "@/api/products/products";
+import { FetchAllCategories, OwnerUpdateProductInProductsOrder } from "@/api/products/products";
 import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { removeDiacritics } from "@/utilities/removeDiacritics";
@@ -35,11 +35,30 @@ export function ProductOrderTable() {
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const { data, isLoading } = useQuery({
-        queryKey: ["productsOrderDetails", productsOrdersId],
-        queryFn: () => GetProductsOrderById(productsOrdersId as string),
-        enabled: !!productsOrdersId,
+    const [orderQuery, categoriesQuery] = useQueries({
+        queries: [
+            {
+                queryKey: ["productsOrderDetails", productsOrdersId],
+                queryFn: () => GetProductsOrderById(productsOrdersId as string),
+                enabled: !!productsOrdersId,
+            },
+            {
+                queryKey: ["categories"],
+                queryFn: () => FetchAllCategories(),
+                refetchOnWindowFocus: false,
+            },
+        ],
     });
+    
+    const { data, isLoading } = orderQuery;
+
+    const categoryOptions = [
+        { label: "Xem tất cả", value: "" },
+        ...(categoriesQuery.data ?? []).map((c: Category) => ({
+            label: c.categoryName,
+            value: c.categoryName,
+        }))
+    ];
 
     useEffect(() => {
         if (data) {
@@ -77,6 +96,7 @@ export function ProductOrderTable() {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Cập nhật thất bại"}));
         }
     });
+
     const handleApprove = () => {
         const missingImportPrice = products.find(
             (p) => !p.importPrice || p.importPrice <= 0
@@ -210,14 +230,6 @@ export function ProductOrderTable() {
         )},
     ], [dispatch, deleteMutation, productsOrdersId, updatePriceMutation]);
 
-    const categories = [
-        { label: "Xem tất cả", value: "" },
-        { label: "Áo", value: "Áo" },
-        { label: "Quần", value: "Quần" },
-        { label: "Đầm", value: "Đầm" },
-        { label: "Váy", value: "Váy" },
-    ];
-
     const products: Product[] = data?.products || [];
     const filteredProducts = products.filter((p) => {
         const matchCategory = selectedCategory ? p.category === selectedCategory : true;
@@ -245,7 +257,7 @@ export function ProductOrderTable() {
 
             {editProduct ? (
                 <div className="flex flex-col gap-4">
-                    <UpdateProductInProductsOrderForm editProduct={editProduct}/>
+                    <UpdateProductInProductsOrderForm key={editProduct.id} editProduct={editProduct}/>
                     <div className="flex items-center justify-between w-1/6 ml-auto">
                         <button
                             onClick={() => dispatch(setEditingProduct(products[currentIndex - 1]))}
@@ -270,7 +282,7 @@ export function ProductOrderTable() {
                 <>
                     <div className="flex flex-col gap-4 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex gap-2">
-                            {categories.map((cat) => (
+                            {categoryOptions.map((cat: { label: string; value: string }) => (
                                 <button
                                     key={cat.value}
                                     onClick={() => setSelectedCategory(cat.value)}
@@ -280,6 +292,7 @@ export function ProductOrderTable() {
                                     {cat.label}
                                 </button>
                             ))}
+                            
                             <NormalSearchInput
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}

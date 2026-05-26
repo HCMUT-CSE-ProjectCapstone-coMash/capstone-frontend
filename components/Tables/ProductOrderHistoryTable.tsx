@@ -2,9 +2,9 @@
 
 import { Column } from "@/types/UIType";
 import { Table } from "./Table";
-import { Product } from "@/types/product";
+import { Category, Product } from "@/types/product";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { GetProductsOrderById } from "@/api/productsOrder/productsOrder";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,6 +20,7 @@ import { RootState } from "@/utilities/store";
 import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { BarcodeForm } from "../Forms/BarcodeForm";
+import { FetchAllCategories } from "@/api/products/products";
 
 export function ProductOrderHistoryTable() {
     const router = useRouter();
@@ -30,11 +31,30 @@ export function ProductOrderHistoryTable() {
     const [searchTerm, setSearchTerm] = useState("");
     const debouncedSearch = useDebounce(searchTerm, 500);
 
-    const { data, isLoading } = useQuery({
-        queryKey: ["productsOrderDetails", productsOrdersId],
-        queryFn: () => GetProductsOrderById(productsOrdersId as string),
-        enabled: !!productsOrdersId,
+    const [orderQuery, categoriesQuery] = useQueries({
+        queries: [
+            {
+                queryKey: ["productsOrderDetails", productsOrdersId],
+                queryFn: () => GetProductsOrderById(productsOrdersId as string),
+                enabled: !!productsOrdersId,
+            },
+            {
+                queryKey: ["categories"],
+                queryFn: () => FetchAllCategories(),
+                refetchOnWindowFocus: false,
+            },
+        ],
     });
+    
+    const { data, isLoading } = orderQuery;
+    
+    const categoryOptions = [
+        { label: "Xem tất cả", value: "" },
+        ...(categoriesQuery.data ?? []).map((c: Category) => ({
+            label: c.categoryName,
+            value: c.categoryName,
+        }))
+    ];
 
     useEffect(() => {
         if (data) {
@@ -128,14 +148,6 @@ export function ProductOrderHistoryTable() {
         )}
     ], [handleToggle, isProductSelected]);
 
-    const categories = [
-        { label: "Xem tất cả", value: "" },
-        { label: "Áo", value: "Áo" },
-        { label: "Quần", value: "Quần" },
-        { label: "Đầm", value: "Đầm" },
-        { label: "Váy", value: "Váy" },
-    ];
-
     const products: Product[] = data?.products || [];
     const filteredProducts = products.filter((p) => {
         const matchCategory = selectedCategory ? p.category === selectedCategory : true;
@@ -159,7 +171,7 @@ export function ProductOrderHistoryTable() {
 
             <div className="flex items-center justify-between">
                 <div className="flex gap-2">
-                    {categories.map((cat) => (
+                    {categoryOptions.map((cat: { label: string; value: string }) => (
                         <button
                             key={cat.value}
                             onClick={() => setSelectedCategory(cat.value)}
@@ -169,6 +181,7 @@ export function ProductOrderHistoryTable() {
                             {cat.label}
                         </button>
                     ))}
+
                     <NormalSearchInput
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}

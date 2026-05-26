@@ -7,9 +7,9 @@ export async function CreateProductAsync(productData: CreateProduct, productsOrd
     const formData = new FormData();
 
     formData.append("ProductName", productData.productName);
-    formData.append("Category", productData.category);
-    formData.append("Color", productData.color);
-    formData.append("Pattern", productData.pattern);
+    formData.append("CategoryId", productData.categoryId);
+    formData.append("ColorId", productData.colorId);
+    formData.append("PatternId", productData.patternId);
     formData.append("SizeType", productData.sizeType);
     formData.append("CreatedBy", productData.createdBy);
 
@@ -70,9 +70,9 @@ export async function FetchApprovedProductByName(productName: string) {
     return response.data;
 }
 
-export async function CreateProductIdByCategory(category: string) {
+export async function CreateProductIdByCategoryId(categoryId: string) {
     const response = await axiosClient.get(
-        "/product/create-product-id-by-category/" + category,
+        "/product/create-product-id-by-category-id/" + categoryId,
         { withCredentials: true }
     );
 
@@ -83,9 +83,9 @@ export async function OwnerCreateProduct(productData: CreateProduct) {
     const formData = new FormData();
 
     formData.append("ProductName", productData.productName);
-    formData.append("Category", productData.category);
-    formData.append("Color", productData.color);
-    formData.append("Pattern", productData.pattern);
+    formData.append("CategoryId", productData.categoryId);
+    formData.append("ColorId", productData.colorId);
+    formData.append("PatternId", productData.patternId);
     formData.append("SizeType", productData.sizeType);
     formData.append("CreatedBy", productData.createdBy);
     
@@ -120,9 +120,9 @@ export async function OwnerUpdateProduct(updateData: UpdateProduct, productId: s
 
     if (updateData.productId) formData.append("ProductId", updateData.productId);
     if (updateData.productName) formData.append("ProductName", updateData.productName);
-    if (updateData.category) formData.append("Category", updateData.category);
-    if (updateData.color) formData.append("Color", updateData.color);
-    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.categoryId) formData.append("CategoryId", updateData.categoryId);
+    if (updateData.colorId) formData.append("ColorId", updateData.colorId);
+    if (updateData.patternId) formData.append("PatternId", updateData.patternId);
     if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
     if (updateData.importPrice) formData.append("ImportPrice", updateData.importPrice.toString());
     if (updateData.salePrice) formData.append("SalePrice", updateData.salePrice.toString());
@@ -168,8 +168,8 @@ export async function OwnerUpdateProductInProductsOrder(productId: string, produ
     const formData = new FormData();
 
     if (updateData.productName) formData.append("ProductName", updateData.productName);
-    if (updateData.color) formData.append("Color", updateData.color);
-    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.colorId) formData.append("ColorId", updateData.colorId);
+    if (updateData.patternId) formData.append("PatternId", updateData.patternId);
     if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
     if (updateData.importPrice) formData.append("ImportPrice", updateData.importPrice.toString());
     if (updateData.salePrice) formData.append("SalePrice", updateData.salePrice.toString());
@@ -199,8 +199,8 @@ export async function EmployeeUpdateProductInProductsOrder(productId: string, pr
     const formData = new FormData();
 
     if (updateData.productName) formData.append("ProductName", updateData.productName);
-    if (updateData.color) formData.append("Color", updateData.color);
-    if (updateData.pattern) formData.append("Pattern", updateData.pattern);
+    if (updateData.colorId) formData.append("ColorId", updateData.colorId);
+    if (updateData.patternId) formData.append("PatternId", updateData.patternId);
     if (updateData.sizeType) formData.append("SizeType", updateData.sizeType);
     
     if (updateData.quantities) {
@@ -271,6 +271,33 @@ export async function FetchProductById(id: string) {
 export async function GenerateModalImage(id: string) {
     const response = await axiosClient.post(
         "/product/generate-model-image/" + id,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function FetchAllCategories() {
+    const response = await axiosClient.get(
+        "/product/fetch-all-categories",
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function FetchAllColors() {
+    const response = await axiosClient.get(
+        "/product/fetch-all-colors",
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function FetchAllPatterns() {
+    const response = await axiosClient.get(
+        "/product/fetch-all-patterns",
         { withCredentials: true }
     );
 

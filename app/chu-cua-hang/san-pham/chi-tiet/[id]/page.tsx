@@ -31,7 +31,7 @@ export default function ProductDetailPage() {
                 </button>
             </div>
 
-            {data && <ProductDetail product={data} />}
+            {data && <ProductDetail key={JSON.stringify(data)} product={data} />}
         </main>
     )
 }
