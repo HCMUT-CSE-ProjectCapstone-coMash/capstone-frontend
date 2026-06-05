@@ -441,7 +441,11 @@ export function OwnerImportProductForm() {
                             value={form.categoryId}
                             onChange={(value) => {
                                 setField("categoryId", value);
-                                createProductIdMutation.mutate(value);
+                                if (value) {
+                                    createProductIdMutation.mutate(value);
+                                } else {
+                                    setField("productId", "");
+                                }
                             }} />
 
                         <SelectInput label={"Màu sắc"} options={colorOptions} value={form.colorId} onChange={(value) => setField("colorId", value)} />

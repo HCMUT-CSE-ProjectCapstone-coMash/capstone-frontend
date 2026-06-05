@@ -23,6 +23,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { NormalSearchInput } from "../FormInputs/NormalSearchInput";
 import { removeDiacritics } from "@/utilities/removeDiacritics";
 import { pinkPlaceholder } from "@/const/placeholder";
+import { Select } from "antd";
 
 export function ProductOrderTable() {
     const router = useRouter();
@@ -281,18 +282,15 @@ export function ProductOrderTable() {
             ) : (
                 <>
                     <div className="flex flex-col gap-4 bg-white py-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex gap-2">
-                            {categoryOptions.map((cat: { label: string; value: string }) => (
-                                <button
-                                    key={cat.value}
-                                    onClick={() => setSelectedCategory(cat.value)}
-                                    className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
-                                        selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
-                                >
-                                    {cat.label}
-                                </button>
-                            ))}
-                            
+                        <div className="flex gap-2 items-center">
+                            <Select
+                                value={selectedCategory}
+                                onChange={(value) => setSelectedCategory(value)}
+                                options={categoryOptions}
+                                className="w-48 h-11"
+                                placeholder="Danh mục"
+                            />
+
                             <NormalSearchInput
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}

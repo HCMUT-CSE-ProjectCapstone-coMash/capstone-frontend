@@ -21,6 +21,7 @@ import { addBarcode, removeBarcode } from "@/utilities/barcodeSlice";
 import { LayoutModal } from "../Modal/LayoutModal";
 import { BarcodeForm } from "../Forms/BarcodeForm";
 import { FetchAllCategories } from "@/api/products/products";
+import { Select } from "antd";
 
 export function ProductOrderHistoryTable() {
     const router = useRouter();
@@ -170,17 +171,14 @@ export function ProductOrderHistoryTable() {
             </div>
 
             <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                    {categoryOptions.map((cat: { label: string; value: string }) => (
-                        <button
-                            key={cat.value}
-                            onClick={() => setSelectedCategory(cat.value)}
-                            className={`py-2 px-4 rounded-lg border border-pink text-sm font-medium transition hover:cursor-pointer ${
-                                selectedCategory === cat.value ? "bg-pink text-white" : "bg-white text-pink hover:bg-purple/5"}`}
-                        >
-                            {cat.label}
-                        </button>
-                    ))}
+                <div className="flex gap-2 items-center">
+                    <Select
+                        value={selectedCategory}
+                        onChange={(value) => setSelectedCategory(value)}
+                        options={categoryOptions}
+                        className="w-48 h-11"
+                        placeholder="Danh mục"
+                    />
 
                     <NormalSearchInput
                         value={searchTerm}
