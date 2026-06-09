@@ -143,6 +143,11 @@ export function ImportProductForm() {
                 salePrice: data.salePrice,
                 modelImageURL: data.modelImageURL,
             }
+
+            if (form.temporaryProductId) {
+                deleteTemporaryProductMutation.mutate(form.temporaryProductId);
+            }
+            
             dispatch(addProductToOrder(newProduct));
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
             setForm(initialFormState);
@@ -203,10 +208,6 @@ export function ImportProductForm() {
         };
 
         createMutation.mutate({ productData, productsOrderId: productsOrder.id });
-
-        if (form.temporaryProductId) {
-            deleteTemporaryProductMutation.mutate(form.temporaryProductId);
-        }
     }
 
     const imageSearchMutation = useMutation({

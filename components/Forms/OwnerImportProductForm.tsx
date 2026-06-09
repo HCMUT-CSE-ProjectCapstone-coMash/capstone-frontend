@@ -192,6 +192,10 @@ export function OwnerImportProductForm() {
     const createMutation = useMutation({
         mutationFn: (newProduct: CreateProduct) => OwnerCreateProduct(newProduct),
         onSuccess: () => {
+            if (form.temporaryProductId) {
+                deleteTemporaryProductMutation.mutate(form.temporaryProductId);
+            }
+
             setForm(initialFormState);
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Thêm sản phẩm thành công" }));
         },
@@ -261,10 +265,6 @@ export function OwnerImportProductForm() {
         };
 
         createMutation.mutate(newProduct);
-
-        if (form.temporaryProductId) {
-            deleteTemporaryProductMutation.mutate(form.temporaryProductId);
-        }
     };
 
     // -- Temporary products from phone capture --
