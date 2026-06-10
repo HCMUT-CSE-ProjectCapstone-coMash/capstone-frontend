@@ -402,15 +402,17 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
                         <span className="font-semibold">{formatThousands(saleOrder.originalTotalPrice)} VNĐ</span>
                     </div>
 
-                    <div className="flex justify-between px-4 py-3">
-                        <div className="flex flex-row gap-1">
-                            <span>Khuyến mãi -</span>
-                            <span>{saleOrder.appliedOrderPromotionName}</span>
+                    {saleOrder.appliedOrderPromotionName && (
+                        <div className="flex justify-between px-4 py-3">
+                            <div className="flex flex-row gap-1">
+                                <span>Khuyến mãi -</span>
+                                <span>{saleOrder.appliedOrderPromotionName}</span>
+                            </div>
+                            <span className="text-green-600 font-semibold">
+                                - {formatThousands(totalSaved)} VNĐ
+                            </span>
                         </div>
-                        <span className="text-green-600 font-semibold">
-                           - {formatThousands(totalSaved)} VNĐ
-                        </span>
-                    </div>
+                    )}
 
                     <div className="flex justify-between px-4 py-3">
                         <span>Thành tiền</span>
@@ -422,8 +424,8 @@ export function SaleOrderDetail({ saleOrder }: SaleOrderDetailProps) {
                     {user.role === "owner" && (
                         <div className="flex justify-between px-4 py-3">
                             <span>Tổng lợi nhuận</span>
-                            <span className="text-green-600 font-semibold">
-                                {formatThousands(saleOrder.totalProfit)} VNĐ
+                            <span className={`font-semibold ${saleOrder.totalProfit < 0 ? "text-red-600" : "text-green-600"}`}>
+                               {saleOrder.totalProfit < 0 ? "-" : ""}{formatThousands(Math.abs(saleOrder.totalProfit))} VNĐ
                             </span>
                         </div>
                     )}
