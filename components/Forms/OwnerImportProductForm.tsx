@@ -11,7 +11,7 @@ import { SwitchInput } from "../FormInputs/SwitchInput";
 import { AnalyzeImage, CreateProductIdByCategoryId, DeleteTemporaryProduct, FetchAllCategories, FetchAllColors, FetchAllPatterns, FetchApprovedProductByName, OwnerCreateProduct, SearchSimilarProduct } from "@/api/products/products";
 import { useMutation, useQueries, useQuery } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
-import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { clampPrice, clampQuantity, formatThousands, MAX_STRING, parseFormattedNumber } from "@/utilities/numberFormat";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
 import { addAlert } from "@/utilities/alertStore";
@@ -112,6 +112,15 @@ export function OwnerImportProductForm() {
         const key = form.isNumberSize ? "numberQuantities" : "letterQuantities";
         setForm(prev => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
     };
+
+    const handleProductNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value.length > MAX_STRING) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: `Tên sản phẩm không được vượt quá ${MAX_STRING} ký tự` }));
+            return;
+        }
+        setField("productName", value);
+    };    
 
     const uploadTriggerRef = useRef<HTMLButtonElement | null>(null);
 
@@ -394,7 +403,7 @@ export function OwnerImportProductForm() {
                         label={"Tên sản phẩm"}
                         placeHolder=""
                         value={form.productName}
-                        onChange={(e) => setField("productName", e.target.value)}
+                        onChange={(e) => handleProductNameChange(e)}
                         suggestions={suggestions}
                         onSuggestionClick={(item) => { dispatch(setOwnerEditingProduct(item.data)); }}
                         renderItem={(item) => (
@@ -414,7 +423,7 @@ export function OwnerImportProductForm() {
                                 placeHolder=""
                                 value={formatThousands(form.importPrice)}
                                 inputType="text"
-                                onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
+                                onChange={(e) => setField("importPrice", clampPrice(parseFormattedNumber(e.target.value)))}
                             />
                         </div>
 
@@ -424,7 +433,7 @@ export function OwnerImportProductForm() {
                                 placeHolder=""
                                 value={formatThousands(form.salePrice)}
                                 inputType="text"
-                                onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
+                                onChange={(e) => setField("salePrice", clampPrice(parseFormattedNumber(e.target.value)))}
                             />
                             {form.salePrice > 0 && form.importPrice > 0 && form.salePrice <= form.importPrice && (
                                 <p className="text-xs text-yellow-600">
@@ -467,7 +476,7 @@ export function OwnerImportProductForm() {
                                 value={quantities[size]}
                                 labelPosition="left"
                                 inputType="text"
-                                onChange={(e) => handleQuantityChange(size, parseFormattedNumber(e.target.value))}
+                                onChange={(e) => handleQuantityChange(size, clampQuantity(parseFormattedNumber(e.target.value)))}
                             />
                         ))}
                     </div>

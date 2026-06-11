@@ -10,7 +10,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { TextInput } from "@/components/FormInputs/TextInput";
 import { TrashIcon } from "@/public/assets/Icons";
-import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { clampQuantity, formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
 import { pinkPlaceholder } from "@/const/placeholder";
@@ -219,7 +219,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: Com
                                             placeHolder="1"
                                             inputType="text"
                                             onChange={(e) =>
-                                                updateItemQuantity(product.id, parseFormattedNumber(e.target.value) || 1)
+                                                updateItemQuantity(product.id, clampQuantity(parseFormattedNumber(e.target.value) || 1))
                                             }
                                             disabled={!isEditable}
                                         />
