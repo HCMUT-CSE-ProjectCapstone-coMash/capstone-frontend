@@ -226,6 +226,12 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
     // -- Handle payment method change --------------------------------------------------------
     const handlePaymentMethodChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedMethod = e.target.value as PaymentMethod;
+
+        if (!selectedCustomer && selectedMethod === PaymentMethod.DEBIT) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: "Vui lòng chọn khách hàng trước khi chọn hình thức ghi nợ" }));
+            return;
+        }
+
         setField("paymentMethod", selectedMethod);
 
         if (selectedMethod === PaymentMethod.CASH) {
@@ -586,7 +592,7 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
                     disabled={createSaleOrderMutation.isPending}
                     className="p-2.5 w-45 self-center rounded-lg text-white font-semibold bg-purple text-base cursor-pointer hover:bg-opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Xuất hóa đơn"}
+                    {createSaleOrderMutation.isPending ? "Đang xử lý..." : "Thanh toán"}
                 </button>
             )}
         </form>
