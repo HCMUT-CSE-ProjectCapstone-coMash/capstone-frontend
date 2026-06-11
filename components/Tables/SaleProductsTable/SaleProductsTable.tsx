@@ -118,7 +118,6 @@ export function SaleProductsTable({ cart, setCart, isLocked, knownCombos, setKno
         );
 
         if (!matched) {
-            dispatch(addAlert({ type: AlertType.ERROR, message: "Không tìm thấy sản phẩm" }));
             return;
         }
 
