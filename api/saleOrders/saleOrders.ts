@@ -1,5 +1,6 @@
 import { SaleOrderRequest } from "@/types/saleOrder";
 import { axiosClient } from "../axiosClient";
+import { CreateTransferPaymentRequest, CreateTransferPaymentResponse } from "@/types/payment";
 
 export async function CreateSaleOrder(saleOrder: SaleOrderRequest) {
     const response = await axiosClient.post(
@@ -117,6 +118,17 @@ export async function FetchDashboardStats() {
 export async function FetchRecentCreatedSaleOrderByEmployeeId(employeeId: string) {
     const response = await axiosClient.get(
         `/sale-orders/fetch-recent-created-by-employee/${employeeId}`,
+        { withCredentials: true }
+    );
+
+    return response.data;
+}
+
+export async function CreateTransferPayment(data: CreateTransferPaymentRequest) : Promise<CreateTransferPaymentResponse> {
+
+    const response = await axiosClient.post(
+        "/sale-orders/create-payments",
+        data,
         { withCredentials: true }
     );
 

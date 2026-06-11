@@ -14,12 +14,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { CreateCustomer, FetchCustomerByName, FetchCustomerByPhone } from "@/api/customers/customers";
 import { Customer } from "@/types/customer";
 import { MappedSaleOrder, mapSaleOrder, SaleComboRequest, SaleOrderRequest, SaleProductRequest } from "@/types/saleOrder";
-import { CreateSaleOrder } from "@/api/saleOrders/saleOrders";
+import { CreateSaleOrder, CreateTransferPayment } from "@/api/saleOrders/saleOrders";
 import { useDebounce } from "@/hooks/useDebounce";
 import { CartLine, OrderPromotionLevelResponse, OrderPromotionResponse } from "@/types/cart";
-import { PrintBill } from "../PrintBill";
 import { FetchOrderPromotions } from "@/api/promotions/promotions";
 import { Tooltip } from "antd";
+import { CreateTransferPaymentRequest, CreateTransferPaymentResponse } from "@/types/payment";
+import { EmployeeSaleOrdersByIdPageRoute, OwnerSaleOrdersByIdPageRoute } from "@/const/routes";
 
 const paymentOptions: { value: string, label: string }[] = [
     { value: PaymentMethod.CASH, label: "Tiền mặt" },
@@ -241,6 +242,18 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
     // -- Handle create sale order ------------------------------------------------------------
     const [completedOrder, setCompletedOrder] = useState<MappedSaleOrder | null>(null);
 
+    const createPaymentTransferMutation = useMutation({
+        mutationFn: (payment: CreateTransferPaymentRequest) => CreateTransferPayment(payment),
+        onSuccess: (data: CreateTransferPaymentResponse) => {
+            dispatch(addAlert({ type: AlertType.SUCCESS, message: "Tạo yêu cầu chuyển khoản thành công" }));
+
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+            }
+        },
+        onError: () => {}
+    });
+
     const createSaleOrderMutation = useMutation({
         mutationFn: (saleOrderRequest: SaleOrderRequest) => CreateSaleOrder(saleOrderRequest),
         onSuccess: (data) => {
@@ -248,6 +261,21 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
             const mapped = mapSaleOrder(data);
             setCompletedOrder(mapped);
             dispatch(addAlert({ type: AlertType.SUCCESS, message: "Xuất hóa đơn thành công" }));
+
+            if (form.paymentMethod === PaymentMethod.TRANSFER) {
+                const numericPart = mapped.saleOrderId.replace(/\D/g, "");
+                const orderCode = parseInt(numericPart, 10);
+
+                const detailUrl = user.role === "employee" ? EmployeeSaleOrdersByIdPageRoute(mapped.id) : OwnerSaleOrdersByIdPageRoute(mapped.id);
+        
+                createPaymentTransferMutation.mutate({
+                    orderCode,
+                    amount: mapped.totalPrice,
+                    description: `Thanh toán đơn hàng ${mapped.saleOrderId}`,
+                    cancelUrl: window.location.origin,
+                    returnUrl: `${window.location.origin}${detailUrl}`
+                });
+            }
         },
         onError: () => {
             dispatch(addAlert({ type: AlertType.ERROR, message: "Không thể tạo hóa đơn bán hàng" }));
@@ -543,7 +571,6 @@ export function InvoiceForm({ cart, isLocked, onOrderComplete, onReset }: Invoic
 
             {completedOrder ? (
                 <div className="flex gap-3 self-center">
-                    <PrintBill order={completedOrder}/>
                     <button
                         type="button"
                         onClick={handleReset}
