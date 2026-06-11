@@ -10,7 +10,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { SearchInput } from "@/components/FormInputs/SearchInput";
 import { TextInput } from "@/components/FormInputs/TextInput";
 import { TrashIcon } from "@/public/assets/Icons";
-import { clampQuantity, formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { clampPrice, clampQuantity, formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { useSelector } from "react-redux";
 import { RootState } from "@/utilities/store";
 import { pinkPlaceholder } from "@/const/placeholder";
@@ -83,7 +83,7 @@ export function ComboTable({ combo, index, onUpdate, onRemove, isEditable }: Com
     };
  
     const handleComboPriceChange = (rawValue: string) => {
-        const parsed = parseFormattedNumber(rawValue);
+        const parsed = clampPrice(parseFormattedNumber(rawValue));
         onUpdate({ comboPrice: Math.max(0, parsed) });
     };
 

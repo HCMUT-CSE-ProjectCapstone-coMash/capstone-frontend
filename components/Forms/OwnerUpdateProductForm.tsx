@@ -4,7 +4,7 @@ import { sizesLetter, sizesNumber } from "@/const/product";
 import { AlertType } from "@/types/alert";
 import { Category, Color, Pattern, Product, UpdateProduct } from "@/types/product"
 import { addAlert } from "@/utilities/alertStore";
-import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { clampPrice, clampQuantity, formatThousands, MAX_STRING, parseFormattedNumber } from "@/utilities/numberFormat";
 import { clearOwnerEditingProduct } from "@/utilities/ownerProductEditStore";
 import { useMutation, useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -100,6 +100,15 @@ function OwnerUpdateProductFormInner({ editProduct, isHasCancelButton, categorie
         const key = form.isNumberSize ? "numberQuantities" : "letterQuantities";
         setForm((prev) => ({ ...prev, [key]: { ...prev[key], [size]: value } }));
     };
+
+    const handleProductNameChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        if (value.length > MAX_STRING) {
+            dispatch(addAlert({ type: AlertType.WARNING, message: `Tên sản phẩm không được vượt quá ${MAX_STRING} ký tự` }));
+            return;
+        }
+        setField("productName", value);
+    };    
 
     const updateMutation = useMutation({
         mutationFn: ({ updateData, productId }: { updateData: UpdateProduct; productId: string }) => OwnerUpdateProduct(updateData, productId),
@@ -199,21 +208,21 @@ function OwnerUpdateProductFormInner({ editProduct, isHasCancelButton, categorie
                 <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                     <TextInput disabled label={"Mã sản phẩm"} placeHolder="" value={form.productId} onChange={(e) => setField("productId", e.target.value)} />
 
-                    <TextInput label={"Tên sản phẩm"} placeHolder="" value={form.productName} onChange={(e) => setField("productName", e.target.value)} />
+                    <TextInput label={"Tên sản phẩm"} placeHolder="" value={form.productName} onChange={(e) => handleProductNameChange(e)} />
 
                     <div className="flex justify-between gap-5 h-20">
                         <div className="flex-1">
                             <TextInput
                                 label={"Giá nhập"} placeHolder="" inputType="text"
                                 value={formatThousands(form.importPrice)}
-                                onChange={(e) => setField("importPrice", parseFormattedNumber(e.target.value))}
+                                onChange={(e) => setField("importPrice", clampPrice(parseFormattedNumber(e.target.value)))}
                             />
                         </div>
                         <div className="flex-1 flex flex-col gap-0.5">
                             <TextInput
                                 label={"Giá bán"} placeHolder="" inputType="text"
                                 value={formatThousands(form.salePrice)}
-                                onChange={(e) => setField("salePrice", parseFormattedNumber(e.target.value))}
+                                onChange={(e) => setField("salePrice", clampPrice(parseFormattedNumber(e.target.value)))}
                             />
                             {form.salePrice > 0 && form.importPrice > 0 && form.salePrice <= form.importPrice && (
                                 <p className="text-xs text-yellow-600">Bạn đang nhập giá bán nhỏ hơn hoặc bằng giá nhập</p>
@@ -237,7 +246,7 @@ function OwnerUpdateProductFormInner({ editProduct, isHasCancelButton, categorie
                             <TextInput
                                 key={size} label={size} placeHolder=""
                                 value={quantities[size]} labelPosition="left" inputType="text"
-                                onChange={(e) => handleQuantityChange(size, parseFormattedNumber(e.target.value))}
+                                onChange={(e) => handleQuantityChange(size, clampQuantity(parseFormattedNumber(e.target.value)))}
                             />
                         ))}
                     </div>

@@ -1,6 +1,6 @@
 import { DiscountType, PromotionLevel } from "@/types/promotion";
 import { TextInput } from "@/components/FormInputs/TextInput";
-import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { clampPrice, formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { SelectOption } from "@/types/UIType";
 import { SelectInput } from "@/components/FormInputs/SelectInput";
 import { AlertType } from "@/types/alert";
@@ -74,12 +74,12 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel, isEditable }
     const dispatch = useDispatch();
 
     const handleMinValueChange = (index: number, rawValue: string) => {
-        const parsed = parseFormattedNumber(rawValue);
+        const parsed = clampPrice(parseFormattedNumber(rawValue));
         onUpdateLevel(index, { minValue: Math.max(0, parsed) });
     };
 
     const handleDiscountValueChange = (index: number, rawValue: string) => {
-        const parsed = parseFormattedNumber(rawValue);
+        const parsed = clampPrice(parseFormattedNumber(rawValue));
         const currentType = levels[index].discountType;
 
         // Percent discounts cannot exceed 100%
@@ -116,7 +116,7 @@ export function LevelsTable({ levels, onUpdateLevel, onRemoveLevel, isEditable }
     }
 
     const handleMaxDiscountChange = (index: number, rawValue: string) => {
-        const parsed = parseFormattedNumber(rawValue);
+        const parsed = clampPrice(parseFormattedNumber(rawValue));
         onUpdateLevel(index, { maxDiscount: parsed > 0 ? parsed : undefined });
     }
 

@@ -6,7 +6,7 @@ import { AlertType } from "@/types/alert";
 import { DiscountType, ProductDiscountItem } from "@/types/promotion";
 import { SelectOption } from "@/types/UIType";
 import { addAlert } from "@/utilities/alertStore";
-import { formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
+import { clampPrice, formatThousands, parseFormattedNumber } from "@/utilities/numberFormat";
 import { RootState } from "@/utilities/store";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
@@ -39,7 +39,7 @@ export function SelectedProductsTable({ productDiscounts, onUpdate, onRemove, is
     const dispatch = useDispatch();
 
     const handleDiscountValueChange = (item: ProductDiscountItem, rawValue: string) => {
-        const parsed = parseFormattedNumber(rawValue);
+        const parsed = clampPrice(parseFormattedNumber(rawValue));
 
         if (item.discountType === "Percent" && parsed > 100) {
             dispatch(addAlert({ type: AlertType.WARNING, message: "Phần trăm giảm không được vượt quá 100%." }));

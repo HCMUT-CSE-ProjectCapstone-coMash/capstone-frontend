@@ -1,4 +1,4 @@
-export const MAX_PRICE = 10_000_000;
+export const MAX_PRICE = 100_000_000;
 export const MAX_QUANTITY = 100;
 export const MAX_STRING = 75;
 
