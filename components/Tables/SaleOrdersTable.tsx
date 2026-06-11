@@ -57,19 +57,17 @@ export function SaleOrdersTable() {
     const saleOrders = data?.items ?? [];
     const total = data?.total ?? 0;
 
-    const columns: Column<SaleOrderResponse>[] = [
+    const baseColumns: Column<SaleOrderResponse>[] = [
         { title: "Mã đơn hàng", key: "orderId", render: (row) => <span>{row.saleOrderId}</span>},
-        { title: "Tên khách hàng", key: "customerName", render: (row) => <span>{row.customerName?? "Khách vãng lai"}</span>},
+        { title: "Tên khách hàng", key: "customerName", render: (row) => <span>{row.customerName ?? "Khách vãng lai"}</span>},
         { title: "Thời gian xuất", key: "createdAt", render: (row) => <span>{formatTime(row.createdAt)}</span>},
         { title: "Thành tiền", key: "totalAmount", render: (row) => <span>{formatThousands(row.totalPrice)} VNĐ</span>},
-        { title: "Lợi nhuận", key: "profit", render: (row) => <span>{formatThousands(row.totalProfit)} VNĐ</span>},
         { title: "Hình thức thanh toán", key: "paymentMethod", render: (row) => (
             <span>
                 {paymentOptions.find(opt => opt.value === row.paymentMethod)?.label ?? row.paymentMethod}
             </span>
         )},
         { title: "Số tiền nợ", key: "debtAmount", render: (row) => <span>{formatThousands(row.debitMoney)} VNĐ</span>},
-        
         {
             title: "",
             key: "action",
@@ -87,8 +85,25 @@ export function SaleOrdersTable() {
                     Xem
                 </button>
             )
-        }
+        },
     ];
+
+    const columns: Column<SaleOrderResponse>[] = user.role === "owner"
+    ? [
+        ...baseColumns.slice(0, 4),
+        {
+            title: "Lợi nhuận",
+            key: "profit",
+            render: (row) => (
+                <span className={row.totalProfit < 0 ? "text-red-600" : "text-green-600"}>
+                    {row.totalProfit < 0 ? "-" : ""}
+                    {formatThousands(Math.abs(row.totalProfit))} VNĐ
+                </span>
+            ),
+        },
+        ...baseColumns.slice(4),
+      ]
+    : baseColumns;
 
     return (
         <div className="flex flex-col gap-5">
